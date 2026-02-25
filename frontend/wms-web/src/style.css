@@ -1,0 +1,60 @@
+:root {
+  /* Default Light Theme (Business Tech) */
+  --bg-body: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-sidebar: #0f172a;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-inverse: #ffffff;
+  --primary-color: #3b82f6;
+  --accent-color: #06b6d4;
+  --border-color: #e2e8f0;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --input-bg: #ffffff;
+  --header-bg: #ffffff;
+}
+
+[data-theme='dark'] {
+  /* Dark Tech Theme */
+  --bg-body: #020617;
+  --bg-card: #1e293b;
+  --bg-sidebar: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-inverse: #ffffff;
+  --primary-color: #60a5fa;
+  --accent-color: #22d3ee;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --input-bg: rgba(15, 23, 42, 0.6);
+  --header-bg: #0f172a;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Element Plus Overrides */
+.el-input__wrapper {
+  background-color: var(--input-bg) !important;
+  box-shadow: 0 0 0 1px var(--border-color) inset !important;
+}
+
+.el-input__inner {
+  color: var(--text-primary) !important;
+}
+
+.el-button--primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+.el-button--primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}

@@ -1,0 +1,14 @@
+using Microsoft.AspNetCore.Mvc;
+using OPSOFT.O3.WebAPI.Api.Controllers.Base;
+using OPSOFT.O3.WebAPI.Application.DTOs;
+using OPSOFT.O3.WebAPI.Application.Interfaces;
+using OPSOFT.O3.WebAPI.Domain.Entities;
+
+namespace OPSOFT.O3.WebAPI.Api.Controllers;
+
+[Route("api/[controller]")]
+public class WarehouseController : ApprovableDisableableMasterDataController<TBdStock, WarehouseListDto, WarehouseDetailDto, CreateWarehouseRequest, UpdateWarehouseRequest>
+{
+    public WarehouseController(IApprovableDisableableService<TBdStock, WarehouseListDto, WarehouseDetailDto, CreateWarehouseRequest, UpdateWarehouseRequest> service)
+        : base(service) { }
+}
