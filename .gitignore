@@ -55,3 +55,5 @@ nunit-*.xml
 /OPSOFT.O3.WebAPI/.vs
 /OPSOFT.O3.WebAPI/src/OPSOFT.O3.WebAPI.Api/*.user
 /frontend/wms-web/node_modules
+/frontend/wms-web/dist
+/frontend/wms-web/*.tsbuildinfo
