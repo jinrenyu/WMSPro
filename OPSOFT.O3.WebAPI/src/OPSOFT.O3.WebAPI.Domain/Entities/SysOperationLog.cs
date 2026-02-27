@@ -79,4 +79,16 @@ public class SysOperationLog : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FSTATEMENT")]
     public string Fstatement { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 日志描述
+    /// </summary>
+    [SugarColumn(ColumnName = "FDESCRIPTION", IsNullable = true)]
+    public string FDESCRIPTION { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 操作实体表名
+    /// </summary>
+    [SugarColumn(ColumnName = "FTABLENAME", IsNullable = true)]
+    public string FTABLENAME { get; set; } = string.Empty;
 }

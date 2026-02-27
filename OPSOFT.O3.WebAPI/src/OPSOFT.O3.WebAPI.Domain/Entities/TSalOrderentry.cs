@@ -145,4 +145,130 @@ public class TSalOrderentry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FTAXAMOUNT_LC")]
     public decimal FtaxamountLc { get; set; }
+
+    /// <summary>
+    /// 折扣额
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISCOUNT", IsNullable = true)]
+    public decimal? FDISCOUNT { get; set; }
+
+    /// <summary>
+    /// 折扣率%
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISCOUNTRATE", IsNullable = true)]
+    public decimal? FDISCOUNTRATE { get; set; }
+
+    /// <summary>
+    /// 实际含税价格
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECPRICEDISCOUNT", IsNullable = true)]
+    public decimal? FSECPRICEDISCOUNT { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 建议交货日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FADVICECONSIGNDATE", IsNullable = true)]
+    public DateTime? FADVICECONSIGNDATE { get; set; }
+
+    /// <summary>
+    /// 价税合计
+    /// </summary>
+    [SugarColumn(ColumnName = "FALLAMOUNT", IsNullable = true)]
+    public decimal? FALLAMOUNT { get; set; }
+
+    /// <summary>
+    /// 结算组织
+    /// </summary>
+    [SugarColumn(ColumnName = "FSETTLEORGID", IsNullable = true)]
+    public string FSETTLEORGID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 金额
+    /// </summary>
+    [SugarColumn(ColumnName = "FAMOUNT", IsNullable = true)]
+    public decimal? FAMOUNT { get; set; }
+
+    /// <summary>
+    /// 累计退货数量（销售）
+    /// </summary>
+    [SugarColumn(ColumnName = "FRETURNQTY", IsNullable = true)]
+    public decimal? FRETURNQTY { get; set; }
+
+    /// <summary>
+    /// 套件行内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FROWID", IsNullable = true)]
+    public string FROWID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 要货日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FDELIVERYDATE", IsNullable = true)]
+    public DateTime? FDELIVERYDATE { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 价税合计(本位币)
+    /// </summary>
+    [SugarColumn(ColumnName = "FALLAMOUNT_LC", IsNullable = true)]
+    public decimal? FALLAMOUNT_LC { get; set; }
+
+    /// <summary>
+    /// 基本单位数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASEUNITQTY", IsNullable = true)]
+    public decimal? FBASEUNITQTY { get; set; }
+
+    /// <summary>
+    /// 累计退货基本数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FRETURNBASEQTY", IsNullable = true)]
+    public decimal? FRETURNBASEQTY { get; set; }
+
+    /// <summary>
+    /// 累计出库基本数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKOUTBASEQTY", IsNullable = true)]
+    public decimal? FSTOCKOUTBASEQTY { get; set; }
+
+    /// <summary>
+    /// 金额(本位币)
+    /// </summary>
+    [SugarColumn(ColumnName = "FAMOUNT_LC", IsNullable = true)]
+    public decimal? FAMOUNT_LC { get; set; }
+
+    /// <summary>
+    /// 交货日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FCONSIGNDATE", IsNullable = true)]
+    public DateTime? FCONSIGNDATE { get; set; }
+
+    /// <summary>
+    /// 库存组织
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKORGID", IsNullable = true)]
+    public string FSTOCKORGID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 累计出库数量（销售）
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKOUTQTY", IsNullable = true)]
+    public decimal? FSTOCKOUTQTY { get; set; }
+
+    /// <summary>
+    /// 父项产品
+    /// </summary>
+    [SugarColumn(ColumnName = "FPARENTMATID", IsNullable = true)]
+    public string FPARENTMATID { get; set; } = string.Empty;
 }

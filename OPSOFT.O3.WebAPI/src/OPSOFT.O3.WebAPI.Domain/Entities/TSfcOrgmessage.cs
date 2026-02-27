@@ -61,4 +61,40 @@ public class TSfcOrgmessage : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FKEY")]
     public string Fkey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// API(手环)
+    /// </summary>
+    [SugarColumn(ColumnName = "FAPI", IsNullable = true)]
+    public string FAPI { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 审核人内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKERID", IsNullable = true)]
+    public string FCHECKERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 禁用人
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEID", IsNullable = true)]
+    public string FDISABLEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 审核日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKDATE", IsNullable = true)]
+    public DateTime? FCHECKDATE { get; set; }
+
+    /// <summary>
+    /// 编码
+    /// </summary>
+    [SugarColumn(ColumnName = "FNUMBER", IsNullable = true)]
+    public string FNUMBER { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 禁用日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEDATE", IsNullable = true)]
+    public DateTime? FDISABLEDATE { get; set; }
 }

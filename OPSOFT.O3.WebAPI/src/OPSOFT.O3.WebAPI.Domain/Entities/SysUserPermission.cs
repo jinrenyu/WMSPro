@@ -19,4 +19,16 @@ public class SysUserPermission : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "PR_CODE")]
     public string PrCode { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 程式代号
+    /// </summary>
+    [SugarColumn(ColumnName = "PRG_ID", IsNullable = true)]
+    public string PRG_ID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 用户权限字段
+    /// </summary>
+    [SugarColumn(ColumnName = "PR_MAP", IsNullable = true)]
+    public byte[] PR_MAP { get; set; }
 }

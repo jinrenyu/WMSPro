@@ -115,4 +115,22 @@ public class OdkSrmDeliveryEntry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FDETAILSTATUS")]
     public int Fdetailstatus { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOTE", IsNullable = true)]
+    public string FNOTE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
 }

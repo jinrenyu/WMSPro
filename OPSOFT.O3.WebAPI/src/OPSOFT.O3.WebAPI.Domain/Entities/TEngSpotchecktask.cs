@@ -127,4 +127,10 @@ public class TEngSpotchecktask : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FEFFECTIVESPAN")]
     public decimal Feffectivespan { get; set; }
+
+    /// <summary>
+    /// 单据编号
+    /// </summary>
+    [SugarColumn(ColumnName = "FBILLNO", IsNullable = true)]
+    public string FBILLNO { get; set; } = string.Empty;
 }

@@ -61,4 +61,16 @@ public class TBdMaterialAuxPty : BaseEntryEntity
     /// </summary>
     [SugarColumn(ColumnName = "FMASTERID")]
     public string FMasterId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
 }

@@ -115,4 +115,94 @@ public class TSfcRepairentry1 : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FTOTALSEC")]
     public decimal Ftotalsec { get; set; }
+
+    /// <summary>
+    /// 非正常累计用时(秒)
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOWORKINGHOURSEC", IsNullable = true)]
+    public decimal? FNOWORKINGHOURSEC { get; set; }
+
+    /// <summary>
+    /// 停工时间
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOPDTIME", IsNullable = true)]
+    public DateTime? FSTOPDTIME { get; set; }
+
+    /// <summary>
+    /// 汇报数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FAUXQTY", IsNullable = true)]
+    public decimal? FAUXQTY { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 条码
+    /// </summary>
+    [SugarColumn(ColumnName = "FBARCODE", IsNullable = true)]
+    public string FBARCODE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 正常累计用时(秒)
+    /// </summary>
+    [SugarColumn(ColumnName = "FWORKINGHOURSEC", IsNullable = true)]
+    public decimal? FWORKINGHOURSEC { get; set; }
+
+    /// <summary>
+    /// 父阶表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FBODYID", IsNullable = true)]
+    public string FBODYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 新的维修单号（转修）
+    /// </summary>
+    [SugarColumn(ColumnName = "FNEXTREPARIBILLNO", IsNullable = true)]
+    public string FNEXTREPARIBILLNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOTE", IsNullable = true)]
+    public string FNOTE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 前道在制品条码
+    /// </summary>
+    [SugarColumn(ColumnName = "FINBILLNO", IsNullable = true)]
+    public string FINBILLNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 报废条码
+    /// </summary>
+    [SugarColumn(ColumnName = "FSCRAPBARCODE", IsNullable = true)]
+    public string FSCRAPBARCODE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 时间段类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FDATATYPE", IsNullable = true)]
+    public string FDATATYPE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 时间段副类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTATE", IsNullable = true)]
+    public string FSTATE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 入库单号内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FININTERID", IsNullable = true)]
+    public string FININTERID { get; set; } = string.Empty;
 }

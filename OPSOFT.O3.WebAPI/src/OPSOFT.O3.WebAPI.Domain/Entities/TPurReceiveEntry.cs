@@ -409,4 +409,16 @@ public class TPurReceiveEntry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FSHDSD")]
     public bool Fshdsd { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
 }

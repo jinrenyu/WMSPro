@@ -25,4 +25,52 @@ public class OdkSrmBidTemplate : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FBIDTYPE")]
     public string Fbidtype { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 审核人内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKERID", IsNullable = true)]
+    public string FCHECKERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 禁用人
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEID", IsNullable = true)]
+    public string FDISABLEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 分值设置(A:100 B:10)
+    /// </summary>
+    [SugarColumn(ColumnName = "FSCORETYPE", IsNullable = true)]
+    public string FSCORETYPE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOTE", IsNullable = true)]
+    public string FNOTE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 审核日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKDATE", IsNullable = true)]
+    public DateTime? FCHECKDATE { get; set; }
+
+    /// <summary>
+    /// 审核级别
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKLEVEL", IsNullable = true)]
+    public int? FCHECKLEVEL { get; set; }
+
+    /// <summary>
+    /// 禁用日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEDATE", IsNullable = true)]
+    public DateTime? FDISABLEDATE { get; set; }
+
+    /// <summary>
+    /// 单据编号
+    /// </summary>
+    [SugarColumn(ColumnName = "FBILLNO", IsNullable = true)]
+    public string FBILLNO { get; set; } = string.Empty;
 }

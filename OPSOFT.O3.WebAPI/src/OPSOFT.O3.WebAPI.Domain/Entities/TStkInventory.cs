@@ -121,4 +121,76 @@ public class TStkInventory : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FUSEFULDATE")]
     public DateTime? Fusefuldate { get; set; }
+
+    /// <summary>
+    /// 客户
+    /// </summary>
+    [SugarColumn(ColumnName = "FCUID", IsNullable = true)]
+    public string FCUID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 审核人内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKERID", IsNullable = true)]
+    public string FCHECKERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 供应商
+    /// </summary>
+    [SugarColumn(ColumnName = "FSUPPLYID", IsNullable = true)]
+    public string FSUPPLYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 是否虚仓库存
+    /// </summary>
+    [SugarColumn(ColumnName = "FISVIRTUAL", IsNullable = true)]
+    public bool? FISVIRTUAL { get; set; }
+
+    /// <summary>
+    /// 客户订单
+    /// </summary>
+    [SugarColumn(ColumnName = "FPONUMBER", IsNullable = true)]
+    public string FPONUMBER { get; set; } = string.Empty;
+
+    /// <summary>
+    /// ERP最后更新时间
+    /// </summary>
+    [SugarColumn(ColumnName = "FUPDATETIME", IsNullable = true)]
+    public DateTime? FUPDATETIME { get; set; }
+
+    /// <summary>
+    /// 禁用人
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEID", IsNullable = true)]
+    public string FDISABLEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 辅助单位数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECUNITQTY", IsNullable = true)]
+    public decimal? FSECUNITQTY { get; set; }
+
+    /// <summary>
+    /// 批次
+    /// </summary>
+    [SugarColumn(ColumnName = "FLOT", IsNullable = true)]
+    public string FLOT { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 审核日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKDATE", IsNullable = true)]
+    public DateTime? FCHECKDATE { get; set; }
+
+    /// <summary>
+    /// 辅助单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECUNITID", IsNullable = true)]
+    public string FSECUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 禁用日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEDATE", IsNullable = true)]
+    public DateTime? FDISABLEDATE { get; set; }
 }

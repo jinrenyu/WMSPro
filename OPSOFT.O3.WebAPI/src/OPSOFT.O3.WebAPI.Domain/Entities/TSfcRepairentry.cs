@@ -91,4 +91,58 @@ public class TSfcRepairentry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FTOTALSEC")]
     public decimal Ftotalsec { get; set; }
+
+    /// <summary>
+    /// 非正常累计用时(秒)
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOWORKINGHOURSEC", IsNullable = true)]
+    public decimal? FNOWORKINGHOURSEC { get; set; }
+
+    /// <summary>
+    /// 停工时间
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOPDTIME", IsNullable = true)]
+    public DateTime? FSTOPDTIME { get; set; }
+
+    /// <summary>
+    /// 汇报数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FAUXQTY", IsNullable = true)]
+    public decimal? FAUXQTY { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOTE", IsNullable = true)]
+    public string FNOTE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 接收数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FREVQTY", IsNullable = true)]
+    public decimal? FREVQTY { get; set; }
+
+    /// <summary>
+    /// 正常累计用时(秒)
+    /// </summary>
+    [SugarColumn(ColumnName = "FWORKINGHOURSEC", IsNullable = true)]
+    public decimal? FWORKINGHOURSEC { get; set; }
+
+    /// <summary>
+    /// 条码
+    /// </summary>
+    [SugarColumn(ColumnName = "FBARCODE", IsNullable = true)]
+    public string FBARCODE { get; set; } = string.Empty;
 }

@@ -109,4 +109,52 @@ public class TStkStockschemeentry2 : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FSTOCKUNITID")]
     public string Fstockunitid { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 盘亏数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FLOSSQTY", IsNullable = true)]
+    public decimal? FLOSSQTY { get; set; }
+
+    /// <summary>
+    /// 盘点单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FUNITID", IsNullable = true)]
+    public string FUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 调整数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FADJUSTQTY", IsNullable = true)]
+    public decimal? FADJUSTQTY { get; set; }
+
+    /// <summary>
+    /// 盘盈数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FGAINQTY", IsNullable = true)]
+    public decimal? FGAINQTY { get; set; }
+
+    /// <summary>
+    /// 库存主单位数量(帐存)
+    /// </summary>
+    [SugarColumn(ColumnName = "FQTY", IsNullable = true)]
+    public decimal? FQTY { get; set; }
+
+    /// <summary>
+    /// 盘点数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FCOUNTQTY", IsNullable = true)]
+    public decimal? FCOUNTQTY { get; set; }
 }

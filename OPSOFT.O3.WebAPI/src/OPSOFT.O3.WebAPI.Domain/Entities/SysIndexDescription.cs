@@ -25,4 +25,28 @@ public class SysIndexDescription : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FTYPE")]
     public string Ftype { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 字段信息
+    /// </summary>
+    [SugarColumn(ColumnName = "FFIELDINFO", IsNullable = true)]
+    public string FFIELDINFO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOTE", IsNullable = true)]
+    public string FNOTE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
 }

@@ -31,4 +31,40 @@ public class TEngEqsparepartsstorageentry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FRATE")]
     public decimal Frate { get; set; }
+
+    /// <summary>
+    /// 出入库价格
+    /// </summary>
+    [SugarColumn(ColumnName = "FADDSTORAGEPRICE", IsNullable = true)]
+    public decimal? FADDSTORAGEPRICE { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 批号
+    /// </summary>
+    [SugarColumn(ColumnName = "FBATCHNO", IsNullable = true)]
+    public string FBATCHNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FAMOUNT", IsNullable = true)]
+    public decimal? FAMOUNT { get; set; }
+
+    /// <summary>
+    /// 金额
+    /// </summary>
+    [SugarColumn(ColumnName = "FMONEY", IsNullable = true)]
+    public decimal? FMONEY { get; set; }
 }

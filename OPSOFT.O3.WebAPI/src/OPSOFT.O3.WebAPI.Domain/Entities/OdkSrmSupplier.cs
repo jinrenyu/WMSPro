@@ -325,4 +325,64 @@ public class OdkSrmSupplier : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FNYQUALIFIED")]
     public string Fnyqualified { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 审核人
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKERID", IsNullable = true)]
+    public string FCHECKERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 有效周期
+    /// </summary>
+    [SugarColumn(ColumnName = "FVALIDDATE", IsNullable = true)]
+    public DateTime? FVALIDDATE { get; set; }
+
+    /// <summary>
+    /// 供应商状态（10：注册20：潜在 30：合格40：淘汰）
+    /// </summary>
+    [SugarColumn(ColumnName = "FSUPSTATUS", IsNullable = true)]
+    public int? FSUPSTATUS { get; set; }
+
+    /// <summary>
+    /// 禁用人
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEID", IsNullable = true)]
+    public string FDISABLEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 交易状态（0：正常 1：留置 2：停止）
+    /// </summary>
+    [SugarColumn(ColumnName = "FTRADSTATUS", IsNullable = true)]
+    public string FTRADSTATUS { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 供应商等级
+    /// </summary>
+    [SugarColumn(ColumnName = "FGRADE", IsNullable = true)]
+    public string FGRADE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 审核日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKDATE", IsNullable = true)]
+    public DateTime? FCHECKDATE { get; set; }
+
+    /// <summary>
+    /// 审核级别
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKLEVEL", IsNullable = true)]
+    public int? FCHECKLEVEL { get; set; }
+
+    /// <summary>
+    /// 禁用日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEDATE", IsNullable = true)]
+    public DateTime? FDISABLEDATE { get; set; }
+
+    /// <summary>
+    /// 币别
+    /// </summary>
+    [SugarColumn(ColumnName = "FCURRENCYID", IsNullable = true)]
+    public string FCURRENCYID { get; set; } = string.Empty;
 }

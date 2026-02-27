@@ -151,4 +151,112 @@ public class TEngEquipment : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FWEIGHT")]
     public decimal Fweight { get; set; }
+
+    /// <summary>
+    /// 外形尺寸
+    /// </summary>
+    [SugarColumn(ColumnName = "FBODIMENSION", IsNullable = true)]
+    public string FBODIMENSION { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 事故日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FACCIDENTDATE", IsNullable = true)]
+    public DateTime? FACCIDENTDATE { get; set; }
+
+    /// <summary>
+    /// 审核人
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKERID", IsNullable = true)]
+    public string FCHECKERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 维修日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FMAINTAINDATE", IsNullable = true)]
+    public DateTime? FMAINTAINDATE { get; set; }
+
+    /// <summary>
+    /// 立项日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FPROJECTDATE", IsNullable = true)]
+    public DateTime? FPROJECTDATE { get; set; }
+
+    /// <summary>
+    /// 售出日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FSOLDDATE", IsNullable = true)]
+    public DateTime? FSOLDDATE { get; set; }
+
+    /// <summary>
+    /// 维护负责人
+    /// </summary>
+    [SugarColumn(ColumnName = "FMAINTID", IsNullable = true)]
+    public string FMAINTID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 开箱日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FUNPACKDATE", IsNullable = true)]
+    public DateTime? FUNPACKDATE { get; set; }
+
+    /// <summary>
+    /// 故障日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FFAULTDATE", IsNullable = true)]
+    public DateTime? FFAULTDATE { get; set; }
+
+    /// <summary>
+    /// 验收日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FACCEPTANCEDATE", IsNullable = true)]
+    public DateTime? FACCEPTANCEDATE { get; set; }
+
+    /// <summary>
+    /// 禁用人
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEID", IsNullable = true)]
+    public string FDISABLEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [SugarColumn(ColumnName = "FDESCRIPTION", IsNullable = true)]
+    public string FDESCRIPTION { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 报废日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FSCRAPDATE", IsNullable = true)]
+    public DateTime? FSCRAPDATE { get; set; }
+
+    /// <summary>
+    /// 审核日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKDATE", IsNullable = true)]
+    public DateTime? FCHECKDATE { get; set; }
+
+    /// <summary>
+    /// 功率(KW)
+    /// </summary>
+    [SugarColumn(ColumnName = "FPOWER", IsNullable = true)]
+    public decimal? FPOWER { get; set; }
+
+    /// <summary>
+    /// 禁用日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISABLEDATE", IsNullable = true)]
+    public DateTime? FDISABLEDATE { get; set; }
+
+    /// <summary>
+    /// 调拨日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FTRANSFERSDATE", IsNullable = true)]
+    public DateTime? FTRANSFERSDATE { get; set; }
+
+    /// <summary>
+    /// 维修负责人
+    /// </summary>
+    [SugarColumn(ColumnName = "FREPAIRID", IsNullable = true)]
+    public string FREPAIRID { get; set; } = string.Empty;
 }

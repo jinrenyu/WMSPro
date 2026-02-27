@@ -121,4 +121,40 @@ public class OdkSrmReceiptEntry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FCHECKTYPE")]
     public string Fchecktype { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 退货数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBADQTY", IsNullable = true)]
+    public decimal? FBADQTY { get; set; }
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOTE", IsNullable = true)]
+    public string FNOTE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 附件
+    /// </summary>
+    [SugarColumn(ColumnName = "FAPPENDIX", IsNullable = true)]
+    public string FAPPENDIX { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 父阶表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FBODYID", IsNullable = true)]
+    public string FBODYID { get; set; } = string.Empty;
 }

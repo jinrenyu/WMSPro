@@ -67,4 +67,70 @@ public class SysKbSet : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FPERIOD")]
     public int Fperiod { get; set; }
+
+    /// <summary>
+    /// 副标题宽
+    /// </summary>
+    [SugarColumn(ColumnName = "FSUBTITLEWIDHT", IsNullable = true)]
+    public decimal? FSUBTITLEWIDHT { get; set; }
+
+    /// <summary>
+    /// 看板表格布局列数
+    /// </summary>
+    [SugarColumn(ColumnName = "FCOLUMN", IsNullable = true)]
+    public int? FCOLUMN { get; set; }
+
+    /// <summary>
+    /// 看板内柱状图最大宽度
+    /// </summary>
+    [SugarColumn(ColumnName = "FBARMAXWIDTH", IsNullable = true)]
+    public decimal? FBARMAXWIDTH { get; set; }
+
+    /// <summary>
+    /// 标题右边控件
+    /// </summary>
+    [SugarColumn(ColumnName = "FRIGHTCONTROL", IsNullable = true)]
+    public string FRIGHTCONTROL { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 显示分隔线
+    /// </summary>
+    [SugarColumn(ColumnName = "FSHOWLINE", IsNullable = true)]
+    public bool? FSHOWLINE { get; set; }
+
+    /// <summary>
+    /// 标题左边控件
+    /// </summary>
+    [SugarColumn(ColumnName = "FLEFTCONTROL", IsNullable = true)]
+    public string FLEFTCONTROL { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 看板表格布局行数
+    /// </summary>
+    [SugarColumn(ColumnName = "FROW", IsNullable = true)]
+    public int? FROW { get; set; }
+
+    /// <summary>
+    /// 手机展示
+    /// </summary>
+    [SugarColumn(ColumnName = "FISPHONE", IsNullable = true)]
+    public bool? FISPHONE { get; set; }
+
+    /// <summary>
+    /// 主标题宽
+    /// </summary>
+    [SugarColumn(ColumnName = "FTITLEWIDHT", IsNullable = true)]
+    public decimal? FTITLEWIDHT { get; set; }
+
+    /// <summary>
+    /// 单据编号
+    /// </summary>
+    [SugarColumn(ColumnName = "FBILLNO", IsNullable = true)]
+    public string FBILLNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 横屏展示
+    /// </summary>
+    [SugarColumn(ColumnName = "FISLANDSCAPE", IsNullable = true)]
+    public bool? FISLANDSCAPE { get; set; }
 }

@@ -200,4 +200,154 @@ public class TBdMaterial : BaseEntity, IApprovable, IDisableable
     /// </summary>
     [SugarColumn(ColumnName = "FTYPEID")]
     public string FTypeId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 税率
+    /// </summary>
+    [SugarColumn(ColumnName = "FTAXRATE", IsNullable = true)]
+    public decimal? FTAXRATE { get; set; }
+
+    /// <summary>
+    /// 长
+    /// </summary>
+    [SugarColumn(ColumnName = "FLENGTH", IsNullable = true)]
+    public decimal? FLENGTH { get; set; }
+
+    /// <summary>
+    /// 宽
+    /// </summary>
+    [SugarColumn(ColumnName = "FWIDTH", IsNullable = true)]
+    public decimal? FWIDTH { get; set; }
+
+    /// <summary>
+    /// 套件
+    /// </summary>
+    [SugarColumn(ColumnName = "FSUITE", IsNullable = true)]
+    public bool? FSUITE { get; set; }
+
+    /// <summary>
+    /// 最长采购时间
+    /// </summary>
+    [SugarColumn(ColumnName = "FLONGESTPURTIME", IsNullable = true)]
+    public int? FLONGESTPURTIME { get; set; }
+
+    /// <summary>
+    /// 委外单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FSUBCONUNITID", IsNullable = true)]
+    public string FSUBCONUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 不投料
+    /// </summary>
+    [SugarColumn(ColumnName = "FISFEED", IsNullable = true)]
+    public bool? FISFEED { get; set; }
+
+    /// <summary>
+    /// 终检
+    /// </summary>
+    [SugarColumn(ColumnName = "FISPINAL", IsNullable = true)]
+    public bool? FISPINAL { get; set; }
+
+    /// <summary>
+    /// 第三方序列号
+    /// </summary>
+    [SugarColumn(ColumnName = "FOTHERSN", IsNullable = true)]
+    public bool? FOTHERSN { get; set; }
+
+    /// <summary>
+    /// ？？
+    /// </summary>
+    [SugarColumn(ColumnName = "FAUXUNITID", IsNullable = true)]
+    public string FAUXUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 启用辅助单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FISSECUNIT", IsNullable = true)]
+    public bool? FISSECUNIT { get; set; }
+
+    /// <summary>
+    /// 生产单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FPRODUCEUNITID", IsNullable = true)]
+    public string FPRODUCEUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 体积
+    /// </summary>
+    [SugarColumn(ColumnName = "FVOLUME", IsNullable = true)]
+    public decimal? FVOLUME { get; set; }
+
+    /// <summary>
+    /// 默认管理员
+    /// </summary>
+    [SugarColumn(ColumnName = "FDEFAULTMANAGER", IsNullable = true)]
+    public string FDEFAULTMANAGER { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 高
+    /// </summary>
+    [SugarColumn(ColumnName = "FHEIGHT", IsNullable = true)]
+    public decimal? FHEIGHT { get; set; }
+
+    /// <summary>
+    /// 检验方式
+    /// </summary>
+    [SugarColumn(ColumnName = "FINSPECTIONLEVEL", IsNullable = true)]
+    public string FINSPECTIONLEVEL { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 最短采购时间
+    /// </summary>
+    [SugarColumn(ColumnName = "FSHORTESTPURTIME", IsNullable = true)]
+    public int? FSHORTESTPURTIME { get; set; }
+
+    /// <summary>
+    /// 条码类别
+    /// </summary>
+    [SugarColumn(ColumnName = "FBARTYPE", IsNullable = true)]
+    public int? FBARTYPE { get; set; }
+
+    /// <summary>
+    /// 单价
+    /// </summary>
+    [SugarColumn(ColumnName = "FPRICE", IsNullable = true)]
+    public decimal? FPRICE { get; set; }
+
+    /// <summary>
+    /// 图片
+    /// </summary>
+    [SugarColumn(ColumnName = "FPICTURE", IsNullable = true)]
+    public byte[] FPICTURE { get; set; }
+
+    /// <summary>
+    /// 最低库存量
+    /// </summary>
+    [SugarColumn(ColumnName = "FLOWLIMIT", IsNullable = true)]
+    public decimal? FLOWLIMIT { get; set; }
+
+    /// <summary>
+    /// 启用序列号
+    /// </summary>
+    [SugarColumn(ColumnName = "FFEEDSN", IsNullable = true)]
+    public bool? FFEEDSN { get; set; }
+
+    /// <summary>
+    /// 图号
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHARTNUMBER", IsNullable = true)]
+    public string FCHARTNUMBER { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 最新版本号
+    /// </summary>
+    [SugarColumn(ColumnName = "FPAEZASSISTANT", IsNullable = true)]
+    public string FPAEZASSISTANT { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 是否VMI业务
+    /// </summary>
+    [SugarColumn(ColumnName = "FISVMIBUSINESS", IsNullable = true)]
+    public bool? FISVMIBUSINESS { get; set; }
 }

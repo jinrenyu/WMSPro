@@ -127,4 +127,22 @@ public class TEngWorkordermanageentry1 : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FORDERSTATUS")]
     public int Forderstatus { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 执行结果
+    /// </summary>
+    [SugarColumn(ColumnName = "FRESULT", IsNullable = true)]
+    public int? FRESULT { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
 }

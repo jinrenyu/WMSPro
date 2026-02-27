@@ -193,4 +193,232 @@ public class TStkOemreceiveentry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FBASEQTY")]
     public decimal Fbaseqty { get; set; }
+
+    /// <summary>
+    /// 合格入库关联数量（库存辅单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKJOINAUXQTY", IsNullable = true)]
+    public decimal? FSTOCKJOINAUXQTY { get; set; }
+
+    /// <summary>
+    /// 源单分录内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FSOURCEDETAILID", IsNullable = true)]
+    public string FSOURCEDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 判退数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FREFUSEBASEQTY", IsNullable = true)]
+    public decimal? FREFUSEBASEQTY { get; set; }
+
+    /// <summary>
+    /// 源单行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCSEQ", IsNullable = true)]
+    public string FSRCSEQ { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 实到数量（库存辅单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FACTLANDAUXQTY", IsNullable = true)]
+    public decimal? FACTLANDAUXQTY { get; set; }
+
+    /// <summary>
+    /// 让步接收数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FCSNRECEIVEQTY", IsNullable = true)]
+    public decimal? FCSNRECEIVEQTY { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 源单类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCBILLTYPEID", IsNullable = true)]
+    public string FSRCBILLTYPEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 不合格入库关联数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FREFUSEJOINBASEQTY", IsNullable = true)]
+    public decimal? FREFUSEJOINBASEQTY { get; set; }
+
+    /// <summary>
+    /// 不合格入库关联数量（库存辅单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FREFUSEJOINAUXQTY", IsNullable = true)]
+    public decimal? FREFUSEJOINAUXQTY { get; set; }
+
+    /// <summary>
+    /// 库存辅单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FAUXUNITID", IsNullable = true)]
+    public string FAUXUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 业务终止
+    /// </summary>
+    [SugarColumn(ColumnName = "FBUSINESSEND", IsNullable = true)]
+    public string FBUSINESSEND { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 检验关联数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKJOINBASEQTY", IsNullable = true)]
+    public decimal? FCHECKJOINBASEQTY { get; set; }
+
+    /// <summary>
+    /// 合格数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FRECEIVEBASEQTY", IsNullable = true)]
+    public decimal? FRECEIVEBASEQTY { get; set; }
+
+    /// <summary>
+    /// 让步接收数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FCSNRECEIVEBASEQTY", IsNullable = true)]
+    public decimal? FCSNRECEIVEBASEQTY { get; set; }
+
+    /// <summary>
+    /// 源单名称
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCFORMID", IsNullable = true)]
+    public string FSRCFORMID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 终止日期
+    /// </summary>
+    [SugarColumn(ColumnName = "FENDDARE", IsNullable = true)]
+    public DateTime? FENDDARE { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 样品破坏数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FSAMPLEDAMAGEBASEQTY", IsNullable = true)]
+    public decimal? FSAMPLEDAMAGEBASEQTY { get; set; }
+
+    /// <summary>
+    /// 判退数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FREFUSEQTY", IsNullable = true)]
+    public decimal? FREFUSEQTY { get; set; }
+
+    /// <summary>
+    /// 拒收数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FREJECTBASEQTY", IsNullable = true)]
+    public decimal? FREJECTBASEQTY { get; set; }
+
+    /// <summary>
+    /// 让步接收入库关联数量（库存辅单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FCSNRECEIVEJOINAUXQTY", IsNullable = true)]
+    public decimal? FCSNRECEIVEJOINAUXQTY { get; set; }
+
+    /// <summary>
+    /// 检验数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKQTY", IsNullable = true)]
+    public decimal? FCHECKQTY { get; set; }
+
+    /// <summary>
+    /// 退料关联数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FRETURNSTKJNBASEQTY", IsNullable = true)]
+    public decimal? FRETURNSTKJNBASEQTY { get; set; }
+
+    /// <summary>
+    /// 实收数量(库存辅单位)
+    /// </summary>
+    [SugarColumn(ColumnName = "FAUXUNITQTY", IsNullable = true)]
+    public decimal? FAUXUNITQTY { get; set; }
+
+    /// <summary>
+    /// 样品破坏数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSAMPLEDAMAGEQTY", IsNullable = true)]
+    public decimal? FSAMPLEDAMAGEQTY { get; set; }
+
+    /// <summary>
+    /// 合格数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FRECEIVEQTY", IsNullable = true)]
+    public decimal? FRECEIVEQTY { get; set; }
+
+    /// <summary>
+    /// 终止人
+    /// </summary>
+    [SugarColumn(ColumnName = "FBUSINESSENDERID", IsNullable = true)]
+    public string FBUSINESSENDERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 源单内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FSOURCEINTERID", IsNullable = true)]
+    public string FSOURCEINTERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 退料关联数量（库存辅单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FRETURNSTKJNAUXQTY", IsNullable = true)]
+    public decimal? FRETURNSTKJNAUXQTY { get; set; }
+
+    /// <summary>
+    /// 让步接收入库关联数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FCSNRECEIVEJOINBASEQTY", IsNullable = true)]
+    public decimal? FCSNRECEIVEJOINBASEQTY { get; set; }
+
+    /// <summary>
+    /// 检验数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKBASEQTY", IsNullable = true)]
+    public decimal? FCHECKBASEQTY { get; set; }
+
+    /// <summary>
+    /// 需要检验
+    /// </summary>
+    [SugarColumn(ColumnName = "FNEEDCHECK", IsNullable = true)]
+    public bool? FNEEDCHECK { get; set; }
+
+    /// <summary>
+    /// 检验关联数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKJOINQTY", IsNullable = true)]
+    public decimal? FCHECKJOINQTY { get; set; }
+
+    /// <summary>
+    /// 源单编号
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCBILLNO", IsNullable = true)]
+    public string FSRCBILLNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 拒收数量（库存辅单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FREJECTAUXQTY", IsNullable = true)]
+    public decimal? FREJECTAUXQTY { get; set; }
+
+    /// <summary>
+    /// 合格入库关联数量（基本单位）
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKJOINBASEQTY", IsNullable = true)]
+    public decimal? FSTOCKJOINBASEQTY { get; set; }
+
+    /// <summary>
+    /// BOM展开需求序号
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCSEQNO", IsNullable = true)]
+    public string FSRCSEQNO { get; set; } = string.Empty;
 }

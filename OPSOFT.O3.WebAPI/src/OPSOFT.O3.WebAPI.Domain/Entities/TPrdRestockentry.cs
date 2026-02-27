@@ -55,4 +55,190 @@ public class TPrdRestockentry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FUSEFULDATE")]
     public DateTime? Fusefuldate { get; set; }
+
+    /// <summary>
+    /// 保管者内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FKEEPERID", IsNullable = true)]
+    public string FKEEPERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 货主类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FOWNERTYPEID", IsNullable = true)]
+    public string FOWNERTYPEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 实退数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FREALQTY", IsNullable = true)]
+    public decimal? FREALQTY { get; set; }
+
+    /// <summary>
+    /// 辅助单位数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECUNITQTY", IsNullable = true)]
+    public decimal? FSECUNITQTY { get; set; }
+
+    /// <summary>
+    /// 项目号
+    /// </summary>
+    [SugarColumn(ColumnName = "FPROJECTNO", IsNullable = true)]
+    public string FPROJECTNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 仓位
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKLOCID", IsNullable = true)]
+    public string FSTOCKLOCID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// ERP表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FERPENTRYID", IsNullable = true)]
+    public string FERPENTRYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 生产订单内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FMOID", IsNullable = true)]
+    public string FMOID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 生产车间
+    /// </summary>
+    [SugarColumn(ColumnName = "FWORKSHOPID", IsNullable = true)]
+    public string FWORKSHOPID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 应退数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FMUSTQTY", IsNullable = true)]
+    public decimal? FMUSTQTY { get; set; }
+
+    /// <summary>
+    /// 源单类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCFORMID", IsNullable = true)]
+    public string FSRCFORMID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 工序号
+    /// </summary>
+    [SugarColumn(ColumnName = "FOPERID", IsNullable = true)]
+    public string FOPERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 物料
+    /// </summary>
+    [SugarColumn(ColumnName = "FMATERIALID", IsNullable = true)]
+    public string FMATERIALID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 源单内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCID", IsNullable = true)]
+    public string FSRCID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 源单行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCENTRYID", IsNullable = true)]
+    public int? FSRCENTRYID { get; set; }
+
+    /// <summary>
+    /// 供应商
+    /// </summary>
+    [SugarColumn(ColumnName = "FSUPPLYID", IsNullable = true)]
+    public string FSUPPLYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 批号内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FLOTID", IsNullable = true)]
+    public string FLOTID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 生产订单分录内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FMOENTRYID", IsNullable = true)]
+    public string FMOENTRYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 单价
+    /// </summary>
+    [SugarColumn(ColumnName = "FPRICE", IsNullable = true)]
+    public decimal? FPRICE { get; set; }
+
+    /// <summary>
+    /// 仓库库存状态
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKSTATUSID", IsNullable = true)]
+    public string FSTOCKSTATUSID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 货主
+    /// </summary>
+    [SugarColumn(ColumnName = "FOWNERID", IsNullable = true)]
+    public string FOWNERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 源单表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCDETAILID", IsNullable = true)]
+    public string FSRCDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 保管者类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FKEEPERTYPEID", IsNullable = true)]
+    public string FKEEPERTYPEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 生产订单行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FMOENTRYSEQ", IsNullable = true)]
+    public int? FMOENTRYSEQ { get; set; }
+
+    /// <summary>
+    /// 批号
+    /// </summary>
+    [SugarColumn(ColumnName = "FLOT", IsNullable = true)]
+    public string FLOT { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 生产订单编号
+    /// </summary>
+    [SugarColumn(ColumnName = "FMOBILLNO", IsNullable = true)]
+    public string FMOBILLNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 辅助单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECUNITID", IsNullable = true)]
+    public string FSECUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 源单单据编号
+    /// </summary>
+    [SugarColumn(ColumnName = "FSRCBILLNO", IsNullable = true)]
+    public string FSRCBILLNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 仓库
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKID", IsNullable = true)]
+    public string FSTOCKID { get; set; } = string.Empty;
 }

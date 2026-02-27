@@ -121,4 +121,10 @@ public class TBdDepartment : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FERPNUMBER")]
     public string FErpNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// TEST
+    /// </summary>
+    [SugarColumn(ColumnName = "FAA", IsNullable = true)]
+    public string FAA { get; set; } = string.Empty;
 }

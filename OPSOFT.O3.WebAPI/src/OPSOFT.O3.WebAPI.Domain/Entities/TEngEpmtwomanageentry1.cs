@@ -103,4 +103,40 @@ public class TEngEpmtwomanageentry1 : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FORDERSTATUS")]
     public int Forderstatus { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 保修到期日
+    /// </summary>
+    [SugarColumn(ColumnName = "FDUEDATE", IsNullable = true)]
+    public DateTime? FDUEDATE { get; set; }
+
+    /// <summary>
+    /// 维修结果
+    /// </summary>
+    [SugarColumn(ColumnName = "FRESULT", IsNullable = true)]
+    public int? FRESULT { get; set; }
+
+    /// <summary>
+    /// 上传图片
+    /// </summary>
+    [SugarColumn(ColumnName = "FIMAGE", IsNullable = true)]
+    public string FIMAGE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 工时
+    /// </summary>
+    [SugarColumn(ColumnName = "FCRAFTTIME", IsNullable = true)]
+    public decimal? FCRAFTTIME { get; set; }
 }

@@ -127,4 +127,94 @@ public class TSfcOptrptentry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FPERSONTIME")]
     public decimal Fpersontime { get; set; }
+
+    /// <summary>
+    /// 合格品入库数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKINQUAAUXQTY", IsNullable = true)]
+    public decimal? FSTOCKINQUAAUXQTY { get; set; }
+
+    /// <summary>
+    /// 基本单位检验数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASECHECKQTY", IsNullable = true)]
+    public decimal? FBASECHECKQTY { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 基本单位不合格品入库数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASESTOCKINFAILQTY", IsNullable = true)]
+    public decimal? FBASESTOCKINFAILQTY { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 基本单位合格数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASEQUAQTY", IsNullable = true)]
+    public decimal? FBASEQUAQTY { get; set; }
+
+    /// <summary>
+    /// 作业机时(分)
+    /// </summary>
+    [SugarColumn(ColumnName = "FEQUPTIME", IsNullable = true)]
+    public decimal? FEQUPTIME { get; set; }
+
+    /// <summary>
+    /// 基本单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASEUNITID", IsNullable = true)]
+    public string FBASEUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 工单工序行内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FMOPROCESSID", IsNullable = true)]
+    public string FMOPROCESSID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 不合格品入库数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKINFAILAUXQTY", IsNullable = true)]
+    public decimal? FSTOCKINFAILAUXQTY { get; set; }
+
+    /// <summary>
+    /// 产品类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FPRDTYPE", IsNullable = true)]
+    public int? FPRDTYPE { get; set; }
+
+    /// <summary>
+    /// 基本单位不合格数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASEFAILQTY", IsNullable = true)]
+    public decimal? FBASEFAILQTY { get; set; }
+
+    /// <summary>
+    /// BOM版本
+    /// </summary>
+    [SugarColumn(ColumnName = "FBOMID", IsNullable = true)]
+    public string FBOMID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 基本单位完工数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASEFINISHQTY", IsNullable = true)]
+    public decimal? FBASEFINISHQTY { get; set; }
+
+    /// <summary>
+    /// 基本单位合格品入库数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASESTOCKINQUAQTY", IsNullable = true)]
+    public decimal? FBASESTOCKINQUAQTY { get; set; }
 }

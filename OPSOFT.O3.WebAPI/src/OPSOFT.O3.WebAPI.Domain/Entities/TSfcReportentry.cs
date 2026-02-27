@@ -79,4 +79,100 @@ public class TSfcReportentry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FTOTALSEC")]
     public decimal Ftotalsec { get; set; }
+
+    /// <summary>
+    /// 非正常累计用时(秒)
+    /// </summary>
+    [SugarColumn(ColumnName = "FNOWORKINGHOURSEC", IsNullable = true)]
+    public decimal? FNOWORKINGHOURSEC { get; set; }
+
+    /// <summary>
+    /// 停工时间
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOPDTIME", IsNullable = true)]
+    public DateTime? FSTOPDTIME { get; set; }
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 合格数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FQUAQTY", IsNullable = true)]
+    public decimal? FQUAQTY { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 条码类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FBARCODETYPE", IsNullable = true)]
+    public int? FBARCODETYPE { get; set; }
+
+    /// <summary>
+    /// 已检验 0=未检验 1=已检验
+    /// </summary>
+    [SugarColumn(ColumnName = "FISCHECK", IsNullable = true)]
+    public bool? FISCHECK { get; set; }
+
+    /// <summary>
+    /// 不良品数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBADQTY", IsNullable = true)]
+    public decimal? FBADQTY { get; set; }
+
+    /// <summary>
+    /// 产生方式 0=汇报产生 1=检验产生
+    /// </summary>
+    [SugarColumn(ColumnName = "FCREATETYPE", IsNullable = true)]
+    public int? FCREATETYPE { get; set; }
+
+    /// <summary>
+    /// 检验数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FCHECKQTY", IsNullable = true)]
+    public decimal? FCHECKQTY { get; set; }
+
+    /// <summary>
+    /// 汇报类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FREPORTTYPE", IsNullable = true)]
+    public int? FREPORTTYPE { get; set; }
+
+    /// <summary>
+    /// 汇报数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FQTY", IsNullable = true)]
+    public decimal? FQTY { get; set; }
+
+    /// <summary>
+    /// 时间段类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FDATATYPE", IsNullable = true)]
+    public string FDATATYPE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 正常累计用时(秒)
+    /// </summary>
+    [SugarColumn(ColumnName = "FWORKINGHOURSEC", IsNullable = true)]
+    public decimal? FWORKINGHOURSEC { get; set; }
+
+    /// <summary>
+    /// 汇报条码
+    /// </summary>
+    [SugarColumn(ColumnName = "FBARCODE", IsNullable = true)]
+    public string FBARCODE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 计件工资数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FPAYQTY", IsNullable = true)]
+    public decimal? FPAYQTY { get; set; }
 }

@@ -175,4 +175,136 @@ public class TSubInstkpickmtlentry : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FUSEFULDATE")]
     public DateTime? Fusefuldate { get; set; }
+
+    /// <summary>
+    /// 保管者内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FKEEPERID", IsNullable = true)]
+    public string FKEEPERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 折扣额
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISCOUNT", IsNullable = true)]
+    public decimal? FDISCOUNT { get; set; }
+
+    /// <summary>
+    /// 折扣率%
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISCOUNTRATE", IsNullable = true)]
+    public decimal? FDISCOUNTRATE { get; set; }
+
+    /// <summary>
+    /// 税率%
+    /// </summary>
+    [SugarColumn(ColumnName = "FTAXRATE", IsNullable = true)]
+    public decimal? FTAXRATE { get; set; }
+
+    /// <summary>
+    /// 货主类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FOWNERTYPEID", IsNullable = true)]
+    public string FOWNERTYPEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 税额(本位币)
+    /// </summary>
+    [SugarColumn(ColumnName = "FTAXAMOUNT_LC", IsNullable = true)]
+    public decimal? FTAXAMOUNT_LC { get; set; }
+
+    /// <summary>
+    /// 辅助单位数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECUNITQTY", IsNullable = true)]
+    public decimal? FSECUNITQTY { get; set; }
+
+    /// <summary>
+    /// ERP表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FERPENTRYID", IsNullable = true)]
+    public string FERPENTRYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 价税合计
+    /// </summary>
+    [SugarColumn(ColumnName = "FALLAMOUNT", IsNullable = true)]
+    public decimal? FALLAMOUNT { get; set; }
+
+    /// <summary>
+    /// 倒冲领料
+    /// </summary>
+    [SugarColumn(ColumnName = "FISBACKFLUSH", IsNullable = true)]
+    public bool? FISBACKFLUSH { get; set; }
+
+    /// <summary>
+    /// 完工
+    /// </summary>
+    [SugarColumn(ColumnName = "FISFINISHED", IsNullable = true)]
+    public bool? FISFINISHED { get; set; }
+
+    /// <summary>
+    /// 税额
+    /// </summary>
+    [SugarColumn(ColumnName = "FTAXAMOUNT", IsNullable = true)]
+    public decimal? FTAXAMOUNT { get; set; }
+
+    /// <summary>
+    /// 供应商
+    /// </summary>
+    [SugarColumn(ColumnName = "FSUPPLYID", IsNullable = true)]
+    public string FSUPPLYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 价税合计(本位币)
+    /// </summary>
+    [SugarColumn(ColumnName = "FALLAMOUNT_LC", IsNullable = true)]
+    public decimal? FALLAMOUNT_LC { get; set; }
+
+    /// <summary>
+    /// 基本单位数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FBASEUNITQTY", IsNullable = true)]
+    public decimal? FBASEUNITQTY { get; set; }
+
+    /// <summary>
+    /// 金额(本位币)
+    /// </summary>
+    [SugarColumn(ColumnName = "FAMOUNT_LC", IsNullable = true)]
+    public decimal? FAMOUNT_LC { get; set; }
+
+    /// <summary>
+    /// 货主
+    /// </summary>
+    [SugarColumn(ColumnName = "FOWNERID", IsNullable = true)]
+    public string FOWNERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 保管者类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FKEEPERTYPEID", IsNullable = true)]
+    public string FKEEPERTYPEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 含税单价
+    /// </summary>
+    [SugarColumn(ColumnName = "FTAXPRICE", IsNullable = true)]
+    public decimal? FTAXPRICE { get; set; }
+
+    /// <summary>
+    /// 辅助单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECUNITID", IsNullable = true)]
+    public string FSECUNITID { get; set; } = string.Empty;
 }

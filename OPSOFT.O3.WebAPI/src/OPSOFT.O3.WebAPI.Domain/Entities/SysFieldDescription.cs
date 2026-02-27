@@ -61,4 +61,28 @@ public class SysFieldDescription : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FCNAME")]
     public string Fcname { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 详细描述(第二语言)
+    /// </summary>
+    [SugarColumn(ColumnName = "FTNAME", IsNullable = true)]
+    public string FTNAME { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 详细描述(第三语言)
+    /// </summary>
+    [SugarColumn(ColumnName = "FENAME", IsNullable = true)]
+    public string FENAME { get; set; } = string.Empty;
 }

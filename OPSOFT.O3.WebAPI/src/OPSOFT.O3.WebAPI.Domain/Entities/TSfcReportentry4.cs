@@ -79,4 +79,22 @@ public class TSfcReportentry4 : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FTOTALSEC")]
     public decimal Ftotalsec { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 父阶表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FBODYID", IsNullable = true)]
+    public string FBODYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
 }

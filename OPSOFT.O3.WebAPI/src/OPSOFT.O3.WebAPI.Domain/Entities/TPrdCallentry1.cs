@@ -91,4 +91,88 @@ public class TPrdCallentry1 : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FUSEFULDATE")]
     public DateTime? Fusefuldate { get; set; }
+
+    /// <summary>
+    /// 仓库库存状态
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTOCKSTATUSID", IsNullable = true)]
+    public string FSTOCKSTATUSID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 保管者内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FKEEPERID", IsNullable = true)]
+    public string FKEEPERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 行号
+    /// </summary>
+    [SugarColumn(ColumnName = "FENTRYID", IsNullable = true)]
+    public int? FENTRYID { get; set; }
+
+    /// <summary>
+    /// 货主
+    /// </summary>
+    [SugarColumn(ColumnName = "FOWNERID", IsNullable = true)]
+    public string FOWNERID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 是否箱码
+    /// </summary>
+    [SugarColumn(ColumnName = "FISBOX", IsNullable = true)]
+    public bool? FISBOX { get; set; }
+
+    /// <summary>
+    /// 表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDETAILID", IsNullable = true)]
+    public string FDETAILID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 货主类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FOWNERTYPEID", IsNullable = true)]
+    public string FOWNERTYPEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 父阶表体内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FBODYID", IsNullable = true)]
+    public string FBODYID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 保管者类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FKEEPERTYPEID", IsNullable = true)]
+    public string FKEEPERTYPEID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 辅助单位数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECUNITQTY", IsNullable = true)]
+    public decimal? FSECUNITQTY { get; set; }
+
+    /// <summary>
+    /// 箱码
+    /// </summary>
+    [SugarColumn(ColumnName = "FBOXBARCODE", IsNullable = true)]
+    public string FBOXBARCODE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 辅助单位
+    /// </summary>
+    [SugarColumn(ColumnName = "FSECUNITID", IsNullable = true)]
+    public string FSECUNITID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 生产发料类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FISSUETYPE", IsNullable = true)]
+    public string FISSUETYPE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 条码类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FBARTYPE", IsNullable = true)]
+    public int? FBARTYPE { get; set; }
 }

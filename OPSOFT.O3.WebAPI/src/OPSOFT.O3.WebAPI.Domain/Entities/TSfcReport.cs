@@ -79,4 +79,40 @@ public class TSfcReport : BaseEntity
     /// </summary>
     [SugarColumn(ColumnName = "FCODE")]
     public string Fcode { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 当前状态
+    /// </summary>
+    [SugarColumn(ColumnName = "FRUNTYPE", IsNullable = true)]
+    public string FRUNTYPE { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 派工单内码
+    /// </summary>
+    [SugarColumn(ColumnName = "FDISPATCHID", IsNullable = true)]
+    public string FDISPATCHID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 开工数量
+    /// </summary>
+    [SugarColumn(ColumnName = "FSTARTQTY", IsNullable = true)]
+    public decimal? FSTARTQTY { get; set; }
+
+    /// <summary>
+    /// 单据编号
+    /// </summary>
+    [SugarColumn(ColumnName = "FBILLNO", IsNullable = true)]
+    public string FBILLNO { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 当时生产线速率
+    /// </summary>
+    [SugarColumn(ColumnName = "FRATE", IsNullable = true)]
+    public decimal? FRATE { get; set; }
+
+    /// <summary>
+    /// 操作人员
+    /// </summary>
+    [SugarColumn(ColumnName = "FEMPID", IsNullable = true)]
+    public string FEMPID { get; set; } = string.Empty;
 }
