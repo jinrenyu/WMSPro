@@ -57,3 +57,4 @@ nunit-*.xml
 /frontend/wms-web/node_modules
 /frontend/wms-web/dist
 /frontend/wms-web/*.tsbuildinfo
+*.db

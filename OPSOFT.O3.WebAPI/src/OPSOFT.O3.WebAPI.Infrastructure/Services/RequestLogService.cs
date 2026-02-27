@@ -150,12 +150,10 @@ public class RequestLogService : IRequestLogService
 
         var dailyTrend = await baseQuery.Clone()
             .Where(l => l.Frequesttime >= trendStartDate)
-            .GroupBy(l => SqlFunc.DateValue(l.Frequesttime!.Value, DateType.Year))
-            .GroupBy(l => SqlFunc.DateValue(l.Frequesttime!.Value, DateType.Month))
-            .GroupBy(l => SqlFunc.DateValue(l.Frequesttime!.Value, DateType.Day))
+            .GroupBy(l => l.Frequesttime!.Value.Date)
             .Select(l => new RequestCountByDateDto
             {
-                Date = l.Frequesttime!.Value.ToString("yyyy-MM-dd"),
+                Date = l.Frequesttime!.Value.Date.ToString("yyyy-MM-dd"),
                 Count = SqlFunc.AggregateCount(l.Uid)
             })
             .OrderBy(l => l.Date)

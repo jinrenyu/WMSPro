@@ -13,6 +13,7 @@ using OPSOFT.O3.WebAPI.Application.Validators;
 using OPSOFT.O3.WebAPI.Infrastructure;
 using OPSOFT.O3.WebAPI.Infrastructure.Services;
 using Serilog;
+using SqlSugar;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -116,7 +117,10 @@ try
     // Add Infrastructure services
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Connection string not configured");
-    builder.Services.AddInfrastructure(connectionString);
+    var dbTypeStr = builder.Configuration["DatabaseType"]
+        ?? throw new InvalidOperationException("DatabaseType not configured");
+    var dbType = Enum.Parse<DbType>(dbTypeStr, ignoreCase: true);
+    builder.Services.AddInfrastructure(connectionString, dbType);
 
     // Add log archival background service
     builder.Services.AddHostedService<LogArchivalService>();
