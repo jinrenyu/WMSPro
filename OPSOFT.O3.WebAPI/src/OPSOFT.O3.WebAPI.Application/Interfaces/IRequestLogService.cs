@@ -12,7 +12,7 @@ public interface IRequestLogService
     /// </summary>
     Task LogAsync(string method, string path, string queryString, int statusCode,
         long elapsedMs, string ip, string userId, string userAgent,
-        string correlationId, string responseBody);
+        string correlationId, string responseBody, string requestBody = "");
 
     /// <summary>
     /// 分页查询请求日志

@@ -18,6 +18,7 @@ public class RequestLoggingMiddleware
     private readonly int _maxBodyLogLength;
     private readonly bool _persistToDatabase;
     private readonly int _maxResponseBodyLogLength;
+    private readonly bool _maskSensitiveData;
 
     public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger,
         IConfiguration configuration, IServiceScopeFactory scopeFactory)
@@ -36,6 +37,7 @@ public class RequestLoggingMiddleware
         _maxBodyLogLength = section.GetValue<int>("MaxRequestBodyLogLength", 4096);
         _persistToDatabase = section.GetValue<bool>("PersistToDatabase", false);
         _maxResponseBodyLogLength = section.GetValue<int>("MaxResponseBodyLogLength", 4096);
+        _maskSensitiveData = section.GetValue<bool>("MaskSensitiveData", true);
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -49,7 +51,7 @@ public class RequestLoggingMiddleware
             return;
         }
 
-        if (_logRequestBody && _logger.IsEnabled(LogLevel.Debug))
+        if (_logRequestBody)
         {
             context.Request.EnableBuffering();
         }
@@ -57,14 +59,15 @@ public class RequestLoggingMiddleware
         var sw = Stopwatch.StartNew();
 
         string? requestBody = null;
-        if (_logRequestBody && _logger.IsEnabled(LogLevel.Debug) && context.Request.ContentLength > 0)
+        if (_logRequestBody && context.Request.ContentLength > 0)
         {
             context.Request.Body.Position = 0;
             using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true);
             requestBody = await reader.ReadToEndAsync();
             if (requestBody.Length > _maxBodyLogLength)
                 requestBody = requestBody[.._maxBodyLogLength] + "...(truncated)";
-            requestBody = MaskSensitiveFields(requestBody);
+            if (_maskSensitiveData)
+                requestBody = MaskSensitiveFields(requestBody);
             context.Request.Body.Position = 0;
         }
 
@@ -93,7 +96,8 @@ public class RequestLoggingMiddleware
                 responseBody = await sr.ReadToEndAsync();
                 if (responseBody.Length > _maxResponseBodyLogLength)
                     responseBody = responseBody[.._maxResponseBodyLogLength] + "...(truncated)";
-                responseBody = MaskSensitiveFields(responseBody);
+                if (_maskSensitiveData)
+                    responseBody = MaskSensitiveFields(responseBody);
 
                 responseBodyStream.Position = 0;
                 await responseBodyStream.CopyToAsync(originalBodyStream);
@@ -138,6 +142,7 @@ public class RequestLoggingMiddleware
             var userAgent = context.Request.Headers.UserAgent.ToString();
             var correlationId = context.Items["CorrelationId"]?.ToString() ?? string.Empty;
             var capturedResponseBody = responseBody ?? string.Empty;
+            var capturedRequestBody = requestBody ?? string.Empty;
 
             _ = Task.Run(async () =>
             {
@@ -146,7 +151,7 @@ public class RequestLoggingMiddleware
                     using var scope = _scopeFactory.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<IRequestLogService>();
                     await service.LogAsync(method, path, queryString, statusCode, elapsedMs,
-                        remoteIp, userId, userAgent, correlationId, capturedResponseBody);
+                        remoteIp, userId, userAgent, correlationId, capturedResponseBody, capturedRequestBody);
                 }
                 catch (Exception ex)
                 {

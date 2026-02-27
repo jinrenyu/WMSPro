@@ -22,7 +22,7 @@ public class RequestLogService : IRequestLogService
 
     public async Task LogAsync(string method, string path, string queryString, int statusCode,
         long elapsedMs, string ip, string userId, string userAgent,
-        string correlationId, string responseBody)
+        string correlationId, string responseBody, string requestBody = "")
     {
         try
         {
@@ -40,6 +40,7 @@ public class RequestLogService : IRequestLogService
                 Fuseragent = userAgent ?? string.Empty,
                 Fcorrelationid = correlationId ?? string.Empty,
                 Frequesttime = DateTime.Now,
+                Frequestbody = requestBody ?? string.Empty,
                 Fresponsebody = responseBody ?? string.Empty,
                 CYmd = DateTime.Now,
                 CUser = userId ?? string.Empty,
@@ -93,6 +94,7 @@ public class RequestLogService : IRequestLogService
                 Fuseragent = l.Fuseragent,
                 Fcorrelationid = l.Fcorrelationid,
                 Frequesttime = l.Frequesttime,
+                Frequestbody = l.Frequestbody,
                 Fresponsebody = l.Fresponsebody
             }).ToList(),
             TotalCount = totalCount,

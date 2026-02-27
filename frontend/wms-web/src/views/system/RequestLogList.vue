@@ -138,11 +138,20 @@
           <el-descriptions-item label="User-Agent">{{ currentRow.fuseragent || '-' }}</el-descriptions-item>
           <el-descriptions-item label="关联ID">{{ currentRow.fcorrelationid || '-' }}</el-descriptions-item>
         </el-descriptions>
-        <div class="response-body-section" v-if="currentRow.fresponsebody">
+        <div class="body-section" v-if="currentRow.frequestbody">
+          <h4>请求体</h4>
+          <el-input
+            type="textarea"
+            :model-value="formatBody(currentRow.frequestbody)"
+            readonly
+            :autosize="{ minRows: 4, maxRows: 16 }"
+          />
+        </div>
+        <div class="body-section" v-if="currentRow.fresponsebody">
           <h4>响应体</h4>
           <el-input
             type="textarea"
-            :model-value="formatResponseBody(currentRow.fresponsebody)"
+            :model-value="formatBody(currentRow.fresponsebody)"
             readonly
             :autosize="{ minRows: 4, maxRows: 16 }"
           />
@@ -253,7 +262,7 @@ const statusTagType = (code: number): string => {
   return 'info'
 }
 
-const formatResponseBody = (body: string): string => {
+const formatBody = (body: string): string => {
   try {
     return JSON.stringify(JSON.parse(body), null, 2)
   } catch {
@@ -342,11 +351,11 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
-.response-body-section {
+.body-section {
   margin-top: 20px;
 }
 
-.response-body-section h4 {
+.body-section h4 {
   margin-bottom: 8px;
   color: var(--text-primary);
 }

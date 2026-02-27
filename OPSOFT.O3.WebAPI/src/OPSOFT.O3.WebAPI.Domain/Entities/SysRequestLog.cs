@@ -69,8 +69,14 @@ public class SysRequestLog : BaseEntity
     public DateTime? Frequesttime { get; set; }
 
     /// <summary>
+    /// 请求体（截断存储）
+    /// </summary>
+    [SugarColumn(ColumnName = "FREQUESTBODY", ColumnDataType = "text", IsNullable = true)]
+    public string Frequestbody { get; set; } = string.Empty;
+
+    /// <summary>
     /// 响应体（截断存储）
     /// </summary>
-    [SugarColumn(ColumnName = "FRESPONSEBODY", Length = 4096)]
+    [SugarColumn(ColumnName = "FRESPONSEBODY", ColumnDataType = "text")]
     public string Fresponsebody { get; set; } = string.Empty;
 }

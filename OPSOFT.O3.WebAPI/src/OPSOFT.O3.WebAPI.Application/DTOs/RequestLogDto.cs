@@ -16,6 +16,7 @@ public class RequestLogDto
     public string Fuseragent { get; set; } = string.Empty;
     public string Fcorrelationid { get; set; } = string.Empty;
     public DateTime? Frequesttime { get; set; }
+    public string Frequestbody { get; set; } = string.Empty;
     public string Fresponsebody { get; set; } = string.Empty;
 }
 

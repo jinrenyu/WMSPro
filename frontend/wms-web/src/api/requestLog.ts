@@ -12,6 +12,7 @@ export interface RequestLog {
     fuseragent: string
     fcorrelationid: string
     frequesttime: string
+    frequestbody: string
     fresponsebody: string
 }
 
