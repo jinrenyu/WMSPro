@@ -58,3 +58,6 @@ nunit-*.xml
 /frontend/wms-web/dist
 /frontend/wms-web/*.tsbuildinfo
 *.db
+
+# Claude Code
+.claude/
