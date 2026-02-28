@@ -16,13 +16,13 @@ public class JwtService : IJwtService
         _configuration = configuration;
     }
 
-    public string GenerateToken(string uid, string userId, string userName, string companyId, List<string>? roles = null, string? paType = null, string? paId = null)
+    public string GenerateToken(string uid, string userId, string userName, string companyId, List<string>? roles = null, string? paType = null, string? paId = null, int? expirationMinutes = null)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
         var issuer = jwtSettings["Issuer"];
         var audience = jwtSettings["Audience"];
-        var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "60");
+        expirationMinutes ??= int.Parse(jwtSettings["AccessTokenExpirationMinutes"] ?? jwtSettings["ExpirationMinutes"] ?? "15");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -59,7 +59,7 @@ public class JwtService : IJwtService
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            expires: DateTime.UtcNow.AddMinutes(expirationMinutes.Value),
             signingCredentials: credentials
         );
 

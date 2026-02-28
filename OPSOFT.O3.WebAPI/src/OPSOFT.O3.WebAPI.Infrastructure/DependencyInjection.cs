@@ -82,7 +82,9 @@ public static class DependencyInjection
         // 基础服务
         services.AddSingleton<IRsaKeyService, RsaKeyService>();
         services.AddScoped<ILoginUserRepository, LoginUserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ICorrelationIdProvider, HttpCorrelationIdProvider>();
         services.AddScoped<IOperationLogService, OperationLogService>();

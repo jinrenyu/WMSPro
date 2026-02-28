@@ -10,17 +10,23 @@ public class AuthService : IAuthService
 {
     private readonly ILoginUserRepository _loginUserRepository;
     private readonly IJwtService _jwtService;
+    private readonly IRefreshTokenService _refreshTokenService;
     private readonly ISqlSugarClient _db;
     private const int MaxPwdErrTimes = 5;
 
-    public AuthService(ILoginUserRepository loginUserRepository, IJwtService jwtService, ISqlSugarClient db)
+    public AuthService(
+        ILoginUserRepository loginUserRepository,
+        IJwtService jwtService,
+        IRefreshTokenService refreshTokenService,
+        ISqlSugarClient db)
     {
         _loginUserRepository = loginUserRepository;
         _jwtService = jwtService;
+        _refreshTokenService = refreshTokenService;
         _db = db;
     }
 
-    public async Task<LoginResponse> LoginAsync(LoginRequest request)
+    public async Task<LoginResponse> LoginAsync(LoginRequest request, string? ipAddress = null, string? userAgent = null)
     {
         var user = await _loginUserRepository.GetByUserIdAsync(request.UserId);
 
@@ -128,11 +134,16 @@ public class AuthService : IAuthService
 
         var token = _jwtService.GenerateToken(user.Uid, user.UserId, user.UserName, user.FCompanyId, roleNames, user.PaType, user.PaId);
 
+        // 生成 Refresh Token
+        var refreshToken = await _refreshTokenService.GenerateRefreshTokenAsync(
+            user.Uid, user.UserId, ipAddress ?? string.Empty, userAgent ?? string.Empty);
+
         return new LoginResponse
         {
             Success = true,
             Message = "登录成功",
             Token = token,
+            RefreshToken = refreshToken,
             UserInfo = new UserInfo
             {
                 Uid = user.Uid,
@@ -151,6 +162,31 @@ public class AuthService : IAuthService
                 }).ToList()
             }
         };
+    }
+
+    public async Task<RefreshTokenResponse?> RefreshTokenAsync(string refreshToken, string? ipAddress = null, string? userAgent = null)
+    {
+        var result = await _refreshTokenService.RefreshAsync(refreshToken, ipAddress ?? string.Empty, userAgent ?? string.Empty);
+        if (result == null)
+            return null;
+
+        return new RefreshTokenResponse
+        {
+            Token = result.Value.AccessToken,
+            RefreshToken = result.Value.RefreshToken
+        };
+    }
+
+    public async Task LogoutAsync(string userUid, string? refreshToken = null)
+    {
+        if (!string.IsNullOrEmpty(refreshToken))
+        {
+            await _refreshTokenService.RevokeByTokenAsync(refreshToken, "用户登出");
+        }
+        else
+        {
+            await _refreshTokenService.RevokeByUserUidAsync(userUid, "用户登出");
+        }
     }
 
     public async Task<List<string>> GetCurrentPermissionsAsync(string userId)

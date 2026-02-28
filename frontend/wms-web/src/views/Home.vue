@@ -79,6 +79,8 @@ import { ElMessage } from 'element-plus'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import { usePermissionStore } from '../stores/permission'
 import { useMenuStore } from '../stores/menu'
+import { getRefreshToken, clearTokens } from '../utils/token'
+import request from '../utils/request'
 
 const router = useRouter()
 const route = useRoute()
@@ -94,10 +96,14 @@ onMounted(async () => {
   }
 })
 
-const handleLogout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('username')
-  localStorage.removeItem('permissions')
+const handleLogout = async () => {
+  try {
+    const refreshToken = getRefreshToken()
+    await request.post('/auth/logout', refreshToken ? { refreshToken } : {})
+  } catch {
+    // 即使后端调用失败也继续登出
+  }
+  clearTokens()
   const permissionStore = usePermissionStore()
   permissionStore.resetPermissions()
   menuStore.resetMenus()

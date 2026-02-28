@@ -1,17 +1,65 @@
-import axios from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '../router'
+import {
+    getAccessToken, setAccessToken,
+    getRefreshToken, setRefreshToken,
+    clearTokens, isTokenExpiringSoon, isTokenExpired
+} from './token'
 
 const service = axios.create({
     baseURL: import.meta.env.DEV ? 'http://localhost:5180/api' : '/api',
     timeout: 10000
 })
 
-// Request interceptor
+// --- Refresh token 并发控制 ---
+let refreshPromise: Promise<string | null> | null = null
+
+async function doRefreshToken(): Promise<string | null> {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) return null
+
+    try {
+        // 使用独立 axios 实例避免拦截器循环
+        const res = await axios.post(
+            `${service.defaults.baseURL}/auth/refresh`,
+            { refreshToken },
+            { timeout: 10000 }
+        )
+
+        const data = res.data
+        if (data.code === 200 && data.data) {
+            setAccessToken(data.data.token)
+            setRefreshToken(data.data.refreshToken)
+            return data.data.token
+        }
+        return null
+    } catch {
+        return null
+    }
+}
+
+function refreshAccessToken(): Promise<string | null> {
+    if (!refreshPromise) {
+        refreshPromise = doRefreshToken().finally(() => {
+            refreshPromise = null
+        })
+    }
+    return refreshPromise
+}
+
+// --- Request interceptor: 主动刷新 ---
 service.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token')
+    async (config: InternalAxiosRequestConfig) => {
+        let token = getAccessToken()
         if (token) {
+            // 主动检查：token 即将过期时先刷新
+            if (isTokenExpiringSoon(token, 5) && !isTokenExpired(token) && getRefreshToken()) {
+                const newToken = await refreshAccessToken()
+                if (newToken) {
+                    token = newToken
+                }
+            }
             config.headers.Authorization = `Bearer ${token}`
         }
         return config
@@ -21,7 +69,7 @@ service.interceptors.request.use(
     }
 )
 
-// Response interceptor - unwrap ApiResponse<T>
+// --- Response interceptor: 被动刷新（401） ---
 service.interceptors.response.use(
     (response) => {
         const res = response.data
@@ -32,7 +80,18 @@ service.interceptors.response.use(
         }
         return res
     },
-    (error) => {
+    async (error) => {
+        const originalRequest = error.config
+        if (error.response?.status === 401 && !originalRequest._retry && getRefreshToken()) {
+            originalRequest._retry = true
+            const newToken = await refreshAccessToken()
+            if (newToken) {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`
+                return service(originalRequest)
+            }
+        }
+
+        // 刷新也失败了，或非 401 错误
         if (error.response) {
             switch (error.response.status) {
                 case 400: {
@@ -47,8 +106,7 @@ service.interceptors.response.use(
                 }
                 case 401:
                     ElMessage.error('登录已过期，请重新登录')
-                    localStorage.removeItem('token')
-                    localStorage.removeItem('username')
+                    clearTokens()
                     router.push('/login')
                     break
                 case 403:

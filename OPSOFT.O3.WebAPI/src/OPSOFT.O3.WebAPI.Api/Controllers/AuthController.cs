@@ -41,7 +41,7 @@ public class AuthController : ControllerBase
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers["User-Agent"].ToString();
 
-        var result = await _authService.LoginAsync(request);
+        var result = await _authService.LoginAsync(request, ipAddress, userAgent);
 
         // 记录登录审计
         await _loginInfoService.RecordLoginAsync(request.UserId, ipAddress, userAgent, result.Success, result.Message);
@@ -55,18 +55,34 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
-    [Authorize]
-    public ActionResult<ApiResponse<object>> Refresh()
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<RefreshTokenResponse>>> Refresh([FromBody] RefreshTokenRequest request)
     {
-        // Token 刷新 - 简单实现：前端在 token 即将过期时重新登录
-        return Ok(ApiResponse<object>.Fail("请重新登录获取新Token", 401));
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers["User-Agent"].ToString();
+
+        var result = await _authService.RefreshTokenAsync(request.RefreshToken, ipAddress, userAgent);
+
+        if (result == null)
+        {
+            return Ok(ApiResponse<RefreshTokenResponse>.Fail("Refresh Token 无效或已过期，请重新登录", 401));
+        }
+
+        return Ok(ApiResponse<RefreshTokenResponse>.Ok(result));
     }
 
     [HttpPost("logout")]
     [Authorize]
-    public ActionResult<ApiResponse<object>> Logout()
+    public async Task<ActionResult<ApiResponse<object>>> Logout([FromBody] RefreshTokenRequest? request = null)
     {
-        // JWT 无状态，客户端删除 token 即可
+        var userUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+
+        if (!string.IsNullOrEmpty(userUid))
+        {
+            await _authService.LogoutAsync(userUid, request?.RefreshToken);
+        }
+
         return Ok(ApiResponse<object>.Ok(new { }, "退出成功"));
     }
 

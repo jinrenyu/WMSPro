@@ -38,6 +38,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '../utils/request'
+import { setAccessToken, setRefreshToken, clearTokens } from '../utils/token'
 import { encryptPassword, fetchPublicKey } from '../utils/crypto'
 import { User, Lock } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -74,9 +75,13 @@ const handleLogin = async () => {
     })
 
     const token = data.data.token
+    const refreshToken = data.data.refreshToken
     const userInfo = data.data.userInfo
 
-    localStorage.setItem('token', token)
+    setAccessToken(token)
+    if (refreshToken) {
+      setRefreshToken(refreshToken)
+    }
     localStorage.setItem('username', userInfo.userName)
     localStorage.setItem('permissions', JSON.stringify(userInfo.permissions || []))
 

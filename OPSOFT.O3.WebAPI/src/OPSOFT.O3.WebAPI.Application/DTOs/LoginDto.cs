@@ -16,6 +16,7 @@ public class LoginResponse
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public string? Token { get; set; }
+    public string? RefreshToken { get; set; }
     public UserInfo? UserInfo { get; set; }
 }
 
@@ -42,5 +43,11 @@ public class UserOrgInfo
 public class RefreshTokenRequest
 {
     [Required(ErrorMessage = "Token不能为空")]
+    public string RefreshToken { get; set; } = string.Empty;
+}
+
+public class RefreshTokenResponse
+{
     public string Token { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
 }

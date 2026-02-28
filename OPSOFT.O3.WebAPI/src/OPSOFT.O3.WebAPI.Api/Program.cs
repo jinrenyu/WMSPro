@@ -125,6 +125,9 @@ try
     // Add log archival background service
     builder.Services.AddHostedService<LogArchivalService>();
 
+    // Add refresh token cleanup background service
+    builder.Services.AddHostedService<RefreshTokenCleanupService>();
+
     // Add health checks
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "ready" });

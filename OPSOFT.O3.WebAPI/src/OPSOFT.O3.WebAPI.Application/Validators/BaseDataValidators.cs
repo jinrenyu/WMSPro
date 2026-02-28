@@ -475,6 +475,6 @@ public class RefreshTokenRequestValidator : AbstractValidator<RefreshTokenReques
 {
     public RefreshTokenRequestValidator()
     {
-        RuleFor(x => x.Token).NotEmpty().WithMessage("Token不能为空");
+        RuleFor(x => x.RefreshToken).NotEmpty().WithMessage("RefreshToken不能为空");
     }
 }
