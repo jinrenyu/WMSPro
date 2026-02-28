@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         // 基础服务
+        services.AddSingleton<IRsaKeyService, RsaKeyService>();
         services.AddScoped<ILoginUserRepository, LoginUserRepository>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();

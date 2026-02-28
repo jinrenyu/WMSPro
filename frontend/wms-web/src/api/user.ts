@@ -1,4 +1,5 @@
 import request from '../utils/request'
+import { encryptPassword } from '../utils/crypto'
 
 export interface User {
     uid?: string
@@ -47,11 +48,15 @@ export const getCurrentUser = () => {
 }
 
 // POST /api/user
-export const createUser = (data: any) => {
+export const createUser = async (data: any) => {
+    const payload = { ...data }
+    if (payload.password) {
+        payload.password = await encryptPassword(payload.password)
+    }
     return request({
         url: '/user',
         method: 'post',
-        data
+        data: payload
     })
 }
 
@@ -98,10 +103,11 @@ export const toggleUserStatus = (id: string) => {
 }
 
 // POST /api/user/reset-password
-export const resetPassword = (data: { userId: string; newPassword: string }) => {
+export const resetPassword = async (data: { userId: string; newPassword: string }) => {
+    const encryptedNewPwd = await encryptPassword(data.newPassword)
     return request({
         url: '/user/reset-password',
         method: 'post',
-        data
+        data: { userId: data.userId, newPassword: encryptedNewPwd }
     })
 }

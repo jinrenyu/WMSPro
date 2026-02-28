@@ -49,7 +49,9 @@ public class AuthService : IAuthService
             await _loginUserRepository.UpdatePwdErrTimesAsync(user.Uid, 0, 0, null);
         }
 
-        if (!VerifyPassword(request.Password, user.PrPassword))
+        var (isValid, needsUpgrade) = PasswordHelper.VerifyPassword(request.Password, user.PrPassword);
+
+        if (!isValid)
         {
             var errTimes = user.PwdErrTimes + 1;
             var lockStatus = errTimes >= MaxPwdErrTimes ? 1 : 0;
@@ -63,6 +65,16 @@ public class AuthService : IAuthService
                 : $"密码错误，还剩{remainTimes}次机会";
 
             return new LoginResponse { Success = false, Message = message };
+        }
+
+        // 明文密码自动升级为 BCrypt 哈希
+        if (needsUpgrade)
+        {
+            var hashedPassword = PasswordHelper.HashPassword(request.Password);
+            await _db.Updateable<SysLoginUser>()
+                .SetColumns(u => u.PrPassword == hashedPassword)
+                .Where(u => u.Uid == user.Uid)
+                .ExecuteCommandAsync();
         }
 
         await _loginUserRepository.UpdatePwdErrTimesAsync(user.Uid, 0, 0, null);
@@ -139,11 +151,6 @@ public class AuthService : IAuthService
                 }).ToList()
             }
         };
-    }
-
-    private static bool VerifyPassword(string inputPassword, string storedPassword)
-    {
-        return inputPassword == storedPassword;
     }
 
     public async Task<List<string>> GetCurrentPermissionsAsync(string userId)

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OPSOFT.O3.WebAPI.Api.Authorization;
@@ -13,11 +14,13 @@ public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly ICurrentUserService _currentUser;
+    private readonly IRsaKeyService _rsaKeyService;
 
-    public UserController(IUserService userService, ICurrentUserService currentUser)
+    public UserController(IUserService userService, ICurrentUserService currentUser, IRsaKeyService rsaKeyService)
     {
         _userService = userService;
         _currentUser = currentUser;
+        _rsaKeyService = rsaKeyService;
     }
 
     [HttpGet]
@@ -55,6 +58,7 @@ public class UserController : ControllerBase
     [RequirePermission("user:add")]
     public async Task<ActionResult<ApiResponse<UserDetailDto>>> Create([FromBody] CreateUserRequest request)
     {
+        request.Password = TryDecryptPassword(request.Password);
         var result = await _userService.CreateAsync(request);
         return Ok(ApiResponse<UserDetailDto>.Ok(result, "创建成功"));
     }
@@ -78,6 +82,9 @@ public class UserController : ControllerBase
     [HttpPost("{id}/change-password")]
     public async Task<ActionResult<ApiResponse<bool>>> ChangePassword(string id, [FromBody] ChangePasswordRequest request)
     {
+        request.OldPassword = TryDecryptPassword(request.OldPassword);
+        request.NewPassword = TryDecryptPassword(request.NewPassword);
+
         // 只允许本人修改密码
         var user = await _userService.GetByIdAsync(id);
         if (user == null)
@@ -93,6 +100,7 @@ public class UserController : ControllerBase
     [RequirePermission("user:reset-pwd")]
     public async Task<ActionResult<ApiResponse<bool>>> ResetPassword([FromBody] ResetPasswordRequest request)
     {
+        request.NewPassword = TryDecryptPassword(request.NewPassword);
         var result = await _userService.ResetPasswordAsync(request);
         return Ok(ApiResponse<bool>.Ok(result, "密码重置成功"));
     }
@@ -119,5 +127,20 @@ public class UserController : ControllerBase
     {
         var result = await _userService.ToggleStatusAsync(id);
         return Ok(ApiResponse<bool>.Ok(result, "状态切换成功"));
+    }
+
+    /// <summary>
+    /// 尝试 RSA 解密密码，失败时返回原始密码（向后兼容）
+    /// </summary>
+    private string TryDecryptPassword(string password)
+    {
+        try
+        {
+            return _rsaKeyService.Decrypt(password);
+        }
+        catch (Exception ex) when (ex is FormatException or CryptographicException)
+        {
+            return password;
+        }
     }
 }

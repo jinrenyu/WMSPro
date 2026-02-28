@@ -35,9 +35,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '../utils/request'
+import { encryptPassword, fetchPublicKey } from '../utils/crypto'
 import { User, Lock } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import ThemeToggle from '../components/ThemeToggle.vue'
@@ -51,6 +52,11 @@ const loginForm = reactive({
   password: ''
 })
 
+// 预获取 RSA 公钥
+onMounted(() => {
+  fetchPublicKey().catch(() => {})
+})
+
 const handleLogin = async () => {
   if (!loginForm.username || !loginForm.password) {
     ElMessage.warning('请输入用户名和密码')
@@ -61,9 +67,10 @@ const handleLogin = async () => {
   const permissionStore = usePermissionStore()
   permissionStore.resetPermissions()
   try {
+    const encryptedPwd = await encryptPassword(loginForm.password)
     const data: any = await request.post('/auth/login', {
       userId: loginForm.username,
-      password: loginForm.password
+      password: encryptedPwd
     })
 
     const token = data.data.token

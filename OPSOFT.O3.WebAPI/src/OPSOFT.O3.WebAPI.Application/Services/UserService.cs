@@ -96,7 +96,7 @@ public class UserService : IUserService
         {
             UserId = request.UserId,
             UserName = request.UserName,
-            PrPassword = request.Password,
+            PrPassword = PasswordHelper.HashPassword(request.Password),
             Email = request.Email,
             PaType = request.PaType,
             PaId = request.PaId,
@@ -157,11 +157,13 @@ public class UserService : IUserService
         if (user == null || user.FDeleted)
             throw new KeyNotFoundException("用户不存在");
 
-        if (user.PrPassword != request.OldPassword)
+        var (isValid, _) = PasswordHelper.VerifyPassword(request.OldPassword, user.PrPassword);
+        if (!isValid)
             throw new ArgumentException("旧密码不正确");
 
+        var hashedPassword = PasswordHelper.HashPassword(request.NewPassword);
         return await _db.Updateable<SysLoginUser>()
-            .SetColumns(u => u.PrPassword == request.NewPassword)
+            .SetColumns(u => u.PrPassword == hashedPassword)
             .SetColumns(u => u.LastCpTime == DateTime.Now)
             .SetColumns(u => u.MYmd == DateTime.Now)
             .SetColumns(u => u.MUser == (_currentUser.UserId ?? string.Empty))
@@ -177,8 +179,9 @@ public class UserService : IUserService
         if (user.UserId == "superadmin")
             throw new InvalidOperationException("不能重置超级管理员密码");
 
+        var hashedNewPassword = PasswordHelper.HashPassword(request.NewPassword);
         return await _db.Updateable<SysLoginUser>()
-            .SetColumns(u => u.PrPassword == request.NewPassword)
+            .SetColumns(u => u.PrPassword == hashedNewPassword)
             .SetColumns(u => u.LastCpTime == DateTime.Now)
             .SetColumns(u => u.PwdErrTimes == 0)
             .SetColumns(u => u.LockStatus == 0)

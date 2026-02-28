@@ -1,3 +1,4 @@
+using OPSOFT.O3.WebAPI.Application.Services;
 using OPSOFT.O3.WebAPI.Domain.Entities;
 using SqlSugar;
 
@@ -90,7 +91,7 @@ public class DataSeedService
                 FInterId = "admin_user",
                 UserId = "admin",
                 UserName = "系统管理员",
-                PrPassword = "admin123",
+                PrPassword = PasswordHelper.HashPassword("admin123"),
                 Email = "admin@opsoft.com",
                 IsDefault = true,
                 FCompanyId = "DEFAULT",
@@ -453,7 +454,7 @@ public class DataSeedService
                 FInterId = "superadmin_user",
                 UserId = "superadmin",
                 UserName = "超级管理员",
-                PrPassword = "123456",
+                PrPassword = PasswordHelper.HashPassword("123456"),
                 Email = "superadmin@opsoft.com",
                 IsDefault = true,
                 FCompanyId = "DEFAULT",

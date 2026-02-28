@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OPSOFT.O3.WebAPI.Application.DTOs;
@@ -11,17 +12,32 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly ILoginInfoService _loginInfoService;
+    private readonly IRsaKeyService _rsaKeyService;
 
-    public AuthController(IAuthService authService, ILoginInfoService loginInfoService)
+    public AuthController(IAuthService authService, ILoginInfoService loginInfoService, IRsaKeyService rsaKeyService)
     {
         _authService = authService;
         _loginInfoService = loginInfoService;
+        _rsaKeyService = rsaKeyService;
+    }
+
+    /// <summary>
+    /// 获取 RSA 公钥（用于密码加密传输）
+    /// </summary>
+    [HttpGet("public-key")]
+    [AllowAnonymous]
+    public ActionResult<ApiResponse<object>> GetPublicKey()
+    {
+        var publicKey = _rsaKeyService.GetPublicKey();
+        return Ok(ApiResponse<object>.Ok(new { publicKey }));
     }
 
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<LoginResponse>>> Login([FromBody] LoginRequest request)
     {
+        request.Password = TryDecryptPassword(request.Password);
+
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers["User-Agent"].ToString();
 
@@ -67,5 +83,20 @@ public class AuthController : ControllerBase
 
         var permissions = await _authService.GetCurrentPermissionsAsync(userId);
         return Ok(ApiResponse<List<string>>.Ok(permissions));
+    }
+
+    /// <summary>
+    /// 尝试 RSA 解密密码，失败时返回原始密码（向后兼容）
+    /// </summary>
+    private string TryDecryptPassword(string password)
+    {
+        try
+        {
+            return _rsaKeyService.Decrypt(password);
+        }
+        catch (Exception ex) when (ex is FormatException or CryptographicException)
+        {
+            return password;
+        }
     }
 }
