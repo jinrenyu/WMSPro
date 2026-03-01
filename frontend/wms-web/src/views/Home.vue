@@ -47,7 +47,7 @@
     <el-container>
       <el-header class="header">
         <div class="header-left">
-          <h2 class="page-title">仪表盘</h2>
+          <h2 class="page-title">{{ pageTitle }}</h2>
         </div>
         <div class="header-right">
           <ThemeToggle />
@@ -89,6 +89,23 @@ const menuStore = useMenuStore()
 
 const activeMenu = computed(() => route.path)
 const menuList = computed(() => menuStore.sidebarMenus)
+
+// 根据当前路由动态获取页面标题
+const pageTitle = computed(() => {
+  const findMenuByPath = (menus: any[], path: string): any => {
+    for (const menu of menus) {
+      if (menu.path === path) return menu
+      if (menu.children) {
+        const found = findMenuByPath(menu.children, path)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const currentMenu = findMenuByPath(menuStore.sidebarMenus, route.path)
+  return currentMenu?.name || route.meta?.title || '仪表盘'
+})
 
 onMounted(async () => {
   if (!menuStore.loaded) {
