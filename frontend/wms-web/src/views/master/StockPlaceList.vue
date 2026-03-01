@@ -20,7 +20,16 @@
       <el-input v-model="queryParams.keyword" placeholder="搜索仓位代码/名称" class="search-input" clearable @clear="fetchData" @keyup.enter="fetchData">
         <template #append><el-button @click="fetchData"><el-icon><Search /></el-icon></el-button></template>
       </el-input>
+      
+      
+      
       <div class="header-right">
+        <DynamicFilter
+        v-model="queryParams.dynamicFilters"
+        :columns="allColumns"
+        :api-fields-func="getStockPlacesFields"
+        @change="fetchData" style="margin-right: 8px;"
+      />
         <ColumnSetting
           :configurable-columns="configurableColumns"
           :visible-keys="visibleKeys"
@@ -113,13 +122,14 @@
 </template>
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { getStockPlaces, getStockPlace, createStockPlace, updateStockPlace, deleteStockPlace, approveStockPlace, unapproveStockPlace, disableStockPlace, enableStockPlace, type StockPlace } from '../../api/stockplace'
+import { getStockPlaces, getStockPlace, createStockPlace, updateStockPlace, deleteStockPlace, approveStockPlace, unapproveStockPlace, disableStockPlace, enableStockPlace, getStockPlacesFields, type StockPlace } from '../../api/stockplace'
 import { formatDate } from '../../utils/format'
 import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
 import LookupSelect from '../../components/LookupSelect.vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
+import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
@@ -144,7 +154,7 @@ const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns
 const loading = ref(false)
 const list = ref<StockPlace[]>([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '' })
+const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', dynamicFilters: [] as DynamicFilterInfo[] })
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,

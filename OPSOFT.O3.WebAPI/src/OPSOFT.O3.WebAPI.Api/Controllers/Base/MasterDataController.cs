@@ -64,4 +64,32 @@ public abstract class MasterDataController<TEntity, TListDto, TDetailDto, TCreat
         var result = await Service.GetLookupAsync(request);
         return Ok(ApiResponse<List<LookupDto>>.Ok(result));
     }
+
+    /// <summary>
+    /// 获取实体的字段及类型配置信息，用于高阶动态查询等前端场景
+    /// </summary>
+    [HttpGet("fields")]
+    public virtual ActionResult<ApiResponse<List<object>>> GetFieldsMetadata()
+    {
+        var properties = typeof(TEntity).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.FlattenHierarchy);
+
+        var list = properties.Select(p => 
+        {
+            var type = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType;
+            string csharpTypeName = type.Name.ToLower();
+
+            if (csharpTypeName == "int32") csharpTypeName = "int";
+            else if (csharpTypeName == "int64") csharpTypeName = "long";
+            else if (csharpTypeName == "int16") csharpTypeName = "short";
+            else if (csharpTypeName == "boolean") csharpTypeName = "bool";
+            else if (csharpTypeName == "single") csharpTypeName = "float";
+
+            return (object)new {
+                Field = char.ToLower(p.Name[0]) + p.Name.Substring(1), // camelCase for frontend
+                DataType = csharpTypeName
+            };
+        }).ToList();
+
+        return Ok(ApiResponse<List<object>>.Ok(list));
+    }
 }

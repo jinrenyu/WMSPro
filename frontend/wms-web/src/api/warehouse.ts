@@ -25,7 +25,6 @@ export interface Warehouse {
     erpNumber?: string
 }
 
-// GET /api/warehouse - paged list
 export const getWarehouses = (params?: any) => {
     return request({
         url: '/warehouse',
@@ -34,7 +33,8 @@ export const getWarehouses = (params?: any) => {
             pageIndex: params?.page || 1,
             pageSize: params?.pageSize || 10,
             keyword: params?.keyword || '',
-            groupId: params?.groupId || ''
+            groupId: params?.groupId || '',
+            dynamicFilters: params?.dynamicFilters || []
         }
     })
 }
@@ -97,10 +97,17 @@ export const disableWarehouse = (id: string) => {
     })
 }
 
-// PUT /api/warehouse/{id}/enable - 反禁用
 export const enableWarehouse = (id: string) => {
     return request({
         url: `/warehouse/${id}/enable`,
         method: 'put'
+    })
+}
+
+// GET /api/warehouse/fields - 获取模型字段数据类型
+export const getWarehousesFields = () => {
+    return request({
+        url: '/warehouse/fields',
+        method: 'get'
     })
 }

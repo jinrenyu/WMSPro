@@ -24,7 +24,7 @@ export interface Employee {
 }
 
 export const getEmployees = (params?: any) => {
-    return request({ url: '/employee', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '' } })
+    return request({ url: '/employee', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', dynamicFilters: params?.dynamicFilters || [] } })
 }
 export const getEmployee = (id: string) => {
     return request({ url: `/employee/${id}`, method: 'get' })
@@ -55,4 +55,9 @@ export const disableEmployee = (id: string) => {
 // PUT /api/employee/{id}/enable - 反禁用
 export const enableEmployee = (id: string) => {
     return request({ url: `/employee/${id}/enable`, method: 'put' })
+}
+
+// GET /api/employee/fields - 获取模型字段数据类型
+export const getEmployeesFields = () => {
+    return request({ url: '/employee/fields', method: 'get' })
 }

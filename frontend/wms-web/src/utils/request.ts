@@ -9,7 +9,33 @@ import {
 
 const service = axios.create({
     baseURL: import.meta.env.DEV ? 'http://localhost:5180/api' : '/api',
-    timeout: 10000
+    timeout: 10000,
+    paramsSerializer: (params) => {
+        const searchParams = new URLSearchParams()
+        for (const key in params) {
+            const value = params[key]
+            if (value === undefined || value === null || value === '') continue
+            
+            if (Array.isArray(value)) {
+                if (value.length > 0 && typeof value[0] === 'object') {
+                    value.forEach((item, index) => {
+                        for (const subKey in item) {
+                            if (item[subKey] !== undefined && item[subKey] !== null) {
+                                searchParams.append(`${key}[${index}].${subKey}`, item[subKey])
+                            }
+                        }
+                    })
+                } else {
+                    value.forEach((item) => {
+                        searchParams.append(key, item)
+                    })
+                }
+            } else {
+                searchParams.append(key, value)
+            }
+        }
+        return searchParams.toString()
+    }
 })
 
 // --- Refresh token 并发控制 ---

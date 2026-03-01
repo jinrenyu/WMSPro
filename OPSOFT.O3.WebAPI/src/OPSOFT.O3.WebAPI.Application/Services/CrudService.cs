@@ -5,6 +5,7 @@ using OPSOFT.O3.WebAPI.Domain.Constants;
 using OPSOFT.O3.WebAPI.Domain.Entities;
 using OPSOFT.O3.WebAPI.Domain.Interfaces;
 using SqlSugar;
+using OPSOFT.O3.WebAPI.Application.Extensions;
 
 namespace OPSOFT.O3.WebAPI.Application.Services;
 
@@ -52,12 +53,16 @@ public abstract class CrudService<TEntity, TListDto, TDetailDto, TCreateDto, TUp
             }
         }
 
+        // 动态高级筛选
+        var conditionalModels = request.DynamicFilters?.ToConditionalModels<TEntity>() ?? new List<IConditionalModel>();
+
         var (items, totalCount) = await Repository.GetPagedListAsync(
             request.PageIndex,
             request.PageSize,
             predicate,
             request.SortField,
-            request.IsAsc);
+            request.IsAsc,
+            conditionalModels);
 
         return new PagedResult<TListDto>
         {

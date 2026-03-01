@@ -21,7 +21,8 @@ export const getSuppliers = (params?: any) => {
             pageIndex: params?.page || 1,
             pageSize: params?.pageSize || 10,
             keyword: params?.keyword || '',
-            groupId: params?.groupId || ''
+            groupId: params?.groupId || '',
+            dynamicFilters: params?.dynamicFilters || []
         }
     })
 }
@@ -89,5 +90,13 @@ export const enableSupplier = (id: string) => {
     return request({
         url: `/supplier/${id}/enable`,
         method: 'put'
+    })
+}
+
+// GET /api/supplier/fields - 获取模型字段数据类型
+export const getSuppliersFields = () => {
+    return request({
+        url: '/supplier/fields',
+        method: 'get'
     })
 }

@@ -29,7 +29,16 @@
           <el-button @click="fetchData"><el-icon><Search /></el-icon></el-button>
         </template>
       </el-input>
+      
+      
+      
       <div class="header-right">
+        <DynamicFilter
+        v-model="queryParams.dynamicFilters"
+        :columns="allColumns"
+        :api-fields-func="getSuppliersFields"
+        @change="fetchData" style="margin-right: 8px;"
+      />
         <ColumnSetting
           :configurable-columns="configurableColumns"
           :visible-keys="visibleKeys"
@@ -155,12 +164,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { getSuppliers, getSupplier, createSupplier, updateSupplier, deleteSupplier, approveSupplier, unapproveSupplier, disableSupplier, enableSupplier, type Supplier } from '../../api/supplier'
+import { getSuppliers, getSupplier, createSupplier, updateSupplier, deleteSupplier, approveSupplier, unapproveSupplier, disableSupplier, enableSupplier, getSuppliersFields, type Supplier } from '../../api/supplier'
 import { formatDate } from '../../utils/format'
 import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
+import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
@@ -188,7 +198,8 @@ const queryParams = reactive({
   page: 1,
   pageSize: 10,
   keyword: '',
-  groupId: ''
+  groupId: '',
+  dynamicFilters: [] as DynamicFilterInfo[]
 })
 
 const {

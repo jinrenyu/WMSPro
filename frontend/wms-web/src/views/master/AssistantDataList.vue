@@ -54,7 +54,15 @@
               <el-button @click="fetchEntries"><el-icon><Search /></el-icon></el-button>
             </template>
           </el-input>
+          
+          
           <div class="header-right">
+        <DynamicFilter
+            v-model="queryParams.dynamicFilters"
+            :columns="allColumns"
+            :api-fields-func="getAssistantDataEntryFields"
+            @change="fetchEntries" style="margin-right: 8px;"
+          />
             <ColumnSetting
               :configurable-columns="configurableColumns"
               :visible-keys="visibleKeys"
@@ -220,13 +228,14 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import {
   getAssistantDataList, getAssistantData, createAssistantData, updateAssistantData, deleteAssistantData, approveAssistantData, unapproveAssistantData,
-  getAssistantDataEntries, getAssistantDataEntry, createAssistantDataEntry, updateAssistantDataEntry, deleteAssistantDataEntry, approveAssistantDataEntry, unapproveAssistantDataEntry, disableAssistantDataEntry, enableAssistantDataEntry,
+  getAssistantDataEntries, getAssistantDataEntry, createAssistantDataEntry, updateAssistantDataEntry, deleteAssistantDataEntry, approveAssistantDataEntry, unapproveAssistantDataEntry, disableAssistantDataEntry, enableAssistantDataEntry, getAssistantDataEntryFields,
   type AssistantData, type AssistantDataEntry
 } from '../../api/assistantdata'
 import { formatDate } from '../../utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
+import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
@@ -334,7 +343,7 @@ const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns
 const entryLoading = ref(false)
 const entryList = ref<AssistantDataEntry[]>([])
 const entryTotal = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10, keyword: '' })
+const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', dynamicFilters: [] as DynamicFilterInfo[] })
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,

@@ -18,7 +18,8 @@ public interface IRepository<T> where T : BaseEntity, new()
         int pageSize,
         Expression<Func<T, bool>>? predicate = null,
         string? orderByField = null,
-        bool isAsc = true);
+        bool isAsc = true,
+        List<IConditionalModel>? conditionalModels = null);
     Task<T> InsertAsync(T entity);
     Task<bool> UpdateAsync(T entity);
     Task<bool> DeleteAsync(string uid);

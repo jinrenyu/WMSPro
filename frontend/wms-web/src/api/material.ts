@@ -54,7 +54,8 @@ export const getMaterials = (params?: any) => {
             pageIndex: params?.page || 1,
             pageSize: params?.pageSize || 10,
             keyword: params?.keyword || '',
-            groupId: params?.groupId || ''
+            groupId: params?.groupId || '',
+            dynamicFilters: params?.dynamicFilters || []
         }
     })
 }
@@ -122,5 +123,13 @@ export const enableMaterial = (id: string) => {
     return request({
         url: `/material/${id}/enable`,
         method: 'put'
+    })
+}
+
+// GET /api/material/fields - 获取模型字段数据类型
+export const getFields = () => {
+    return request({
+        url: '/material/fields',
+        method: 'get'
     })
 }

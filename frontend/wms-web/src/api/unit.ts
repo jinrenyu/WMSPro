@@ -16,7 +16,7 @@ export interface Unit {
 }
 
 export const getUnits = (params?: any) => {
-    return request({ url: '/unit', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '' } })
+    return request({ url: '/unit', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', dynamicFilters: params?.dynamicFilters || [] } })
 }
 export const getUnit = (id: string) => {
     return request({ url: `/unit/${id}`, method: 'get' })
@@ -49,4 +49,9 @@ export const disableUnit = (id: string) => {
 // PUT /api/unit/{id}/enable - 反禁用
 export const enableUnit = (id: string) => {
     return request({ url: `/unit/${id}/enable`, method: 'put' })
+}
+
+// GET /api/unit/fields - 获取模型字段数据类型
+export const getUnitsFields = () => {
+    return request({ url: '/unit/fields', method: 'get' })
 }

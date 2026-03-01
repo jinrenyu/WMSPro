@@ -16,7 +16,6 @@ export interface Currency {
     fUseOrgId?: string
 }
 
-// GET /api/currency - paged list
 export const getCurrencies = (params?: any) => {
     return request({
         url: '/currency',
@@ -25,7 +24,8 @@ export const getCurrencies = (params?: any) => {
             pageIndex: params?.page || 1,
             pageSize: params?.pageSize || 10,
             keyword: params?.keyword || '',
-            groupId: params?.groupId || ''
+            groupId: params?.groupId || '',
+            dynamicFilters: params?.dynamicFilters || []
         }
     })
 }
@@ -93,5 +93,13 @@ export const enableCurrency = (id: string) => {
     return request({
         url: `/currency/${id}/enable`,
         method: 'put'
+    })
+}
+
+// GET /api/currency/fields - 获取模型字段数据类型
+export const getCurrenciesFields = () => {
+    return request({
+        url: '/currency/fields',
+        method: 'get'
     })
 }

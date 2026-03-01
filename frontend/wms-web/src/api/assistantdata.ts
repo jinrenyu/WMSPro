@@ -59,7 +59,7 @@ export interface AssistantDataEntry {
 }
 
 export const getAssistantDataEntries = (params?: any) => {
-    return request({ url: '/assistantdataentry', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', fid: params?.fid || '' } })
+    return request({ url: '/assistantdataentry', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', fid: params?.fid || '', dynamicFilters: params?.dynamicFilters || [] } })
 }
 export const getAssistantDataEntry = (id: string) => {
     return request({ url: `/assistantdataentry/${id}`, method: 'get' })
@@ -84,4 +84,9 @@ export const disableAssistantDataEntry = (id: string) => {
 }
 export const enableAssistantDataEntry = (id: string) => {
     return request({ url: `/assistantdataentry/${id}/enable`, method: 'put' })
+}
+
+// GET /api/assistantdataentry/fields - 获取模型字段数据类型
+export const getAssistantDataEntryFields = () => {
+    return request({ url: '/assistantdataentry/fields', method: 'get' })
 }

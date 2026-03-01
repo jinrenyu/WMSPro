@@ -20,7 +20,16 @@
       <el-input v-model="queryParams.keyword" placeholder="搜索单位代码/名称" class="search-input" clearable @clear="fetchData" @keyup.enter="fetchData">
         <template #append><el-button @click="fetchData"><el-icon><Search /></el-icon></el-button></template>
       </el-input>
+      
+      
+      
       <div class="header-right">
+        <DynamicFilter
+        v-model="queryParams.dynamicFilters"
+        :columns="allColumns"
+        :api-fields-func="getUnitsFields"
+        @change="fetchData" style="margin-right: 8px;"
+      />
         <ColumnSetting
           :configurable-columns="configurableColumns"
           :visible-keys="visibleKeys"
@@ -117,12 +126,13 @@
 </template>
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { getUnits, getUnit, createUnit, updateUnit, deleteUnit, approveUnit, unapproveUnit, disableUnit, enableUnit, type Unit } from '../../api/unit'
+import { getUnits, getUnit, createUnit, updateUnit, deleteUnit, approveUnit, unapproveUnit, disableUnit, enableUnit, getUnitsFields, type Unit } from '../../api/unit'
 import { formatDate } from '../../utils/format'
 import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
+import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
@@ -149,7 +159,7 @@ const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns
 const loading = ref(false)
 const list = ref<Unit[]>([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '' })
+const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', dynamicFilters: [] as DynamicFilterInfo[] })
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,

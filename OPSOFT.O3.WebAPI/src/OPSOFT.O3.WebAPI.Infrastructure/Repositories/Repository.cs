@@ -45,7 +45,8 @@ public class Repository<T> : IRepository<T> where T : BaseEntity, new()
         int pageSize,
         Expression<Func<T, bool>>? predicate = null,
         string? orderByField = null,
-        bool isAsc = true)
+        bool isAsc = true,
+        List<IConditionalModel>? conditionalModels = null)
     {
         var totalCount = new RefAsync<int>(0);
 
@@ -54,6 +55,11 @@ public class Repository<T> : IRepository<T> where T : BaseEntity, new()
         if (predicate != null)
         {
             query = query.Where(predicate);
+        }
+
+        if (conditionalModels != null && conditionalModels.Count > 0)
+        {
+            query = query.Where(conditionalModels);
         }
 
         if (!string.IsNullOrEmpty(orderByField))

@@ -14,7 +14,7 @@ export interface StockPlace {
 }
 
 export const getStockPlaces = (params?: any) => {
-    return request({ url: '/stockplace', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '' } })
+    return request({ url: '/stockplace', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', dynamicFilters: params?.dynamicFilters || [] } })
 }
 export const getStockPlace = (id: string) => {
     return request({ url: `/stockplace/${id}`, method: 'get' })
@@ -45,4 +45,9 @@ export const disableStockPlace = (id: string) => {
 // PUT /api/stockplace/{id}/enable - 反禁用
 export const enableStockPlace = (id: string) => {
     return request({ url: `/stockplace/${id}/enable`, method: 'put' })
+}
+
+// GET /api/stockplace/fields - 获取模型字段数据类型
+export const getStockPlacesFields = () => {
+    return request({ url: '/stockplace/fields', method: 'get' })
 }

@@ -15,7 +15,6 @@ export interface MaterialBarType {
     fGroupId?: string
 }
 
-// GET /api/materialbartype - paged list
 export const getMaterialBarTypes = (params?: any) => {
     return request({
         url: '/materialbartype',
@@ -24,7 +23,8 @@ export const getMaterialBarTypes = (params?: any) => {
             pageIndex: params?.page || 1,
             pageSize: params?.pageSize || 10,
             keyword: params?.keyword || '',
-            groupId: params?.groupId || ''
+            groupId: params?.groupId || '',
+            dynamicFilters: params?.dynamicFilters || []
         }
     })
 }
@@ -92,5 +92,13 @@ export const enableMaterialBarType = (id: string) => {
     return request({
         url: `/materialbartype/${id}/enable`,
         method: 'put'
+    })
+}
+
+// GET /api/materialbartype/fields - 获取模型字段数据类型
+export const getMaterialBarTypesFields = () => {
+    return request({
+        url: '/materialbartype/fields',
+        method: 'get'
     })
 }
