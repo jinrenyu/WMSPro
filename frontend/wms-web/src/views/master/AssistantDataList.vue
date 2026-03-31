@@ -102,7 +102,7 @@
             </el-button>
           </div>
 
-          <el-table ref="tableRef" v-loading="entryLoading" :data="entryList" style="width: 100%" border @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick">
+          <el-table ref="tableRef" v-loading="entryLoading" :data="entryList" style="width: 100%" border @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" @sort-change="handleSortChange">
             <el-table-column type="selection" width="45" fixed="left" />
             <template v-for="col in allColumns" :key="col.key">
               <el-table-column
@@ -113,6 +113,7 @@
                 :min-width="col.minWidth"
                 :align="col.align"
                 :fixed="col.fixed"
+                :sortable="col.sortable"
               >
                 <template v-if="col.slotName" #default="scope">
                   <template v-if="col.slotName === 'isdefault'">
@@ -327,15 +328,15 @@ const submitCategory = async () => {
 // 明细
 // ═══════════════════════════════════════════════════════
 const columns: ColumnDef[] = [
-  { key: 'fnumber', label: '代码', prop: 'fnumber', width: 130 },
-  { key: 'fdatavalue', label: '名称', prop: 'fdatavalue', minWidth: 180 },
-  { key: 'fseq', label: '顺序', prop: 'fseq', width: 80, align: 'center' },
-  { key: 'isdefault', label: '系统预设', width: 100, align: 'center', slotName: 'isdefault' },
-  { key: 'fisbuildself', label: '自建', width: 80, align: 'center', slotName: 'fisbuildself', defaultVisible: false },
-  { key: 'fdescription', label: '备注', prop: 'fdescription', minWidth: 200, defaultVisible: false },
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fnumber', label: '代码', prop: 'fnumber', width: 130, sortable: 'custom' },
+  { key: 'fdatavalue', label: '名称', prop: 'fdatavalue', minWidth: 180, sortable: 'custom' },
+  { key: 'fseq', label: '顺序', prop: 'fseq', width: 80, align: 'center', sortable: 'custom' },
+  { key: 'isdefault', label: '系统预设', prop: 'isdefault', width: 100, align: 'center', slotName: 'isdefault', sortable: 'custom' },
+  { key: 'fisbuildself', label: '自建', prop: 'fisbuildself', width: 80, align: 'center', slotName: 'fisbuildself', defaultVisible: false, sortable: 'custom' },
+  { key: 'fdescription', label: '备注', prop: 'fdescription', minWidth: 200, defaultVisible: false, sortable: 'custom' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('assistantdata', columns)
@@ -343,7 +344,7 @@ const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns
 const entryLoading = ref(false)
 const entryList = ref<AssistantDataEntry[]>([])
 const entryTotal = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', dynamicFilters: [] as DynamicFilterInfo[] })
+const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', dynamicFilters: [] as DynamicFilterInfo[], sortField: undefined as string | undefined, isAsc: undefined as boolean | undefined })
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
@@ -365,6 +366,19 @@ const handleEditSelected = () => {
 
 const handleRowDblClick = (row: AssistantDataEntry) => {
   handleEditEntry(row)
+}
+
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
+  queryParams.page = 1
+  fetchEntries()
 }
 
 async function fetchEntries() {

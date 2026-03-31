@@ -21,6 +21,8 @@ export interface ColumnDef {
   hideable?: boolean
   /** 自定义渲染插槽名 */
   slotName?: string
+  /** 排序配置，默认为false。'custom'表示后端排序 */
+  sortable?: boolean | 'custom'
 }
 
 const STORAGE_PREFIX = 'col_config_'

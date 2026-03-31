@@ -34,7 +34,9 @@ export const getWarehouses = (params?: any) => {
             pageSize: params?.pageSize || 10,
             keyword: params?.keyword || '',
             groupId: params?.groupId || '',
-            dynamicFilters: params?.dynamicFilters || []
+            dynamicFilters: params?.dynamicFilters || [],
+            sortField: params?.sortField,
+            isAsc: params?.isAsc
         }
     })
 }

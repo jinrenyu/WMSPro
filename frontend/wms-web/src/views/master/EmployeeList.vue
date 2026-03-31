@@ -60,7 +60,7 @@
       </el-button>
     </div>
 
-    <el-table ref="tableRef" v-loading="loading" :data="list" style="width: 100%" border @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick">
+    <el-table ref="tableRef" v-loading="loading" :data="list" style="width: 100%" border @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" @sort-change="handleSortChange">
       <el-table-column type="selection" width="45" fixed="left" />
       <template v-for="col in allColumns" :key="col.key">
         <el-table-column
@@ -71,6 +71,7 @@
           :min-width="col.minWidth"
           :align="col.align"
           :fixed="col.fixed"
+          :sortable="col.sortable"
         >
           <template v-if="col.slotName" #default="scope">
             <template v-if="col.slotName === 'sex'">
@@ -162,25 +163,25 @@ const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
 const columns: ColumnDef[] = [
-  { key: 'fNumber', label: '员工编码', prop: 'fNumber', width: 130 },
-  { key: 'fName', label: '姓名', prop: 'fName', minWidth: 120 },
-  { key: 'fSex', label: '性别', width: 80, align: 'center', slotName: 'sex' },
-  { key: 'fTel', label: '电话', prop: 'fTel', width: 140 },
-  { key: 'fSalDeptName', label: '部门', prop: 'fSalDeptName', width: 120 },
-  { key: 'fEducation', label: '学历', prop: 'fEducation', width: 100, defaultVisible: false },
-  { key: 'fBirthDate', label: '出生日期', width: 120, slotName: 'dateField', defaultVisible: false },
-  { key: 'fEntryDate', label: '入职日期', width: 120, slotName: 'dateField', defaultVisible: false },
-  { key: 'fDepartureDate', label: '离职日期', width: 120, slotName: 'dateField', defaultVisible: false },
-  { key: 'fIsDeparture', label: '在职状态', width: 100, align: 'center', slotName: 'departure' },
-  { key: 'fMail', label: '邮箱', prop: 'fMail', width: 180, defaultVisible: false },
-  { key: 'fNote', label: '备注', prop: 'fNote', minWidth: 200, defaultVisible: false },
-  { key: 'fAddress', label: '家庭住址', prop: 'fAddress', minWidth: 200, defaultVisible: false },
-  { key: 'fWechat', label: '微信', prop: 'fWechat', width: 130, defaultVisible: false },
-  { key: 'emergency', label: '紧急联系人', prop: 'emergency', width: 120, defaultVisible: false },
-  { key: 'fEmergencyTel', label: '紧急联系电话', prop: 'fEmergencyTel', width: 140, defaultVisible: false },
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fNumber', label: '员工编码', prop: 'fNumber', width: 130, sortable: 'custom' },
+  { key: 'fName', label: '姓名', prop: 'fName', minWidth: 120, sortable: 'custom' },
+  { key: 'fSex', label: '性别', prop: 'fSex', width: 80, align: 'center', slotName: 'sex', sortable: 'custom' },
+  { key: 'fTel', label: '电话', prop: 'fTel', width: 140, sortable: 'custom' },
+  { key: 'fSalDeptName', label: '部门', prop: 'fSalDeptName', width: 120, sortable: 'custom' },
+  { key: 'fEducation', label: '学历', prop: 'fEducation', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fBirthDate', label: '出生日期', prop: 'fBirthDate', width: 120, slotName: 'dateField', defaultVisible: false, sortable: 'custom' },
+  { key: 'fEntryDate', label: '入职日期', prop: 'fEntryDate', width: 120, slotName: 'dateField', defaultVisible: false, sortable: 'custom' },
+  { key: 'fDepartureDate', label: '离职日期', prop: 'fDepartureDate', width: 120, slotName: 'dateField', defaultVisible: false, sortable: 'custom' },
+  { key: 'fIsDeparture', label: '在职状态', prop: 'fIsDeparture', width: 100, align: 'center', slotName: 'departure', sortable: 'custom' },
+  { key: 'fMail', label: '邮箱', prop: 'fMail', width: 180, defaultVisible: false, sortable: 'custom' },
+  { key: 'fNote', label: '备注', prop: 'fNote', minWidth: 200, defaultVisible: false, sortable: 'custom' },
+  { key: 'fAddress', label: '家庭住址', prop: 'fAddress', minWidth: 200, defaultVisible: false, sortable: 'custom' },
+  { key: 'fWechat', label: '微信', prop: 'fWechat', width: 130, defaultVisible: false, sortable: 'custom' },
+  { key: 'emergency', label: '紧急联系人', prop: 'emergency', width: 120, defaultVisible: false, sortable: 'custom' },
+  { key: 'fEmergencyTel', label: '紧急联系电话', prop: 'fEmergencyTel', width: 140, defaultVisible: false, sortable: 'custom' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('employee', columns)
@@ -188,7 +189,7 @@ const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns
 const loading = ref(false)
 const list = ref<Employee[]>([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', dynamicFilters: [] as DynamicFilterInfo[] })
+const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', dynamicFilters: [] as DynamicFilterInfo[], sortField: undefined as string | undefined, isAsc: undefined as boolean | undefined })
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
@@ -205,6 +206,18 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

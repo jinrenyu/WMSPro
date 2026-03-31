@@ -81,6 +81,7 @@
       border
       @selection-change="handleSelectionChange"
       @row-dblclick="handleRowDblClick"
+      @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="45" fixed="left" />
       <template v-for="col in allColumns" :key="col.key">
@@ -92,6 +93,7 @@
           :min-width="col.minWidth"
           :align="col.align"
           :fixed="col.fixed"
+          :sortable="col.sortable"
         >
           <template v-if="col.slotName" #default="scope">
             <template v-if="col.slotName === 'boolTag'">
@@ -268,28 +270,28 @@ const tableRef = ref()
 
 const columns: ColumnDef[] = [
   // 基本信息
-  { key: 'fNumber', label: '仓库编码', prop: 'fNumber', width: 130 },
-  { key: 'fName', label: '仓库名称', prop: 'fName', minWidth: 180 },
-  { key: 'fType', label: '仓库类型', prop: 'fType', width: 120 },
-  { key: 'fStockProperty', label: '仓库属性', prop: 'fStockProperty', width: 120, defaultVisible: false },
-  { key: 'fPrincipal', label: '负责人', prop: 'fPrincipal', width: 120 },
-  { key: 'fTel', label: '电话', prop: 'fTel', width: 140 },
-  { key: 'fAddress', label: '地址', prop: 'fAddress', minWidth: 200 },
-  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false },
+  { key: 'fNumber', label: '仓库编码', prop: 'fNumber', width: 130, sortable: 'custom' },
+  { key: 'fName', label: '仓库名称', prop: 'fName', minWidth: 180, sortable: 'custom' },
+  { key: 'fType', label: '仓库类型', prop: 'fType', width: 120, sortable: 'custom' },
+  { key: 'fStockProperty', label: '仓库属性', prop: 'fStockProperty', width: 120, defaultVisible: false, sortable: 'custom' },
+  { key: 'fPrincipal', label: '负责人', prop: 'fPrincipal', width: 120, sortable: 'custom' },
+  { key: 'fTel', label: '电话', prop: 'fTel', width: 140, sortable: 'custom' },
+  { key: 'fAddress', label: '地址', prop: 'fAddress', minWidth: 200, sortable: 'custom' },
+  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false, sortable: 'custom' },
   // 仓库设置
-  { key: 'fAllowMinusQty', label: '允许负库存', width: 110, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fIsOpenLocation', label: '启用仓位', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fBonded', label: '是否保税', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fAllowMrpPlan', label: '允许MRP', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fAllowLock', label: '允许锁库', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fIsVirtual', label: '是否虚仓', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fAvailableAlert', label: '参与预警', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fAvailablePicking', label: '参与拣货', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fSortingPriority', label: '拣货优先级', prop: 'fSortingPriority', width: 110, defaultVisible: false },
+  { key: 'fAllowMinusQty', label: '允许负库存', prop: 'fAllowMinusQty', width: 110, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fIsOpenLocation', label: '启用仓位', prop: 'fIsOpenLocation', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fBonded', label: '是否保税', prop: 'fBonded', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fAllowMrpPlan', label: '允许MRP', prop: 'fAllowMrpPlan', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fAllowLock', label: '允许锁库', prop: 'fAllowLock', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fIsVirtual', label: '是否虚仓', prop: 'fIsVirtual', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fAvailableAlert', label: '参与预警', prop: 'fAvailableAlert', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fAvailablePicking', label: '参与拣货', prop: 'fAvailablePicking', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fSortingPriority', label: '拣货优先级', prop: 'fSortingPriority', width: 110, defaultVisible: false, sortable: 'custom' },
   // 系统字段
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('warehouse', columns)
@@ -302,7 +304,9 @@ const queryParams = reactive({
   pageSize: 10,
   keyword: '',
   groupId: '',
-  dynamicFilters: [] as DynamicFilterInfo[]
+  dynamicFilters: [] as DynamicFilterInfo[],
+  sortField: undefined as string | undefined,
+  isAsc: undefined as boolean | undefined
 })
 
 const {
@@ -320,6 +324,19 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

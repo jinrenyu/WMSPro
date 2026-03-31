@@ -59,7 +59,7 @@ export interface AssistantDataEntry {
 }
 
 export const getAssistantDataEntries = (params?: any) => {
-    return request({ url: '/assistantdataentry', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', fid: params?.fid || '', dynamicFilters: params?.dynamicFilters || [] } })
+    return request({ url: '/assistantdataentry', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', fid: params?.fid || '', dynamicFilters: params?.dynamicFilters || [], sortField: params?.sortField, isAsc: params?.isAsc } })
 }
 export const getAssistantDataEntry = (id: string) => {
     return request({ url: `/assistantdataentry/${id}`, method: 'get' })

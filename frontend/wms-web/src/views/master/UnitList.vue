@@ -60,7 +60,7 @@
       </el-button>
     </div>
 
-    <el-table ref="tableRef" v-loading="loading" :data="list" style="width: 100%" border @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick">
+    <el-table ref="tableRef" v-loading="loading" :data="list" style="width: 100%" border @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" @sort-change="handleSortChange">
       <el-table-column type="selection" width="45" fixed="left" />
       <template v-for="col in allColumns" :key="col.key">
         <el-table-column
@@ -71,6 +71,7 @@
           :min-width="col.minWidth"
           :align="col.align"
           :fixed="col.fixed"
+          :sortable="col.sortable"
         >
           <template v-if="col.slotName" #default="scope">
             <template v-if="col.slotName === 'baseUnit'">
@@ -140,18 +141,18 @@ const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
 const columns: ColumnDef[] = [
-  { key: 'fNumber', label: '单位代码', prop: 'fNumber', width: 130 },
-  { key: 'fName', label: '单位名称', prop: 'fName', minWidth: 150 },
-  { key: 'fUnitGroupId', label: '单位组', prop: 'fUnitGroupId', width: 120 },
-  { key: 'fIsBaseUnit', label: '基准单位', width: 100, align: 'center', slotName: 'baseUnit' },
-  { key: 'fPrecision', label: '精度', prop: 'fPrecision', width: 80, align: 'center' },
-  { key: 'fCoefficient', label: '换算率', prop: 'fCoefficient', width: 100 },
-  { key: 'fRoundType', label: '舍入类型', prop: 'fRoundType', width: 100, defaultVisible: false },
-  { key: 'fConvertType', label: '转换类型', prop: 'fConvertType', width: 100, defaultVisible: false },
-  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false },
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fNumber', label: '单位代码', prop: 'fNumber', width: 130, sortable: 'custom' },
+  { key: 'fName', label: '单位名称', prop: 'fName', minWidth: 150, sortable: 'custom' },
+  { key: 'fUnitGroupId', label: '单位组', prop: 'fUnitGroupId', width: 120, sortable: 'custom' },
+  { key: 'fIsBaseUnit', label: '基准单位', prop: 'fIsBaseUnit', width: 100, align: 'center', slotName: 'baseUnit', sortable: 'custom' },
+  { key: 'fPrecision', label: '精度', prop: 'fPrecision', width: 80, align: 'center', sortable: 'custom' },
+  { key: 'fCoefficient', label: '换算率', prop: 'fCoefficient', width: 100, sortable: 'custom' },
+  { key: 'fRoundType', label: '舍入类型', prop: 'fRoundType', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fConvertType', label: '转换类型', prop: 'fConvertType', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false, sortable: 'custom' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('unit', columns)
@@ -159,7 +160,7 @@ const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns
 const loading = ref(false)
 const list = ref<Unit[]>([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', dynamicFilters: [] as DynamicFilterInfo[] })
+const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', dynamicFilters: [] as DynamicFilterInfo[], sortField: undefined as string | undefined, isAsc: undefined as boolean | undefined })
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
@@ -176,6 +177,18 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

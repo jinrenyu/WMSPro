@@ -84,6 +84,7 @@
           class="material-table"
           @selection-change="handleSelectionChange"
           @row-dblclick="handleRowDblClick"
+          @sort-change="handleSortChange"
         >
           <el-table-column type="selection" width="45" fixed="left" />
           <template v-for="col in allColumns" :key="col.key">
@@ -95,6 +96,7 @@
               :min-width="col.minWidth"
               :align="col.align"
               :fixed="col.fixed"
+              :sortable="col.sortable"
             >
               <template v-if="col.slotName" #default="scope">
                 <template v-if="col.slotName === 'boolTag'">
@@ -363,41 +365,41 @@ const tableRef = ref()
 
 const columns: ColumnDef[] = [
   // 基本信息
-  { key: 'fNumber', label: '物料编码', prop: 'fNumber', width: 150 },
-  { key: 'fName', label: '物料名称', prop: 'fName', minWidth: 180 },
-  { key: 'fSpecification', label: '规格型号', prop: 'fSpecification', minWidth: 150 },
-  { key: 'fErpClsId', label: '物料属性', prop: 'fErpClsId', width: 120 },
-  { key: 'fTypeId', label: '物料类别', prop: 'fTypeId', width: 120 },
-  { key: 'fGroupName', label: '物料分组', prop: 'fGroupName', width: 120 },
-  { key: 'fAbc', label: 'ABC分类', prop: 'fAbc', width: 100, defaultVisible: false },
-  { key: 'fBarcode', label: '条码', prop: 'fBarcode', width: 150, defaultVisible: false },
-  { key: 'fOldNumber', label: '旧料号', prop: 'fOldNumber', width: 130, defaultVisible: false },
-  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false },
+  { key: 'fNumber', label: '物料编码', prop: 'fNumber', width: 150, sortable: 'custom' },
+  { key: 'fName', label: '物料名称', prop: 'fName', minWidth: 180, sortable: 'custom' },
+  { key: 'fSpecification', label: '规格型号', prop: 'fSpecification', minWidth: 150, sortable: 'custom' },
+  { key: 'fErpClsId', label: '物料属性', prop: 'fErpClsId', width: 120, sortable: 'custom' },
+  { key: 'fTypeId', label: '物料类别', prop: 'fTypeId', width: 120, sortable: 'custom' },
+  { key: 'fGroupName', label: '物料分组', prop: 'fGroupName', width: 120, sortable: 'custom' },
+  { key: 'fAbc', label: 'ABC分类', prop: 'fAbc', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fBarcode', label: '条码', prop: 'fBarcode', width: 150, defaultVisible: false, sortable: 'custom' },
+  { key: 'fOldNumber', label: '旧料号', prop: 'fOldNumber', width: 130, defaultVisible: false, sortable: 'custom' },
+  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false, sortable: 'custom' },
   // 单位信息
-  { key: 'fBaseUnitName', label: '基本单位', prop: 'fBaseUnitName', width: 100 },
-  { key: 'fStoreUnitId', label: '库存单位', prop: 'fStoreUnitId', width: 100, defaultVisible: false },
-  { key: 'fSaleUnitId', label: '销售单位', prop: 'fSaleUnitId', width: 100, defaultVisible: false },
-  { key: 'fPurchaseUnitId', label: '采购单位', prop: 'fPurchaseUnitId', width: 100, defaultVisible: false },
-  { key: 'fNetWeight', label: '净重', prop: 'fNetWeight', width: 100, defaultVisible: false },
-  { key: 'fGrossWeight', label: '毛重', prop: 'fGrossWeight', width: 100, defaultVisible: false },
+  { key: 'fBaseUnitName', label: '基本单位', prop: 'fBaseUnitName', width: 100, sortable: 'custom' },
+  { key: 'fStoreUnitId', label: '库存单位', prop: 'fStoreUnitId', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fSaleUnitId', label: '销售单位', prop: 'fSaleUnitId', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fPurchaseUnitId', label: '采购单位', prop: 'fPurchaseUnitId', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fNetWeight', label: '净重', prop: 'fNetWeight', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fGrossWeight', label: '毛重', prop: 'fGrossWeight', width: 100, defaultVisible: false, sortable: 'custom' },
   // 库存信息
-  { key: 'fIsBatchManage', label: '批号管理', width: 100, align: 'center', slotName: 'boolTag' },
-  { key: 'fCheckIncoming', label: '来料检验', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fVPart', label: '虚拟件', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fMaxQty', label: '最大库存', prop: 'fMaxQty', width: 110, defaultVisible: false },
-  { key: 'fSafeQty', label: '安全库存', prop: 'fSafeQty', width: 110, defaultVisible: false },
-  { key: 'fDeStockName', label: '默认仓库', prop: 'fDeStockName', width: 120, defaultVisible: false },
-  { key: 'fDeSpName', label: '默认仓位', prop: 'fDeSpName', width: 120, defaultVisible: false },
+  { key: 'fIsBatchManage', label: '批号管理', prop: 'fIsBatchManage', width: 100, align: 'center', slotName: 'boolTag', sortable: 'custom' },
+  { key: 'fCheckIncoming', label: '来料检验', prop: 'fCheckIncoming', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fVPart', label: '虚拟件', prop: 'fVPart', width: 100, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fMaxQty', label: '最大库存', prop: 'fMaxQty', width: 110, defaultVisible: false, sortable: 'custom' },
+  { key: 'fSafeQty', label: '安全库存', prop: 'fSafeQty', width: 110, defaultVisible: false, sortable: 'custom' },
+  { key: 'fDeStockName', label: '默认仓库', prop: 'fDeStockName', width: 120, defaultVisible: false, sortable: 'custom' },
+  { key: 'fDeSpName', label: '默认仓位', prop: 'fDeSpName', width: 120, defaultVisible: false, sortable: 'custom' },
   // 采购与保质期
-  { key: 'fMinPoQty', label: '最小订货量', prop: 'fMinPoQty', width: 110, defaultVisible: false },
-  { key: 'fIncreaseQty', label: '最小包装量', prop: 'fIncreaseQty', width: 110, defaultVisible: false },
-  { key: 'fIsKfPeriod', label: '启用保质期', width: 110, align: 'center', slotName: 'boolTag', defaultVisible: false },
-  { key: 'fKfPeriod', label: '保质期限', prop: 'fKfPeriod', width: 100, defaultVisible: false },
-  { key: 'fKfUnit', label: '保质期单位', width: 110, slotName: 'kfUnit', defaultVisible: false },
+  { key: 'fMinPoQty', label: '最小订货量', prop: 'fMinPoQty', width: 110, defaultVisible: false, sortable: 'custom' },
+  { key: 'fIncreaseQty', label: '最小包装量', prop: 'fIncreaseQty', width: 110, defaultVisible: false, sortable: 'custom' },
+  { key: 'fIsKfPeriod', label: '启用保质期', prop: 'fIsKfPeriod', width: 110, align: 'center', slotName: 'boolTag', defaultVisible: false, sortable: 'custom' },
+  { key: 'fKfPeriod', label: '保质期限', prop: 'fKfPeriod', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fKfUnit', label: '保质期单位', prop: 'fKfUnit', width: 110, slotName: 'kfUnit', defaultVisible: false, sortable: 'custom' },
   // 系统字段
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('material', columns)
@@ -410,7 +412,9 @@ const queryParams = reactive({
   pageSize: 10,
   keyword: '',
   groupId: '',
-  dynamicFilters: [] as DynamicFilterInfo[]
+  dynamicFilters: [] as DynamicFilterInfo[],
+  sortField: undefined as string | undefined,
+  isAsc: undefined as boolean | undefined
 })
 
 const {
@@ -428,6 +432,19 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

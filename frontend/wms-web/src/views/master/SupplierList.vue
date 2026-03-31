@@ -81,6 +81,7 @@
       border
       @selection-change="handleSelectionChange"
       @row-dblclick="handleRowDblClick"
+      @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="45" fixed="left" />
       <template v-for="col in allColumns" :key="col.key">
@@ -92,6 +93,7 @@
           :min-width="col.minWidth"
           :align="col.align"
           :fixed="col.fixed"
+          :sortable="col.sortable"
         >
           <template v-if="col.slotName" #default="scope">
             <template v-if="col.slotName === 'createTime'">
@@ -178,15 +180,15 @@ const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
 const columns: ColumnDef[] = [
-  { key: 'fNumber', label: '供应商编码', prop: 'fNumber', width: 150 },
-  { key: 'fName', label: '供应商名称', prop: 'fName', minWidth: 200 },
-  { key: 'fContact', label: '联系人', prop: 'fContact', width: 120 },
-  { key: 'fPhone', label: '电话', prop: 'fPhone', width: 150 },
-  { key: 'fAddress', label: '地址', prop: 'fAddress', minWidth: 250 },
-  { key: 'fNote', label: '备注', prop: 'fNote', minWidth: 200, defaultVisible: false },
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fNumber', label: '供应商编码', prop: 'fNumber', width: 150, sortable: 'custom' },
+  { key: 'fName', label: '供应商名称', prop: 'fName', minWidth: 200, sortable: 'custom' },
+  { key: 'fContact', label: '联系人', prop: 'fContact', width: 120, sortable: 'custom' },
+  { key: 'fPhone', label: '电话', prop: 'fPhone', width: 150, sortable: 'custom' },
+  { key: 'fAddress', label: '地址', prop: 'fAddress', minWidth: 250, sortable: 'custom' },
+  { key: 'fNote', label: '备注', prop: 'fNote', minWidth: 200, defaultVisible: false, sortable: 'custom' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('supplier', columns)
@@ -199,7 +201,9 @@ const queryParams = reactive({
   pageSize: 10,
   keyword: '',
   groupId: '',
-  dynamicFilters: [] as DynamicFilterInfo[]
+  dynamicFilters: [] as DynamicFilterInfo[],
+  sortField: undefined as string | undefined,
+  isAsc: undefined as boolean | undefined
 })
 
 const {
@@ -217,6 +221,19 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

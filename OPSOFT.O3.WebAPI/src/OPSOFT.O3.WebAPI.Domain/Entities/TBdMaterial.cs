@@ -350,4 +350,34 @@ public class TBdMaterial : BaseEntity, IApprovable, IDisableable
     /// </summary>
     [SugarColumn(ColumnName = "FISVMIBUSINESS", IsNullable = true)]
     public bool? FISVMIBUSINESS { get; set; }
+
+    // ---- 导航属性（关联排序用） ----
+
+    /// <summary>
+    /// 导航：物料分组
+    /// </summary>
+    [Navigate(NavigateType.OneToOne, nameof(FGroupId))]
+    [SugarColumn(IsIgnore = true)]
+    public SysBaseDataGroup? Group { get; set; }
+
+    /// <summary>
+    /// 导航：基本单位
+    /// </summary>
+    [Navigate(NavigateType.OneToOne, nameof(FBaseUnitId))]
+    [SugarColumn(IsIgnore = true)]
+    public TBdUnit? BaseUnit { get; set; }
+
+    /// <summary>
+    /// 导航：默认仓库
+    /// </summary>
+    [Navigate(NavigateType.OneToOne, nameof(FDeStockId))]
+    [SugarColumn(IsIgnore = true)]
+    public TBdStock? DeStock { get; set; }
+
+    /// <summary>
+    /// 导航：默认仓位
+    /// </summary>
+    [Navigate(NavigateType.OneToOne, nameof(FDeSpId))]
+    [SugarColumn(IsIgnore = true)]
+    public TBdStockPlace? DeSp { get; set; }
 }

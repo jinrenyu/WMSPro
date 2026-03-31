@@ -60,7 +60,7 @@
       </el-button>
     </div>
 
-    <el-table ref="tableRef" v-loading="loading" :data="list" style="width: 100%" border @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick">
+    <el-table ref="tableRef" v-loading="loading" :data="list" style="width: 100%" border @selection-change="handleSelectionChange" @row-dblclick="handleRowDblClick" @sort-change="handleSortChange">
       <el-table-column type="selection" width="45" fixed="left" />
       <template v-for="col in allColumns" :key="col.key">
         <el-table-column
@@ -71,6 +71,7 @@
           :min-width="col.minWidth"
           :align="col.align"
           :fixed="col.fixed"
+          :sortable="col.sortable"
         >
           <template v-if="col.slotName" #default="scope">
             <template v-if="col.slotName === 'allowMix'">
@@ -137,16 +138,16 @@ const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
 const columns: ColumnDef[] = [
-  { key: 'fNumber', label: '仓位代码', prop: 'fNumber', width: 130 },
-  { key: 'fName', label: '仓位名称', prop: 'fName', minWidth: 180 },
-  { key: 'fStockName', label: '所属仓库', prop: 'fStockName', width: 150 },
-  { key: 'fSpProperty', label: '仓位属性', prop: 'fSpProperty', width: 120 },
-  { key: 'fAllowMix', label: '允许混放', width: 100, align: 'center', slotName: 'allowMix' },
-  { key: 'fMaxCapacity', label: '最大容量', prop: 'fMaxCapacity', width: 110, defaultVisible: false },
-  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false },
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fNumber', label: '仓位代码', prop: 'fNumber', width: 130, sortable: 'custom' },
+  { key: 'fName', label: '仓位名称', prop: 'fName', minWidth: 180, sortable: 'custom' },
+  { key: 'fStockName', label: '所属仓库', prop: 'fStockName', width: 150, sortable: 'custom' },
+  { key: 'fSpProperty', label: '仓位属性', prop: 'fSpProperty', width: 120, sortable: 'custom' },
+  { key: 'fAllowMix', label: '允许混放', prop: 'fAllowMix', width: 100, align: 'center', slotName: 'allowMix', sortable: 'custom' },
+  { key: 'fMaxCapacity', label: '最大容量', prop: 'fMaxCapacity', width: 110, defaultVisible: false, sortable: 'custom' },
+  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false, sortable: 'custom' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('stockplace', columns)
@@ -154,7 +155,7 @@ const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns
 const loading = ref(false)
 const list = ref<StockPlace[]>([])
 const total = ref(0)
-const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', dynamicFilters: [] as DynamicFilterInfo[] })
+const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', dynamicFilters: [] as DynamicFilterInfo[], sortField: undefined as string | undefined, isAsc: undefined as boolean | undefined })
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
@@ -171,6 +172,18 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

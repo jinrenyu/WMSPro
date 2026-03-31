@@ -81,6 +81,7 @@
       border
       @selection-change="handleSelectionChange"
       @row-dblclick="handleRowDblClick"
+      @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="45" fixed="left" />
       <template v-for="col in allColumns" :key="col.key">
@@ -92,6 +93,7 @@
           :min-width="col.minWidth"
           :align="col.align"
           :fixed="col.fixed"
+          :sortable="col.sortable"
         >
           <template v-if="col.slotName" #default="scope">
             <template v-if="col.slotName === 'createTime'">
@@ -304,35 +306,35 @@ const tableRef = ref()
 
 const columns: ColumnDef[] = [
   // 基本信息
-  { key: 'fNumber', label: '客户编码', prop: 'fNumber', width: 150 },
-  { key: 'fName', label: '客户名称', prop: 'fName', minWidth: 200 },
-  { key: 'fShortName', label: '简称', prop: 'fShortName', width: 150 },
-  { key: 'fContact', label: '联系人', prop: 'fContact', width: 120 },
-  { key: 'fPhone', label: '电话', prop: 'fPhone', width: 150 },
-  { key: 'fSeller', label: '销售员', prop: 'fSeller', width: 120, defaultVisible: false },
-  { key: 'fAddress', label: '地址', prop: 'fAddress', minWidth: 200 },
-  { key: 'fNote', label: '备注', prop: 'fNote', minWidth: 200, defaultVisible: false },
+  { key: 'fNumber', label: '客户编码', prop: 'fNumber', width: 150, sortable: 'custom' },
+  { key: 'fName', label: '客户名称', prop: 'fName', minWidth: 200, sortable: 'custom' },
+  { key: 'fShortName', label: '简称', prop: 'fShortName', width: 150, sortable: 'custom' },
+  { key: 'fContact', label: '联系人', prop: 'fContact', width: 120, sortable: 'custom' },
+  { key: 'fPhone', label: '电话', prop: 'fPhone', width: 150, sortable: 'custom' },
+  { key: 'fSeller', label: '销售员', prop: 'fSeller', width: 120, defaultVisible: false, sortable: 'custom' },
+  { key: 'fAddress', label: '地址', prop: 'fAddress', minWidth: 200, sortable: 'custom' },
+  { key: 'fNote', label: '备注', prop: 'fNote', minWidth: 200, defaultVisible: false, sortable: 'custom' },
   // 联系信息
-  { key: 'fTel', label: '座机', prop: 'fTel', width: 140, defaultVisible: false },
-  { key: 'fFax', label: '传真', prop: 'fFax', width: 140, defaultVisible: false },
-  { key: 'fEmail', label: '邮箱', prop: 'fEmail', width: 180, defaultVisible: false },
-  { key: 'fWebSite', label: '网站', prop: 'fWebSite', width: 180, defaultVisible: false },
-  { key: 'fCountry', label: '国家', prop: 'fCountry', width: 100, defaultVisible: false },
-  { key: 'fProvincial', label: '省份', prop: 'fProvincial', width: 100, defaultVisible: false },
-  { key: 'fCity', label: '城市', prop: 'fCity', width: 100, defaultVisible: false },
-  { key: 'fZip', label: '邮编', prop: 'fZip', width: 100, defaultVisible: false },
-  { key: 'fTradingCurrId', label: '交易币种', prop: 'fTradingCurrId', width: 120, defaultVisible: false },
-  { key: 'fNameEn', label: '英文名称', prop: 'fNameEn', width: 150, defaultVisible: false },
-  { key: 'fAddressEn', label: '英文地址', prop: 'fAddressEn', minWidth: 200, defaultVisible: false },
+  { key: 'fTel', label: '座机', prop: 'fTel', width: 140, defaultVisible: false, sortable: 'custom' },
+  { key: 'fFax', label: '传真', prop: 'fFax', width: 140, defaultVisible: false, sortable: 'custom' },
+  { key: 'fEmail', label: '邮箱', prop: 'fEmail', width: 180, defaultVisible: false, sortable: 'custom' },
+  { key: 'fWebSite', label: '网站', prop: 'fWebSite', width: 180, defaultVisible: false, sortable: 'custom' },
+  { key: 'fCountry', label: '国家', prop: 'fCountry', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fProvincial', label: '省份', prop: 'fProvincial', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fCity', label: '城市', prop: 'fCity', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fZip', label: '邮编', prop: 'fZip', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fTradingCurrId', label: '交易币种', prop: 'fTradingCurrId', width: 120, defaultVisible: false, sortable: 'custom' },
+  { key: 'fNameEn', label: '英文名称', prop: 'fNameEn', width: 150, defaultVisible: false, sortable: 'custom' },
+  { key: 'fAddressEn', label: '英文地址', prop: 'fAddressEn', minWidth: 200, defaultVisible: false, sortable: 'custom' },
   // 财务信息
-  { key: 'fBank', label: '开户银行', prop: 'fBank', width: 150, defaultVisible: false },
-  { key: 'fAccount', label: '银行账号', prop: 'fAccount', width: 180, defaultVisible: false },
-  { key: 'fLegalPerson', label: '法人', prop: 'fLegalPerson', width: 100, defaultVisible: false },
-  { key: 'fTaxRegisterCode', label: '税务登记号', prop: 'fTaxRegisterCode', width: 150, defaultVisible: false },
+  { key: 'fBank', label: '开户银行', prop: 'fBank', width: 150, defaultVisible: false, sortable: 'custom' },
+  { key: 'fAccount', label: '银行账号', prop: 'fAccount', width: 180, defaultVisible: false, sortable: 'custom' },
+  { key: 'fLegalPerson', label: '法人', prop: 'fLegalPerson', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fTaxRegisterCode', label: '税务登记号', prop: 'fTaxRegisterCode', width: 150, defaultVisible: false, sortable: 'custom' },
   // 系统字段
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('customer', columns)
@@ -345,7 +347,9 @@ const queryParams = reactive({
   pageSize: 10,
   keyword: '',
   groupId: '',
-  dynamicFilters: [] as DynamicFilterInfo[]
+  dynamicFilters: [] as DynamicFilterInfo[],
+  sortField: undefined as string | undefined,
+  isAsc: undefined as boolean | undefined
 })
 
 const {
@@ -363,6 +367,19 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

@@ -81,6 +81,7 @@
       border
       @selection-change="handleSelectionChange"
       @row-dblclick="handleRowDblClick"
+      @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="45" fixed="left" />
       <template v-for="col in allColumns" :key="col.key">
@@ -92,6 +93,7 @@
           :min-width="col.minWidth"
           :align="col.align"
           :fixed="col.fixed"
+          :sortable="col.sortable"
         >
           <template v-if="col.slotName" #default="scope">
             <template v-if="col.slotName === 'fbartype'">
@@ -214,16 +216,16 @@ const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
 const columns: ColumnDef[] = [
-  { key: 'fmaterialnumber', label: '物料编码', prop: 'fmaterialnumber', width: 150 },
-  { key: 'fmaterialname', label: '物料名称', prop: 'fmaterialname', minWidth: 150 },
-  { key: 'fbartype', label: '条码类型', width: 140, align: 'center', slotName: 'fbartype' },
-  { key: 'fcheckdate', label: '审核日期', width: 160, slotName: 'fcheckdate' },
-  { key: 'fcheckerid', label: '审核人', prop: 'fcheckerid', width: 120 },
-  { key: 'fdisabledate', label: '禁用日期', width: 160, slotName: 'fdisabledate', defaultVisible: false },
-  { key: 'fdisableid', label: '禁用人', prop: 'fdisableid', width: 120, defaultVisible: false },
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'fstatus' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fmaterialnumber', label: '物料编码', prop: 'fmaterialnumber', width: 150, sortable: 'custom' },
+  { key: 'fmaterialname', label: '物料名称', prop: 'fmaterialname', minWidth: 150, sortable: 'custom' },
+  { key: 'fbartype', label: '条码类型', prop: 'fbartype', width: 140, align: 'center', slotName: 'fbartype', sortable: 'custom' },
+  { key: 'fcheckdate', label: '审核日期', prop: 'fcheckdate', width: 160, slotName: 'fcheckdate', sortable: 'custom' },
+  { key: 'fcheckerid', label: '审核人', prop: 'fcheckerid', width: 120, sortable: 'custom' },
+  { key: 'fdisabledate', label: '禁用日期', prop: 'fdisabledate', width: 160, slotName: 'fdisabledate', defaultVisible: false, sortable: 'custom' },
+  { key: 'fdisableid', label: '禁用人', prop: 'fdisableid', width: 120, defaultVisible: false, sortable: 'custom' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'fstatus', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('materialBarType', columns)
@@ -236,7 +238,9 @@ const queryParams = reactive({
   pageSize: 10,
   keyword: '',
   groupId: '',
-  dynamicFilters: [] as DynamicFilterInfo[]
+  dynamicFilters: [] as DynamicFilterInfo[],
+  sortField: undefined as string | undefined,
+  isAsc: undefined as boolean | undefined
 })
 
 const {
@@ -254,6 +258,19 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

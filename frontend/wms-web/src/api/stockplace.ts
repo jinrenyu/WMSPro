@@ -14,7 +14,7 @@ export interface StockPlace {
 }
 
 export const getStockPlaces = (params?: any) => {
-    return request({ url: '/stockplace', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', dynamicFilters: params?.dynamicFilters || [] } })
+    return request({ url: '/stockplace', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', dynamicFilters: params?.dynamicFilters || [], sortField: params?.sortField, isAsc: params?.isAsc } })
 }
 export const getStockPlace = (id: string) => {
     return request({ url: `/stockplace/${id}`, method: 'get' })

@@ -81,6 +81,7 @@
       border
       @selection-change="handleSelectionChange"
       @row-dblclick="handleRowDblClick"
+      @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="45" fixed="left" />
       <template v-for="col in allColumns" :key="col.key">
@@ -92,6 +93,7 @@
           :min-width="col.minWidth"
           :align="col.align"
           :fixed="col.fixed"
+          :sortable="col.sortable"
         >
           <template v-if="col.slotName" #default="scope">
             <template v-if="col.slotName === 'createTime'">
@@ -202,17 +204,17 @@ const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
 const columns: ColumnDef[] = [
-  { key: 'fNumber', label: '币别代码', prop: 'fNumber', width: 120 },
-  { key: 'fCode', label: '货币代码', prop: 'fCode', width: 120 },
-  { key: 'fName', label: '币别名称', prop: 'fName', minWidth: 150 },
-  { key: 'fExchangeRate', label: '汇率', prop: 'fExchangeRate', width: 120 },
-  { key: 'fFixRate', label: '换算方式', prop: 'fFixRate', width: 100, defaultVisible: false },
-  { key: 'fPriceDigits', label: '单价精度', prop: 'fPriceDigits', width: 100, align: 'center' },
-  { key: 'fAmountDigits', label: '金额精度', prop: 'fAmountDigits', width: 100, align: 'center' },
-  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false },
-  { key: 'fStatus', label: '审核状态', width: 100, align: 'center', slotName: 'status' },
-  { key: 'fDisabled', label: '禁用状态', width: 100, align: 'center', slotName: 'disabled' },
-  { key: 'cYmd', label: '创建时间', width: 180, slotName: 'createTime' },
+  { key: 'fNumber', label: '币别代码', prop: 'fNumber', width: 120, sortable: 'custom' },
+  { key: 'fCode', label: '货币代码', prop: 'fCode', width: 120, sortable: 'custom' },
+  { key: 'fName', label: '币别名称', prop: 'fName', minWidth: 150, sortable: 'custom' },
+  { key: 'fExchangeRate', label: '汇率', prop: 'fExchangeRate', width: 120, sortable: 'custom' },
+  { key: 'fFixRate', label: '换算方式', prop: 'fFixRate', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fPriceDigits', label: '单价精度', prop: 'fPriceDigits', width: 100, align: 'center', sortable: 'custom' },
+  { key: 'fAmountDigits', label: '金额精度', prop: 'fAmountDigits', width: 100, align: 'center', sortable: 'custom' },
+  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false, sortable: 'custom' },
+  { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
+  { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
+  { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
 const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('currency', columns)
@@ -225,7 +227,9 @@ const queryParams = reactive({
   pageSize: 10,
   keyword: '',
   groupId: '',
-  dynamicFilters: [] as DynamicFilterInfo[]
+  dynamicFilters: [] as DynamicFilterInfo[],
+  sortField: undefined as string | undefined,
+  isAsc: undefined as boolean | undefined
 })
 
 const {
@@ -243,6 +247,19 @@ const {
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
+  queryParams.page = 1
+  fetchData()
+}
+
+const handleSortChange = ({ prop, order }: { prop: string, order: string | null }) => {
+  queryParams.sortField = prop || undefined
+  if (order === 'ascending') {
+    queryParams.isAsc = true
+  } else if (order === 'descending') {
+    queryParams.isAsc = false
+  } else {
+    queryParams.isAsc = undefined
+  }
   queryParams.page = 1
   fetchData()
 }

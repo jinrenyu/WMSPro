@@ -16,7 +16,7 @@ export interface Unit {
 }
 
 export const getUnits = (params?: any) => {
-    return request({ url: '/unit', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', dynamicFilters: params?.dynamicFilters || [] } })
+    return request({ url: '/unit', method: 'get', params: { pageIndex: params?.page || 1, pageSize: params?.pageSize || 10, keyword: params?.keyword || '', groupId: params?.groupId || '', dynamicFilters: params?.dynamicFilters || [], sortField: params?.sortField, isAsc: params?.isAsc } })
 }
 export const getUnit = (id: string) => {
     return request({ url: `/unit/${id}`, method: 'get' })
