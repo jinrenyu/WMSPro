@@ -50,6 +50,16 @@
           <h2 class="page-title">{{ pageTitle }}</h2>
         </div>
         <div class="header-right">
+          <el-select
+            v-if="orgStore.orgs.length"
+            :model-value="orgStore.currentOrgId"
+            class="org-switcher"
+            placeholder="选择组织"
+            @change="orgStore.setCurrentOrg"
+          >
+            <template #prefix><el-icon><OfficeBuilding /></el-icon></template>
+            <el-option v-for="o in orgStore.orgs" :key="o.orgId" :label="o.orgName" :value="o.orgId" />
+          </el-select>
           <ThemeToggle />
           <div class="user-info">
             <el-avatar :size="32" class="user-avatar">A</el-avatar>
@@ -79,6 +89,7 @@ import { ElMessage } from 'element-plus'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import { usePermissionStore } from '../stores/permission'
 import { useMenuStore } from '../stores/menu'
+import { useOrgStore } from '../stores/org'
 import { getRefreshToken, clearTokens } from '../utils/token'
 import request from '../utils/request'
 
@@ -86,6 +97,7 @@ const router = useRouter()
 const route = useRoute()
 const username = ref(localStorage.getItem('username') || 'User')
 const menuStore = useMenuStore()
+const orgStore = useOrgStore()
 
 const activeMenu = computed(() => route.path)
 const menuList = computed(() => menuStore.sidebarMenus)
@@ -111,6 +123,9 @@ onMounted(async () => {
   if (!menuStore.loaded) {
     await menuStore.loadMenus()
   }
+  if (!orgStore.loaded) {
+    orgStore.loadOrgs()
+  }
 })
 
 const handleLogout = async () => {
@@ -124,6 +139,7 @@ const handleLogout = async () => {
   const permissionStore = usePermissionStore()
   permissionStore.resetPermissions()
   menuStore.resetMenus()
+  orgStore.reset()
   ElMessage.success('已退出登录')
   router.push('/login')
 }
@@ -211,6 +227,10 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.org-switcher {
+  width: 160px;
 }
 
 .user-info {

@@ -99,6 +99,7 @@ public static class DependencyInjection
         services.AddScoped<ILoginInfoService, LoginInfoService>();
 
         services.AddScoped<IMenuService, MenuService>();
+        services.AddScoped<IOrgService, OrgService>();
 
         // Phase 2: 基础资料
         services.AddScoped<DepartmentService>();
