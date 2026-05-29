@@ -4,7 +4,7 @@
       <!-- 左侧分组树面板（通用组件） -->
       <GroupPanel
         ref="groupPanelRef"
-        prg-key="BD_Material"
+        prg-key="Material"
         title="物料分组"
         @select="handleGroupSelect"
       />
@@ -32,8 +32,8 @@
               <el-button @click="fetchData"><el-icon><Search /></el-icon></el-button>
             </template>
           </el-input>
-          
-          
+
+
           <div class="header-right">
         <DynamicFilter
             v-model="queryParams.dynamicFilters"
@@ -135,231 +135,22 @@
         </div>
       </div>
     </div>
-
-    <!-- Create/Edit Dialog -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'create' ? '新增物料' : isReadonly ? '查看物料' : '编辑物料'"
-      width="750px"
-    >
-      <el-form :model="form" label-width="100px" :disabled="isReadonly">
-        <el-tabs v-model="activeTab">
-          <!-- 基本信息 -->
-          <el-tab-pane label="基本信息" name="basic">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="物料编码" required>
-                  <el-input v-model="form.fNumber" :disabled="dialogType === 'edit'" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="物料名称" required>
-                  <el-input v-model="form.fName" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="规格型号">
-                  <el-input v-model="form.fSpecification" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="物料属性">
-                  <el-input v-model="form.fErpClsId" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="物料类别">
-                  <el-input v-model="form.fTypeId" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="ABC分类">
-                  <el-input v-model="form.fAbc" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="物料分组">
-                  <el-tree-select
-                    v-model="form.fGroupId"
-                    :data="groupPanelRef?.treeData || []"
-                    :props="{ label: 'fName', children: 'children', value: 'uid' }"
-                    placeholder="请选择分组"
-                    clearable
-                    check-strictly
-                    style="width: 100%"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="条码">
-                  <el-input v-model="form.fBarcode" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="旧料号">
-                  <el-input v-model="form.fOldNumber" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-form-item label="描述">
-              <el-input v-model="form.fDescription" type="textarea" :rows="2" />
-            </el-form-item>
-          </el-tab-pane>
-
-          <!-- 单位信息 -->
-          <el-tab-pane label="单位信息" name="unit">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="基本单位">
-                  <LookupSelect v-model="form.fBaseUnitId" module="unit" placeholder="请选择基本单位" preload />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="库存单位">
-                  <LookupSelect v-model="form.fStoreUnitId" module="unit" placeholder="请选择库存单位" preload />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="销售单位">
-                  <LookupSelect v-model="form.fSaleUnitId" module="unit" placeholder="请选择销售单位" preload />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="采购单位">
-                  <LookupSelect v-model="form.fPurchaseUnitId" module="unit" placeholder="请选择采购单位" preload />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="净重">
-                  <el-input-number v-model="form.fNetWeight" :min="0" :precision="4" style="width: 100%" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="毛重">
-                  <el-input-number v-model="form.fGrossWeight" :min="0" :precision="4" style="width: 100%" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-tab-pane>
-
-          <!-- 库存信息 -->
-          <el-tab-pane label="库存信息" name="stock">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="最大库存">
-                  <el-input-number v-model="form.fMaxQty" :min="0" :precision="4" style="width: 100%" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="安全库存">
-                  <el-input-number v-model="form.fSafeQty" :min="0" :precision="4" style="width: 100%" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="默认仓库">
-                  <LookupSelect v-model="form.fDeStockId" module="warehouse" placeholder="请选择默认仓库" preload @change="handleWarehouseChange" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="默认仓位">
-                  <LookupSelect v-model="form.fDeSpId" module="stockplace" :parent-id="form.fDeStockId" placeholder="请先选择仓库" :disabled="!form.fDeStockId" preload />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="批号管理">
-                  <el-switch v-model="form.fIsBatchManage" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="来料检验">
-                  <el-switch v-model="form.fCheckIncoming" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="虚拟件">
-                  <el-switch v-model="form.fVPart" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-tab-pane>
-
-          <!-- 采购与保质期 -->
-          <el-tab-pane label="采购与保质期" name="purchase">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="最小订货量">
-                  <el-input-number v-model="form.fMinPoQty" :min="0" :precision="4" style="width: 100%" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="最小包装量">
-                  <el-input-number v-model="form.fIncreaseQty" :min="0" :precision="4" style="width: 100%" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="启用保质期">
-                  <el-switch v-model="form.fIsKfPeriod" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="保质期限">
-                  <el-input-number v-model="form.fKfPeriod" :min="0" :disabled="!form.fIsKfPeriod" style="width: 100%" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="保质期单位">
-                  <el-select v-model="form.fKfUnit" :disabled="!form.fIsKfPeriod" style="width: 100%">
-                    <el-option :value="0" label="天" />
-                    <el-option :value="1" label="月" />
-                    <el-option :value="2" label="年" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-tab-pane>
-        </el-tabs>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">{{ isReadonly ? '关闭' : '取消' }}</el-button>
-          <el-button v-if="!isReadonly" type="primary" @click="submitForm">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { getMaterials, getMaterial, createMaterial, updateMaterial, deleteMaterial, approveMaterial, unapproveMaterial, disableMaterial, enableMaterial, getFields, type Material } from '../../api/material'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getMaterials, deleteMaterial, approveMaterial, unapproveMaterial, disableMaterial, enableMaterial, getFields, type Material } from '../../api/material'
 import { formatDate } from '../../utils/format'
-import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
-import LookupSelect from '../../components/LookupSelect.vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
+const router = useRouter()
 const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
@@ -369,7 +160,7 @@ const columns: ColumnDef[] = [
   { key: 'fName', label: '物料名称', prop: 'fName', minWidth: 180, sortable: 'custom' },
   { key: 'fSpecification', label: '规格型号', prop: 'fSpecification', minWidth: 150, sortable: 'custom' },
   { key: 'fErpClsId', label: '物料属性', prop: 'fErpClsId', width: 120, sortable: 'custom' },
-  { key: 'fTypeId', label: '物料类别', prop: 'fTypeId', width: 120, sortable: 'custom' },
+  { key: 'fTypeName', label: '物料类别', prop: 'fTypeName', width: 120 },
   { key: 'fGroupName', label: '物料分组', prop: 'fGroupName', width: 120, sortable: 'custom' },
   { key: 'fAbc', label: 'ABC分类', prop: 'fAbc', width: 100, defaultVisible: false, sortable: 'custom' },
   { key: 'fBarcode', label: '条码', prop: 'fBarcode', width: 150, defaultVisible: false, sortable: 'custom' },
@@ -419,7 +210,7 @@ const queryParams = reactive({
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
-  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable, clearSelection
+  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable
 } = useTableSelection<Material>({
   entityName: '物料',
   approveFn: approveMaterial,
@@ -449,49 +240,6 @@ const handleSortChange = ({ prop, order }: { prop: string, order: string | null 
   fetchData()
 }
 
-// --- 物料 ---
-const dialogVisible = ref(false)
-const dialogType = ref<'create' | 'edit'>('create')
-const activeTab = ref('basic')
-
-const isReadonly = computed(() => dialogType.value === 'edit' && (form.fStatus === 40 || form.fDisabled))
-
-const defaultForm = {
-  uid: undefined as string | undefined,
-  fStatus: 0,
-  fNumber: '',
-  fName: '',
-  fSpecification: '',
-  fDescription: '',
-  fBarcode: '',
-  fErpClsId: '',
-  fAbc: '',
-  fMaxQty: 0,
-  fSafeQty: 0,
-  fNetWeight: 0,
-  fGrossWeight: 0,
-  fBaseUnitId: '',
-  fStoreUnitId: '',
-  fSaleUnitId: '',
-  fPurchaseUnitId: '',
-  fIsKfPeriod: false,
-  fKfUnit: 0,
-  fKfPeriod: 0,
-  fIsBatchManage: false,
-  fMinPoQty: 0,
-  fIncreaseQty: 0,
-  fCheckIncoming: false,
-  fOldNumber: '',
-  fDeStockId: '',
-  fDeSpId: '',
-  fVPart: false,
-  fTypeId: '',
-  fGroupId: '',
-  fDisabled: false
-}
-
-const form = reactive({ ...defaultForm })
-
 async function fetchData() {
   loading.value = true
   try {
@@ -506,55 +254,11 @@ async function fetchData() {
 }
 
 const handleAdd = () => {
-  dialogType.value = 'create'
-  activeTab.value = 'basic'
-  Object.assign(form, { ...defaultForm })
-  dialogVisible.value = true
+  router.push({ name: 'MaterialEdit', query: queryParams.groupId ? { groupId: queryParams.groupId } : {} })
 }
 
-const handleEdit = async (row: Material) => {
-  dialogType.value = 'edit'
-  activeTab.value = 'basic'
-  try {
-    const res: any = await getMaterial(row.uid!)
-    const d = res.data
-    Object.assign(form, {
-      uid: d.uid,
-      fStatus: d.fStatus || 0,
-      fNumber: d.fNumber || '',
-      fName: d.fName || '',
-      fSpecification: d.fSpecification || '',
-      fDescription: d.fDescription || '',
-      fBarcode: d.fBarcode || '',
-      fErpClsId: d.fErpClsId || '',
-      fAbc: d.fAbc || '',
-      fMaxQty: d.fMaxQty || 0,
-      fSafeQty: d.fSafeQty || 0,
-      fNetWeight: d.fNetWeight || 0,
-      fGrossWeight: d.fGrossWeight || 0,
-      fBaseUnitId: d.fBaseUnitId || '',
-      fStoreUnitId: d.fStoreUnitId || '',
-      fSaleUnitId: d.fSaleUnitId || '',
-      fPurchaseUnitId: d.fPurchaseUnitId || '',
-      fIsKfPeriod: d.fIsKfPeriod || false,
-      fKfUnit: d.fKfUnit || 0,
-      fKfPeriod: d.fKfPeriod || 0,
-      fIsBatchManage: d.fIsBatchManage || false,
-      fMinPoQty: d.fMinPoQty || 0,
-      fIncreaseQty: d.fIncreaseQty || 0,
-      fCheckIncoming: d.fCheckIncoming || false,
-      fOldNumber: d.fOldNumber || '',
-      fDeStockId: d.fDeStockId || '',
-      fDeSpId: d.fDeSpId || '',
-      fVPart: d.fVPart || false,
-      fTypeId: d.fTypeId || '',
-      fGroupId: d.fGroupId || '',
-      fDisabled: d.fDisabled || false
-    })
-  } catch (error) {
-    console.error('Fetch material detail failed:', error)
-  }
-  dialogVisible.value = true
+const handleEdit = (row: Material) => {
+  router.push({ name: 'MaterialEdit', query: { uid: row.uid } })
 }
 
 const handleEditSelected = () => {
@@ -564,69 +268,6 @@ const handleEditSelected = () => {
 
 const handleRowDblClick = (row: Material) => {
   handleEdit(row)
-}
-
-const handleWarehouseChange = () => {
-  form.fDeSpId = ''
-}
-
-const submitForm = async () => {
-  if (!form.fNumber || !form.fName) {
-    ElMessage.warning('请输入物料编码和名称')
-    return
-  }
-
-  const data = {
-    fNumber: form.fNumber,
-    fName: form.fName,
-    fSpecification: form.fSpecification,
-    fDescription: form.fDescription,
-    fBarcode: form.fBarcode,
-    fErpClsId: form.fErpClsId,
-    fAbc: form.fAbc,
-    fMaxQty: form.fMaxQty,
-    fSafeQty: form.fSafeQty,
-    fNetWeight: form.fNetWeight,
-    fGrossWeight: form.fGrossWeight,
-    fBaseUnitId: form.fBaseUnitId,
-    fStoreUnitId: form.fStoreUnitId,
-    fSaleUnitId: form.fSaleUnitId,
-    fPurchaseUnitId: form.fPurchaseUnitId,
-    fIsKfPeriod: form.fIsKfPeriod,
-    fKfUnit: form.fKfUnit,
-    fKfPeriod: form.fKfPeriod,
-    fIsBatchManage: form.fIsBatchManage,
-    fMinPoQty: form.fMinPoQty,
-    fIncreaseQty: form.fIncreaseQty,
-    fCheckIncoming: form.fCheckIncoming,
-    fOldNumber: form.fOldNumber,
-    fDeStockId: form.fDeStockId,
-    fDeSpId: form.fDeSpId,
-    fVPart: form.fVPart,
-    fTypeId: form.fTypeId,
-    fGroupId: form.fGroupId
-  }
-
-  try {
-    if (dialogType.value === 'create') {
-      await createMaterial(data)
-      ElMessage.success('创建成功')
-    } else {
-      const { fNumber, ...updateData } = data
-      await updateMaterial(form.uid!, updateData)
-      ElMessage.success('更新成功')
-    }
-    dialogVisible.value = false
-    fetchData()
-  } catch (error: any) {
-    console.error('Submit material failed:', error)
-    if (error.response && error.response.data) {
-      const errorMsg = error.response.data.message || JSON.stringify(error.response.data)
-      ElMessage.error(errorMsg)
-    } else {
-      ElMessage.error('提交失败')
-    }
-  }
 }
 
 onMounted(() => {

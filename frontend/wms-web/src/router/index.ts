@@ -58,6 +58,12 @@ const routes = [
                 meta: { title: '物料管理' }
             },
             {
+                path: 'master/materials/edit',
+                name: 'MaterialEdit',
+                component: () => import('../views/master/MaterialEdit.vue'),
+                meta: { title: '物料-维护' }
+            },
+            {
                 path: 'master/customers',
                 name: 'CustomerList',
                 component: () => import('../views/master/CustomerList.vue'),
