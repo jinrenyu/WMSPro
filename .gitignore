@@ -61,3 +61,4 @@ nunit-*.xml
 
 # Claude Code
 .claude/
+/designpictures
