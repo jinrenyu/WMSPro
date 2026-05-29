@@ -26,6 +26,128 @@ public class DataSeedService
         await SeedAdminPermissionsAsync();
         await SeedSuperAdminAsync();
         await SeedStatusAsync();
+        await SeedFlexAuxPropertiesAsync();
+        await SeedOrgsAsync();
+        await SeedMaterialTypesAsync();
+    }
+
+    private async Task SeedFlexAuxPropertiesAsync()
+    {
+        var defs = new (string Number, string Name)[]
+        {
+            ("AUXP001", "颜色"),
+            ("AUXP002", "尺寸"),
+            ("AUXP003", "批次"),
+            ("AUXP004", "等级"),
+        };
+        foreach (var (number, name) in defs)
+        {
+            var exists = await _db.Queryable<TBdFlexauxproperty>().Where(p => p.Fnumber == number).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBdFlexauxproperty
+            {
+                Uid = Guid.NewGuid().ToString("N"),
+                FInterId = number,
+                Fnumber = number,
+                Fname = name,
+                Fvaluetype = "1",
+                FCompanyId = "DEFAULT",
+                CYmd = DateTime.Now,
+                CUser = "system",
+                MYmd = DateTime.Now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+    }
+
+    private async Task SeedOrgsAsync()
+    {
+        var orgs = new[]
+        {
+            new { Uid = "org_hq", Num = "ORG-HQ", Name = "总公司",     Parent = "" },
+            new { Uid = "org_sh", Num = "ORG-SH", Name = "上海分公司", Parent = "org_hq" },
+            new { Uid = "org_bj", Num = "ORG-BJ", Name = "北京分公司", Parent = "org_hq" },
+        };
+        foreach (var o in orgs)
+        {
+            var exists = await _db.Queryable<SysOrgStructure>().Where(x => x.Uid == o.Uid).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new SysOrgStructure
+            {
+                Uid = o.Uid,
+                FInterId = o.Uid,
+                Fparaid = o.Parent,
+                Fnumber = o.Num,
+                Fname = o.Name,
+                Fcheckdate = DateTime.MinValue,
+                Fdisabledate = DateTime.MinValue,
+                FCompanyId = "DEFAULT",
+                CYmd = DateTime.Now,
+                CUser = "system",
+                MYmd = DateTime.Now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+
+        // 用户-组织关系：admin / superadmin 各挂 3 个组织，默认总公司
+        var assignments = new[]
+        {
+            new { User = "admin",      Org = "org_hq", Def = true },
+            new { User = "admin",      Org = "org_sh", Def = false },
+            new { User = "admin",      Org = "org_bj", Def = false },
+            new { User = "superadmin", Org = "org_hq", Def = true },
+            new { User = "superadmin", Org = "org_sh", Def = false },
+            new { User = "superadmin", Org = "org_bj", Def = false },
+        };
+        foreach (var a in assignments)
+        {
+            var exists = await _db.Queryable<SysUserOrg>().Where(x => x.UserId == a.User && x.Forgid == a.Org).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new SysUserOrg
+            {
+                Uid = Guid.NewGuid().ToString("N"),
+                FInterId = Guid.NewGuid().ToString("N"),
+                UserId = a.User,
+                Forgid = a.Org,
+                Fisdefault = a.Def,
+                FCompanyId = "DEFAULT",
+                CYmd = DateTime.Now,
+                CUser = "system",
+                MYmd = DateTime.Now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+    }
+
+    private async Task SeedMaterialTypesAsync()
+    {
+        var types = new (string Num, string Name)[]
+        {
+            ("MT-RAW",  "原材料"),
+            ("MT-SEMI", "半成品"),
+            ("MT-FIN",  "成品"),
+            ("MT-OUT",  "外购件"),
+            ("MT-CONS", "消耗品"),
+        };
+        foreach (var (num, name) in types)
+        {
+            var exists = await _db.Queryable<TBdMaterialtype>().Where(x => x.Fnumber == num).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBdMaterialtype
+            {
+                Uid = Guid.NewGuid().ToString("N"),
+                FInterId = num,
+                Fnumber = num,
+                Fname = name,
+                Fcheckdate = DateTime.MinValue,
+                Fdisabledate = DateTime.MinValue,
+                FCompanyId = "DEFAULT",
+                CYmd = DateTime.Now,
+                CUser = "system",
+                MYmd = DateTime.Now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
     }
 
     private async Task SeedRoleTypeAsync()
