@@ -234,10 +234,11 @@ public class CreateCurrencyRequestValidator : AbstractValidator<CreateCurrencyRe
     public CreateCurrencyRequestValidator()
     {
         RuleFor(x => x.FNumber).NotEmpty().WithMessage("编码不能为空").MaximumLength(50);
-        RuleFor(x => x.FCode).NotEmpty().WithMessage("货币代码不能为空").MaximumLength(10);
+        RuleFor(x => x.FCode).MaximumLength(10);
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
         RuleFor(x => x.FDescription).MaximumLength(500);
         RuleFor(x => x.FExchangeRate).GreaterThan(0).WithMessage("汇率必须大于0");
+        RuleFor(x => x.FFixRate).InclusiveBetween(1, 2).WithMessage("折算方式只能为 1 或 2");
         RuleFor(x => x.FPriceDigits).GreaterThanOrEqualTo(0);
         RuleFor(x => x.FAmountDigits).GreaterThanOrEqualTo(0);
     }
@@ -251,6 +252,7 @@ public class UpdateCurrencyRequestValidator : AbstractValidator<UpdateCurrencyRe
         RuleFor(x => x.FCode).MaximumLength(10);
         RuleFor(x => x.FDescription).MaximumLength(500);
         RuleFor(x => x.FExchangeRate).GreaterThan(0).WithMessage("汇率必须大于0");
+        RuleFor(x => x.FFixRate).InclusiveBetween(1, 2).WithMessage("折算方式只能为 1 或 2");
         RuleFor(x => x.FPriceDigits).GreaterThanOrEqualTo(0);
         RuleFor(x => x.FAmountDigits).GreaterThanOrEqualTo(0);
     }

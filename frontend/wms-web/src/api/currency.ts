@@ -6,6 +6,7 @@ export interface Currency {
     fCode: string
     fName: string
     fStatus?: number
+    fDisabled?: boolean
     fExchangeRate?: number
     fPriceDigits?: number
     fAmountDigits?: number
@@ -14,6 +15,18 @@ export interface Currency {
     fDescription?: string
     fFixRate?: number
     fUseOrgId?: string
+    fGroupId?: string
+    fGroupName?: string
+    // 使用组织 / 审计（只读）
+    fCompanyId?: string
+    fCompanyName?: string
+    cUser?: string
+    mUser?: string
+    mYmd?: string
+    fCheckerId?: string
+    fCheckDate?: string
+    fdisableid?: string
+    fdisabledate?: string
 }
 
 export const getCurrencies = (params?: any) => {

@@ -94,6 +94,12 @@ const routes = [
                 meta: { title: '币种管理' }
             },
             {
+                path: 'master/currencies/edit',
+                name: 'CurrencyEdit',
+                component: () => import('../views/master/CurrencyEdit.vue'),
+                meta: { title: '币别-维护' }
+            },
+            {
                 path: 'master/warehouses',
                 name: 'WarehouseList',
                 component: () => import('../views/master/WarehouseList.vue'),

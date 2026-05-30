@@ -3,7 +3,7 @@
     <div class="list-layout">
       <GroupPanel
         ref="groupPanelRef"
-        prg-key="BD_Currency"
+        prg-key="Currency"
         title="币种分组"
         @select="handleGroupSelect"
       />
@@ -19,7 +19,7 @@
       </el-button>
       <el-input
         v-model="queryParams.keyword"
-        placeholder="搜索币种代码/名称"
+        placeholder="搜索币别代码/货币代码/名称"
         class="search-input"
         clearable
         @clear="fetchData"
@@ -29,9 +29,7 @@
           <el-button @click="fetchData"><el-icon><Search /></el-icon></el-button>
         </template>
       </el-input>
-      
-      
-      
+
       <div class="header-right">
         <DynamicFilter
         v-model="queryParams.dynamicFilters"
@@ -99,6 +97,9 @@
             <template v-if="col.slotName === 'createTime'">
               {{ formatDate(scope.row.cYmd) }}
             </template>
+            <template v-else-if="col.slotName === 'fixRate'">
+              {{ scope.row.fFixRate === 2 ? '原币÷汇率＝本位币' : '原币×汇率＝本位币' }}
+            </template>
             <template v-else-if="col.slotName === 'status'">
               <el-tag :type="scope.row.fStatus === 40 ? 'success' : 'warning'" size="small">
                 {{ scope.row.fStatus === 40 ? '已审核' : '未审核' }}
@@ -122,77 +123,16 @@
         @current-change="fetchData"
       />
     </div>
-
-    <!-- Create/Edit Dialog -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'create' ? '新增币种' : isReadonly ? '查看币种' : '编辑币种'"
-      width="550px"
-    >
-      <el-form :model="form" label-width="100px" :disabled="isReadonly">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="币别代码" required>
-              <el-input v-model="form.fNumber" :disabled="dialogType === 'edit'" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="货币代码" required>
-              <el-input v-model="form.fCode" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="币别名称" required>
-          <el-input v-model="form.fName" />
-        </el-form-item>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="汇率">
-              <el-input-number v-model="form.fExchangeRate" :min="0" :precision="6" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="换算方式">
-              <el-input-number v-model="form.fFixRate" :min="0" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="单价精度">
-              <el-input-number v-model="form.fPriceDigits" :min="0" :max="10" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="金额精度">
-              <el-input-number v-model="form.fAmountDigits" :min="0" :max="10" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="分组">
-          <el-tree-select v-model="form.fGroupId" :data="groupPanelRef?.treeData || []" :props="{ label: 'fName', children: 'children', value: 'uid' }" placeholder="请选择分组" clearable check-strictly style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="form.fDescription" type="textarea" :rows="2" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">{{ isReadonly ? '关闭' : '取消' }}</el-button>
-          <el-button v-if="!isReadonly" type="primary" @click="submitForm">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { getCurrencies, getCurrency, createCurrency, updateCurrency, deleteCurrency, approveCurrency, unapproveCurrency, disableCurrency, enableCurrency, getCurrenciesFields, type Currency } from '../../api/currency'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getCurrencies, deleteCurrency, approveCurrency, unapproveCurrency, disableCurrency, enableCurrency, getCurrenciesFields, type Currency } from '../../api/currency'
 import { formatDate } from '../../utils/format'
-import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
@@ -200,6 +140,7 @@ import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicF
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
+const router = useRouter()
 const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
@@ -207,11 +148,11 @@ const columns: ColumnDef[] = [
   { key: 'fNumber', label: '币别代码', prop: 'fNumber', width: 120, sortable: 'custom' },
   { key: 'fCode', label: '货币代码', prop: 'fCode', width: 120, sortable: 'custom' },
   { key: 'fName', label: '币别名称', prop: 'fName', minWidth: 150, sortable: 'custom' },
-  { key: 'fExchangeRate', label: '汇率', prop: 'fExchangeRate', width: 120, sortable: 'custom' },
-  { key: 'fFixRate', label: '换算方式', prop: 'fFixRate', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fExchangeRate', label: '记账汇率', prop: 'fExchangeRate', width: 120, sortable: 'custom' },
+  { key: 'fFixRate', label: '折算方式', prop: 'fFixRate', width: 160, slotName: 'fixRate', defaultVisible: false, sortable: 'custom' },
   { key: 'fPriceDigits', label: '单价精度', prop: 'fPriceDigits', width: 100, align: 'center', sortable: 'custom' },
   { key: 'fAmountDigits', label: '金额精度', prop: 'fAmountDigits', width: 100, align: 'center', sortable: 'custom' },
-  { key: 'fDescription', label: '描述', prop: 'fDescription', minWidth: 200, defaultVisible: false, sortable: 'custom' },
+  { key: 'fDescription', label: '币别描述', prop: 'fDescription', minWidth: 200, defaultVisible: false, sortable: 'custom' },
   { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
   { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
   { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
@@ -234,7 +175,7 @@ const queryParams = reactive({
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
-  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable, clearSelection
+  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable
 } = useTableSelection<Currency>({
   entityName: '币种',
   approveFn: approveCurrency,
@@ -264,28 +205,6 @@ const handleSortChange = ({ prop, order }: { prop: string, order: string | null 
   fetchData()
 }
 
-const dialogVisible = ref(false)
-const dialogType = ref<'create' | 'edit'>('create')
-
-const isReadonly = computed(() => dialogType.value === 'edit' && (form.fStatus === 40 || form.fDisabled))
-
-const defaultForm = {
-  uid: undefined as string | undefined,
-  fStatus: 0,
-  fNumber: '',
-  fCode: '',
-  fName: '',
-  fDescription: '',
-  fPriceDigits: 2,
-  fAmountDigits: 2,
-  fFixRate: 0,
-  fExchangeRate: 1,
-  fGroupId: '',
-  fDisabled: false
-}
-
-const form = reactive({ ...defaultForm })
-
 async function fetchData() {
   loading.value = true
   try {
@@ -300,34 +219,11 @@ async function fetchData() {
 }
 
 const handleAdd = () => {
-  dialogType.value = 'create'
-  Object.assign(form, { ...defaultForm })
-  dialogVisible.value = true
+  router.push({ name: 'CurrencyEdit', query: queryParams.groupId ? { groupId: queryParams.groupId } : {} })
 }
 
-const handleEdit = async (row: Currency) => {
-  dialogType.value = 'edit'
-  try {
-    const res: any = await getCurrency(row.uid!)
-    const d = res.data
-    Object.assign(form, {
-      uid: d.uid,
-      fStatus: d.fStatus || 0,
-      fNumber: d.fNumber || '',
-      fCode: d.fCode || '',
-      fName: d.fName || '',
-      fDescription: d.fDescription || '',
-      fPriceDigits: d.fPriceDigits ?? 2,
-      fAmountDigits: d.fAmountDigits ?? 2,
-      fFixRate: d.fFixRate ?? 0,
-      fExchangeRate: d.fExchangeRate ?? 1,
-      fGroupId: d.fGroupId || '',
-      fDisabled: d.fDisabled || false
-    })
-  } catch (error) {
-    console.error('Fetch currency detail failed:', error)
-  }
-  dialogVisible.value = true
+const handleEdit = (row: Currency) => {
+  router.push({ name: 'CurrencyEdit', query: { uid: row.uid } })
 }
 
 const handleEditSelected = () => {
@@ -337,52 +233,6 @@ const handleEditSelected = () => {
 
 const handleRowDblClick = (row: Currency) => {
   handleEdit(row)
-}
-
-const submitForm = async () => {
-  if (!form.fNumber || !form.fCode || !form.fName) {
-    ElMessage.warning('请输入币别代码、货币代码和名称')
-    return
-  }
-
-  try {
-    if (dialogType.value === 'create') {
-      await createCurrency({
-        fNumber: form.fNumber,
-        fCode: form.fCode,
-        fName: form.fName,
-        fDescription: form.fDescription,
-        fPriceDigits: form.fPriceDigits,
-        fAmountDigits: form.fAmountDigits,
-        fFixRate: form.fFixRate,
-        fExchangeRate: form.fExchangeRate,
-        fGroupId: form.fGroupId
-      })
-      ElMessage.success('创建成功')
-    } else {
-      await updateCurrency(form.uid!, {
-        fName: form.fName,
-        fCode: form.fCode,
-        fDescription: form.fDescription,
-        fPriceDigits: form.fPriceDigits,
-        fAmountDigits: form.fAmountDigits,
-        fFixRate: form.fFixRate,
-        fExchangeRate: form.fExchangeRate,
-        fGroupId: form.fGroupId
-      })
-      ElMessage.success('更新成功')
-    }
-    dialogVisible.value = false
-    fetchData()
-  } catch (error: any) {
-    console.error('Submit currency failed:', error)
-    if (error.response && error.response.data) {
-      const errorMsg = error.response.data.message || JSON.stringify(error.response.data)
-      ElMessage.error(errorMsg)
-    } else {
-      ElMessage.error('提交失败')
-    }
-  }
 }
 
 onMounted(() => {
