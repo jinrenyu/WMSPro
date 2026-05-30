@@ -44,10 +44,11 @@ public class CreateSupplierRequestValidator : AbstractValidator<CreateSupplierRe
     {
         RuleFor(x => x.FNumber).NotEmpty().WithMessage("编码不能为空").MaximumLength(50);
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
+        RuleFor(x => x.FShortName).MaximumLength(200);
         RuleFor(x => x.FContact).MaximumLength(100);
         RuleFor(x => x.FPhone).MaximumLength(50);
         RuleFor(x => x.FAddress).MaximumLength(500);
-        RuleFor(x => x.FNote).MaximumLength(500);
+        RuleFor(x => x.FEmail).MaximumLength(200);
     }
 }
 
@@ -56,10 +57,11 @@ public class UpdateSupplierRequestValidator : AbstractValidator<UpdateSupplierRe
     public UpdateSupplierRequestValidator()
     {
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
+        RuleFor(x => x.FShortName).MaximumLength(200);
         RuleFor(x => x.FContact).MaximumLength(100);
         RuleFor(x => x.FPhone).MaximumLength(50);
         RuleFor(x => x.FAddress).MaximumLength(500);
-        RuleFor(x => x.FNote).MaximumLength(500);
+        RuleFor(x => x.FEmail).MaximumLength(200);
     }
 }
 

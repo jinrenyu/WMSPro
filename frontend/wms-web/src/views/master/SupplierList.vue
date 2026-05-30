@@ -3,7 +3,7 @@
     <div class="list-layout">
       <GroupPanel
         ref="groupPanelRef"
-        prg-key="BD_Supplier"
+        prg-key="Supplier"
         title="供应商分组"
         @select="handleGroupSelect"
       />
@@ -29,9 +29,7 @@
           <el-button @click="fetchData"><el-icon><Search /></el-icon></el-button>
         </template>
       </el-input>
-      
-      
-      
+
       <div class="header-right">
         <DynamicFilter
         v-model="queryParams.dynamicFilters"
@@ -122,53 +120,16 @@
         @current-change="fetchData"
       />
     </div>
-
-    <!-- Create/Edit Dialog -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'create' ? '新增供应商' : isReadonly ? '查看供应商' : '编辑供应商'"
-      width="600px"
-    >
-      <el-form :model="form" label-width="100px" :disabled="isReadonly">
-        <el-form-item label="供应商编码" required>
-          <el-input v-model="form.fNumber" :disabled="dialogType === 'edit'" />
-        </el-form-item>
-        <el-form-item label="供应商名称" required>
-          <el-input v-model="form.fName" />
-        </el-form-item>
-        <el-form-item label="联系人">
-          <el-input v-model="form.fContact" />
-        </el-form-item>
-        <el-form-item label="电话">
-          <el-input v-model="form.fPhone" />
-        </el-form-item>
-        <el-form-item label="地址">
-          <el-input v-model="form.fAddress" />
-        </el-form-item>
-        <el-form-item label="分组">
-          <el-tree-select v-model="form.fGroupId" :data="groupPanelRef?.treeData || []" :props="{ label: 'fName', children: 'children', value: 'uid' }" placeholder="请选择分组" clearable check-strictly style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="form.fNote" type="textarea" :rows="3" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">{{ isReadonly ? '关闭' : '取消' }}</el-button>
-          <el-button v-if="!isReadonly" type="primary" @click="submitForm">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { getSuppliers, getSupplier, createSupplier, updateSupplier, deleteSupplier, approveSupplier, unapproveSupplier, disableSupplier, enableSupplier, getSuppliersFields, type Supplier } from '../../api/supplier'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getSuppliers, deleteSupplier, approveSupplier, unapproveSupplier, disableSupplier, enableSupplier, getSuppliersFields, type Supplier } from '../../api/supplier'
 import { formatDate } from '../../utils/format'
-import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
@@ -176,15 +137,17 @@ import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicF
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
+const router = useRouter()
 const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
 const columns: ColumnDef[] = [
   { key: 'fNumber', label: '供应商编码', prop: 'fNumber', width: 150, sortable: 'custom' },
   { key: 'fName', label: '供应商名称', prop: 'fName', minWidth: 200, sortable: 'custom' },
+  { key: 'fShortName', label: '简称', prop: 'fShortName', width: 150, defaultVisible: false, sortable: 'custom' },
   { key: 'fContact', label: '联系人', prop: 'fContact', width: 120, sortable: 'custom' },
-  { key: 'fPhone', label: '电话', prop: 'fPhone', width: 150, sortable: 'custom' },
-  { key: 'fAddress', label: '地址', prop: 'fAddress', minWidth: 250, sortable: 'custom' },
+  { key: 'fPhone', label: '联系电话', prop: 'fPhone', width: 150, sortable: 'custom' },
+  { key: 'fAddress', label: '通讯地址', prop: 'fAddress', minWidth: 250, sortable: 'custom' },
   { key: 'fNote', label: '备注', prop: 'fNote', minWidth: 200, defaultVisible: false, sortable: 'custom' },
   { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
   { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
@@ -208,7 +171,7 @@ const queryParams = reactive({
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
-  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable, clearSelection
+  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable
 } = useTableSelection<Supplier>({
   entityName: '供应商',
   approveFn: approveSupplier,
@@ -238,26 +201,6 @@ const handleSortChange = ({ prop, order }: { prop: string, order: string | null 
   fetchData()
 }
 
-const dialogVisible = ref(false)
-const dialogType = ref<'create' | 'edit'>('create')
-
-const defaultForm = {
-  uid: undefined as string | undefined,
-  fNumber: '',
-  fName: '',
-  fContact: '',
-  fPhone: '',
-  fAddress: '',
-  fNote: '',
-  fGroupId: '',
-  fStatus: 0,
-  fDisabled: false
-}
-
-const form = reactive({ ...defaultForm })
-
-const isReadonly = computed(() => dialogType.value === 'edit' && (form.fStatus === 40 || form.fDisabled))
-
 async function fetchData() {
   loading.value = true
   try {
@@ -272,32 +215,11 @@ async function fetchData() {
 }
 
 const handleAdd = () => {
-  dialogType.value = 'create'
-  Object.assign(form, { ...defaultForm })
-  dialogVisible.value = true
+  router.push({ name: 'SupplierEdit', query: queryParams.groupId ? { groupId: queryParams.groupId } : {} })
 }
 
-const handleEdit = async (row: Supplier) => {
-  dialogType.value = 'edit'
-  try {
-    const res: any = await getSupplier(row.uid!)
-    const d = res.data
-    Object.assign(form, {
-      uid: d.uid,
-      fNumber: d.fNumber || '',
-      fName: d.fName || '',
-      fContact: d.fContact || '',
-      fPhone: d.fPhone || '',
-      fAddress: d.fAddress || '',
-      fNote: d.fNote || '',
-      fGroupId: d.fGroupId || '',
-      fStatus: d.fStatus || 0,
-      fDisabled: d.fDisabled || false
-    })
-  } catch (error) {
-    console.error('Fetch supplier detail failed:', error)
-  }
-  dialogVisible.value = true
+const handleEdit = (row: Supplier) => {
+  router.push({ name: 'SupplierEdit', query: { uid: row.uid } })
 }
 
 const handleEditSelected = () => {
@@ -307,48 +229,6 @@ const handleEditSelected = () => {
 
 const handleRowDblClick = (row: Supplier) => {
   handleEdit(row)
-}
-
-const submitForm = async () => {
-  if (!form.fNumber || !form.fName) {
-    ElMessage.warning('请输入供应商编码和名称')
-    return
-  }
-
-  try {
-    if (dialogType.value === 'create') {
-      await createSupplier({
-        fNumber: form.fNumber,
-        fName: form.fName,
-        fContact: form.fContact,
-        fPhone: form.fPhone,
-        fAddress: form.fAddress,
-        fNote: form.fNote,
-        fGroupId: form.fGroupId
-      })
-      ElMessage.success('创建成功')
-    } else {
-      await updateSupplier(form.uid!, {
-        fName: form.fName,
-        fContact: form.fContact,
-        fPhone: form.fPhone,
-        fAddress: form.fAddress,
-        fNote: form.fNote,
-        fGroupId: form.fGroupId
-      })
-      ElMessage.success('更新成功')
-    }
-    dialogVisible.value = false
-    fetchData()
-  } catch (error: any) {
-    console.error('Submit supplier failed:', error)
-    if (error.response && error.response.data) {
-      const errorMsg = error.response.data.message || JSON.stringify(error.response.data)
-      ElMessage.error(errorMsg)
-    } else {
-      ElMessage.error('提交失败')
-    }
-  }
 }
 
 onMounted(() => {

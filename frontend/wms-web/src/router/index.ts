@@ -82,6 +82,12 @@ const routes = [
                 meta: { title: '供应商管理' }
             },
             {
+                path: 'master/suppliers/edit',
+                name: 'SupplierEdit',
+                component: () => import('../views/master/SupplierEdit.vue'),
+                meta: { title: '供应商-维护' }
+            },
+            {
                 path: 'master/currencies',
                 name: 'CurrencyList',
                 component: () => import('../views/master/CurrencyList.vue'),

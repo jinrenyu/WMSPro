@@ -3,13 +3,36 @@ import request from '../utils/request'
 export interface Supplier {
     uid?: string
     fStatus?: number
+    fDisabled?: boolean
     fNumber: string
     fName: string
+    fShortName?: string
     fContact?: string
     fPhone?: string
     fAddress?: string
     fNote?: string
     cYmd?: string
+    // detail fields
+    fTaxRate?: number
+    fCountry?: string
+    fProvincial?: string
+    fFax?: string
+    fEmail?: string
+    fBank?: string
+    fAccount?: string
+    fEmpId?: string
+    fGroupId?: string
+    fGroupName?: string
+    // 使用组织 / 审计（只读）
+    fCompanyId?: string
+    fCompanyName?: string
+    cUser?: string
+    mUser?: string
+    mYmd?: string
+    fCheckerId?: string
+    fCheckDate?: string
+    fdisableid?: string
+    fdisabledate?: string
 }
 
 // GET /api/supplier - paged list
