@@ -3,7 +3,7 @@
     <div class="list-layout">
       <GroupPanel
         ref="groupPanelRef"
-        prg-key="BD_Customer"
+        prg-key="Customer"
         title="客户分组"
         @select="handleGroupSelect"
       />
@@ -19,7 +19,7 @@
       </el-button>
       <el-input
         v-model="queryParams.keyword"
-        placeholder="搜索客户编码/名称/联系人"
+        placeholder="搜索客户编码/名称/简称"
         class="search-input"
         clearable
         @clear="fetchData"
@@ -29,9 +29,7 @@
           <el-button @click="fetchData"><el-icon><Search /></el-icon></el-button>
         </template>
       </el-input>
-      
-      
-      
+
       <div class="header-right">
         <DynamicFilter
         v-model="queryParams.dynamicFilters"
@@ -122,185 +120,24 @@
         @current-change="fetchData"
       />
     </div>
-
-    <!-- Create/Edit Dialog -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'create' ? '新增客户' : isReadonly ? '查看客户' : '编辑客户'"
-      width="700px"
-    >
-      <el-form :model="form" label-width="100px" :disabled="isReadonly">
-        <el-tabs v-model="activeTab">
-          <!-- 基本信息 -->
-          <el-tab-pane label="基本信息" name="basic">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="客户编码" required>
-                  <el-input v-model="form.fNumber" :disabled="dialogType === 'edit'" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="客户名称" required>
-                  <el-input v-model="form.fName" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="简称">
-                  <el-input v-model="form.fShortName" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="联系人">
-                  <el-input v-model="form.fContact" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="电话">
-                  <el-input v-model="form.fPhone" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="销售员">
-                  <el-input v-model="form.fSeller" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-form-item label="地址">
-              <el-input v-model="form.fAddress" />
-            </el-form-item>
-            <el-form-item label="分组">
-              <el-tree-select v-model="form.fGroupId" :data="groupPanelRef?.treeData || []" :props="{ label: 'fName', children: 'children', value: 'uid' }" placeholder="请选择分组" clearable check-strictly style="width: 100%" />
-            </el-form-item>
-            <el-form-item label="备注">
-              <el-input v-model="form.fNote" type="textarea" :rows="2" />
-            </el-form-item>
-          </el-tab-pane>
-
-          <!-- 联系信息 -->
-          <el-tab-pane label="联系信息" name="contact">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="座机">
-                  <el-input v-model="form.fTel" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="传真">
-                  <el-input v-model="form.fFax" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="邮箱">
-                  <el-input v-model="form.fEmail" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="网站">
-                  <el-input v-model="form.fWebSite" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="国家">
-                  <el-input v-model="form.fCountry" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="交易币种">
-                  <LookupSelect v-model="form.fTradingCurrId" module="currency" placeholder="请选择币种" preload />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="省份">
-                  <el-input v-model="form.fProvincial" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="城市">
-                  <el-input v-model="form.fCity" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="邮编">
-                  <el-input v-model="form.fZip" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="英文名称">
-                  <el-input v-model="form.fNameEn" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-form-item label="英文地址">
-              <el-input v-model="form.fAddressEn" />
-            </el-form-item>
-          </el-tab-pane>
-
-          <!-- 财务信息 -->
-          <el-tab-pane label="财务信息" name="finance">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="开户银行">
-                  <el-input v-model="form.fBank" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="银行账号">
-                  <el-input v-model="form.fAccount" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="法人">
-                  <el-input v-model="form.fLegalPerson" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="税务登记号">
-                  <el-input v-model="form.fTaxRegisterCode" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-tab-pane>
-        </el-tabs>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">{{ isReadonly ? '关闭' : '取消' }}</el-button>
-          <el-button v-if="!isReadonly" type="primary" @click="submitForm">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { getCustomers, getCustomer, createCustomer, updateCustomer, deleteCustomer, approveCustomer, unapproveCustomer, disableCustomer, enableCustomer, getCustomersFields, type Customer } from '../../api/customer'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getCustomers, deleteCustomer, approveCustomer, unapproveCustomer, disableCustomer, enableCustomer, getCustomersFields, type Customer } from '../../api/customer'
 import { formatDate } from '../../utils/format'
-import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
-import LookupSelect from '../../components/LookupSelect.vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
+const router = useRouter()
 const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
@@ -310,27 +147,23 @@ const columns: ColumnDef[] = [
   { key: 'fName', label: '客户名称', prop: 'fName', minWidth: 200, sortable: 'custom' },
   { key: 'fShortName', label: '简称', prop: 'fShortName', width: 150, sortable: 'custom' },
   { key: 'fContact', label: '联系人', prop: 'fContact', width: 120, sortable: 'custom' },
-  { key: 'fPhone', label: '电话', prop: 'fPhone', width: 150, sortable: 'custom' },
-  { key: 'fSeller', label: '销售员', prop: 'fSeller', width: 120, defaultVisible: false, sortable: 'custom' },
+  { key: 'fPhone', label: '联系电话', prop: 'fPhone', width: 150, sortable: 'custom' },
   { key: 'fAddress', label: '地址', prop: 'fAddress', minWidth: 200, sortable: 'custom' },
   { key: 'fNote', label: '备注', prop: 'fNote', minWidth: 200, defaultVisible: false, sortable: 'custom' },
   // 联系信息
-  { key: 'fTel', label: '座机', prop: 'fTel', width: 140, defaultVisible: false, sortable: 'custom' },
-  { key: 'fFax', label: '传真', prop: 'fFax', width: 140, defaultVisible: false, sortable: 'custom' },
-  { key: 'fEmail', label: '邮箱', prop: 'fEmail', width: 180, defaultVisible: false, sortable: 'custom' },
-  { key: 'fWebSite', label: '网站', prop: 'fWebSite', width: 180, defaultVisible: false, sortable: 'custom' },
-  { key: 'fCountry', label: '国家', prop: 'fCountry', width: 100, defaultVisible: false, sortable: 'custom' },
   { key: 'fProvincial', label: '省份', prop: 'fProvincial', width: 100, defaultVisible: false, sortable: 'custom' },
   { key: 'fCity', label: '城市', prop: 'fCity', width: 100, defaultVisible: false, sortable: 'custom' },
-  { key: 'fZip', label: '邮编', prop: 'fZip', width: 100, defaultVisible: false, sortable: 'custom' },
-  { key: 'fTradingCurrId', label: '交易币种', prop: 'fTradingCurrId', width: 120, defaultVisible: false, sortable: 'custom' },
-  { key: 'fNameEn', label: '英文名称', prop: 'fNameEn', width: 150, defaultVisible: false, sortable: 'custom' },
+  { key: 'fZip', label: '邮政区号', prop: 'fZip', width: 100, defaultVisible: false, sortable: 'custom' },
+  { key: 'fFax', label: '传真', prop: 'fFax', width: 140, defaultVisible: false, sortable: 'custom' },
+  { key: 'fEmail', label: '邮箱', prop: 'fEmail', width: 180, defaultVisible: false, sortable: 'custom' },
+  { key: 'fWebSite', label: '公司网址', prop: 'fWebSite', width: 180, defaultVisible: false, sortable: 'custom' },
+  { key: 'fNameEn', label: '英文简称', prop: 'fNameEn', width: 150, defaultVisible: false, sortable: 'custom' },
   { key: 'fAddressEn', label: '英文地址', prop: 'fAddressEn', minWidth: 200, defaultVisible: false, sortable: 'custom' },
   // 财务信息
-  { key: 'fBank', label: '开户银行', prop: 'fBank', width: 150, defaultVisible: false, sortable: 'custom' },
-  { key: 'fAccount', label: '银行账号', prop: 'fAccount', width: 180, defaultVisible: false, sortable: 'custom' },
+  { key: 'fBank', label: '银行', prop: 'fBank', width: 150, defaultVisible: false, sortable: 'custom' },
+  { key: 'fAccount', label: '账户', prop: 'fAccount', width: 180, defaultVisible: false, sortable: 'custom' },
   { key: 'fLegalPerson', label: '法人', prop: 'fLegalPerson', width: 100, defaultVisible: false, sortable: 'custom' },
-  { key: 'fTaxRegisterCode', label: '税务登记号', prop: 'fTaxRegisterCode', width: 150, defaultVisible: false, sortable: 'custom' },
+  { key: 'fTaxRegisterCode', label: '税号', prop: 'fTaxRegisterCode', width: 150, defaultVisible: false, sortable: 'custom' },
   // 系统字段
   { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 100, align: 'center', slotName: 'status', sortable: 'custom' },
   { key: 'fDisabled', label: '禁用状态', prop: 'fDisabled', width: 100, align: 'center', slotName: 'disabled', sortable: 'custom' },
@@ -354,7 +187,7 @@ const queryParams = reactive({
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
-  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable, clearSelection
+  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable
 } = useTableSelection<Customer>({
   entityName: '客户',
   approveFn: approveCustomer,
@@ -384,44 +217,6 @@ const handleSortChange = ({ prop, order }: { prop: string, order: string | null 
   fetchData()
 }
 
-const dialogVisible = ref(false)
-const dialogType = ref<'create' | 'edit'>('create')
-const activeTab = ref('basic')
-
-const isReadonly = computed(() => dialogType.value === 'edit' && (form.fStatus === 40 || form.fDisabled))
-
-const defaultForm = {
-  uid: undefined as string | undefined,
-  fStatus: 0,
-  fNumber: '',
-  fName: '',
-  fShortName: '',
-  fContact: '',
-  fPhone: '',
-  fAddress: '',
-  fSeller: '',
-  fTradingCurrId: '',
-  fCountry: '',
-  fProvincial: '',
-  fCity: '',
-  fZip: '',
-  fWebSite: '',
-  fTel: '',
-  fFax: '',
-  fEmail: '',
-  fBank: '',
-  fAccount: '',
-  fLegalPerson: '',
-  fTaxRegisterCode: '',
-  fNameEn: '',
-  fAddressEn: '',
-  fNote: '',
-  fGroupId: '',
-  fDisabled: false
-}
-
-const form = reactive({ ...defaultForm })
-
 async function fetchData() {
   loading.value = true
   try {
@@ -436,51 +231,11 @@ async function fetchData() {
 }
 
 const handleAdd = () => {
-  dialogType.value = 'create'
-  activeTab.value = 'basic'
-  Object.assign(form, { ...defaultForm })
-  dialogVisible.value = true
+  router.push({ name: 'CustomerEdit', query: queryParams.groupId ? { groupId: queryParams.groupId } : {} })
 }
 
-const handleEdit = async (row: Customer) => {
-  dialogType.value = 'edit'
-  activeTab.value = 'basic'
-  try {
-    const res: any = await getCustomer(row.uid!)
-    const d = res.data
-    Object.assign(form, {
-      uid: d.uid,
-      fStatus: d.fStatus || 0,
-      fNumber: d.fNumber || '',
-      fName: d.fName || '',
-      fShortName: d.fShortName || '',
-      fContact: d.fContact || '',
-      fPhone: d.fPhone || '',
-      fAddress: d.fAddress || '',
-      fSeller: d.fSeller || '',
-      fTradingCurrId: d.fTradingCurrId || '',
-      fCountry: d.fCountry || '',
-      fProvincial: d.fProvincial || '',
-      fCity: d.fCity || '',
-      fZip: d.fZip || '',
-      fWebSite: d.fWebSite || '',
-      fTel: d.fTel || '',
-      fFax: d.fFax || '',
-      fEmail: d.fEmail || '',
-      fBank: d.fBank || '',
-      fAccount: d.fAccount || '',
-      fLegalPerson: d.fLegalPerson || '',
-      fTaxRegisterCode: d.fTaxRegisterCode || '',
-      fNameEn: d.fNameEn || '',
-      fAddressEn: d.fAddressEn || '',
-      fNote: d.fNote || '',
-      fGroupId: d.fGroupId || '',
-      fDisabled: d.fDisabled || false
-    })
-  } catch (error) {
-    console.error('Fetch customer detail failed:', error)
-  }
-  dialogVisible.value = true
+const handleEdit = (row: Customer) => {
+  router.push({ name: 'CustomerEdit', query: { uid: row.uid } })
 }
 
 const handleEditSelected = () => {
@@ -490,50 +245,6 @@ const handleEditSelected = () => {
 
 const handleRowDblClick = (row: Customer) => {
   handleEdit(row)
-}
-
-const submitForm = async () => {
-  if (!form.fNumber || !form.fName) {
-    ElMessage.warning('请输入客户编码和名称')
-    return
-  }
-
-  const data = {
-    fNumber: form.fNumber,
-    fName: form.fName,
-    fShortName: form.fShortName,
-    fContact: form.fContact,
-    fPhone: form.fPhone,
-    fAddress: form.fAddress,
-    fSeller: form.fSeller,
-    fTradingCurrId: form.fTradingCurrId,
-    fCountry: form.fCountry,
-    fTel: form.fTel,
-    fEmail: form.fEmail,
-    fNote: form.fNote,
-    fGroupId: form.fGroupId
-  }
-
-  try {
-    if (dialogType.value === 'create') {
-      await createCustomer(data)
-      ElMessage.success('创建成功')
-    } else {
-      const { fNumber, ...updateData } = data
-      await updateCustomer(form.uid!, updateData)
-      ElMessage.success('更新成功')
-    }
-    dialogVisible.value = false
-    fetchData()
-  } catch (error: any) {
-    console.error('Submit customer failed:', error)
-    if (error.response && error.response.data) {
-      const errorMsg = error.response.data.message || JSON.stringify(error.response.data)
-      ElMessage.error(errorMsg)
-    } else {
-      ElMessage.error('提交失败')
-    }
-  }
 }
 
 onMounted(() => {

@@ -12,11 +12,12 @@ public class CreateCustomerRequestValidator : AbstractValidator<CreateCustomerRe
         RuleFor(x => x.FNumber).NotEmpty().WithMessage("编码不能为空").MaximumLength(50);
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
         RuleFor(x => x.FShortName).MaximumLength(200);
+        RuleFor(x => x.FNameEn).MaximumLength(200);
         RuleFor(x => x.FContact).MaximumLength(100);
         RuleFor(x => x.FPhone).MaximumLength(50);
         RuleFor(x => x.FAddress).MaximumLength(500);
         RuleFor(x => x.FEmail).MaximumLength(200);
-        RuleFor(x => x.FNote).MaximumLength(500);
+        RuleFor(x => x.FTaxRegisterCode).MaximumLength(100);
     }
 }
 
@@ -26,11 +27,12 @@ public class UpdateCustomerRequestValidator : AbstractValidator<UpdateCustomerRe
     {
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
         RuleFor(x => x.FShortName).MaximumLength(200);
+        RuleFor(x => x.FNameEn).MaximumLength(200);
         RuleFor(x => x.FContact).MaximumLength(100);
         RuleFor(x => x.FPhone).MaximumLength(50);
         RuleFor(x => x.FAddress).MaximumLength(500);
         RuleFor(x => x.FEmail).MaximumLength(200);
-        RuleFor(x => x.FNote).MaximumLength(500);
+        RuleFor(x => x.FTaxRegisterCode).MaximumLength(100);
     }
 }
 

@@ -70,6 +70,12 @@ const routes = [
                 meta: { title: '客户管理' }
             },
             {
+                path: 'master/customers/edit',
+                name: 'CustomerEdit',
+                component: () => import('../views/master/CustomerEdit.vue'),
+                meta: { title: '客户-维护' }
+            },
+            {
                 path: 'master/suppliers',
                 name: 'SupplierList',
                 component: () => import('../views/master/SupplierList.vue'),

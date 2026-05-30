@@ -5,6 +5,7 @@ export interface Customer {
     fNumber: string
     fName: string
     fStatus?: number
+    fDisabled?: boolean
     fShortName?: string
     fContact?: string
     fPhone?: string
@@ -30,6 +31,18 @@ export interface Customer {
     fAddressEn?: string
     fNote?: string
     fEmpId?: string
+    fGroupId?: string
+    fGroupName?: string
+    // 使用组织 / 审计（只读）
+    fCompanyId?: string
+    fCompanyName?: string
+    cUser?: string
+    mUser?: string
+    mYmd?: string
+    fCheckerId?: string
+    fCheckDate?: string
+    fdisableid?: string
+    fdisabledate?: string
 }
 
 // GET /api/customer - paged list
