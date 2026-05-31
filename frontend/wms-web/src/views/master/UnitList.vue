@@ -3,7 +3,7 @@
     <div class="list-layout">
       <GroupPanel
         ref="groupPanelRef"
-        prg-key="BD_Unit"
+        prg-key="Unit"
         title="单位分组"
         @select="handleGroupSelect"
       />
@@ -96,40 +96,15 @@
     <div class="pagination-container">
       <el-pagination v-model:current-page="queryParams.page" v-model:page-size="queryParams.pageSize" :total="total" layout="total, prev, pager, next" @current-change="fetchData" />
     </div>
-    <el-dialog v-model="dialogVisible" :title="dialogType === 'create' ? '新增单位' : isReadonly ? '查看单位' : '编辑单位'" width="550px">
-      <el-form :model="form" label-width="100px" :disabled="isReadonly">
-        <el-row :gutter="20">
-          <el-col :span="12"><el-form-item label="单位代码" required><el-input v-model="form.fNumber" :disabled="dialogType === 'edit'" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="单位名称" required><el-input v-model="form.fName" /></el-form-item></el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12"><el-form-item label="单位组"><el-input v-model="form.fUnitGroupId" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="换算率"><el-input-number v-model="form.fCoefficient" :min="0" :precision="6" style="width:100%" /></el-form-item></el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="精度"><el-input-number v-model="form.fPrecision" :min="0" :max="10" style="width:100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="基准单位"><el-switch v-model="form.fIsBaseUnit" /></el-form-item></el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12"><el-form-item label="舍入类型"><el-input v-model="form.fRoundType" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="转换类型"><el-input v-model="form.fConvertType" /></el-form-item></el-col>
-        </el-row>
-        <el-form-item label="分组">
-          <el-tree-select v-model="form.fGroupId" :data="groupPanelRef?.treeData || []" :props="{ label: 'fName', children: 'children', value: 'uid' }" placeholder="请选择分组" clearable check-strictly style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="描述"><el-input v-model="form.fDescription" type="textarea" :rows="2" /></el-form-item>
-      </el-form>
-      <template #footer><el-button @click="dialogVisible = false">{{ isReadonly ? '关闭' : '取消' }}</el-button><el-button v-if="!isReadonly" type="primary" @click="submitForm">确定</el-button></template>
-    </el-dialog>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { getUnits, getUnit, createUnit, updateUnit, deleteUnit, approveUnit, unapproveUnit, disableUnit, enableUnit, getUnitsFields, type Unit } from '../../api/unit'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getUnits, deleteUnit, approveUnit, unapproveUnit, disableUnit, enableUnit, getUnitsFields, type Unit } from '../../api/unit'
 import { formatDate } from '../../utils/format'
-import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
@@ -137,6 +112,7 @@ import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicF
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
+const router = useRouter()
 const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
@@ -164,7 +140,7 @@ const queryParams = reactive({ page: 1, pageSize: 10, keyword: '', groupId: '', 
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
-  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable, clearSelection
+  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable
 } = useTableSelection<Unit>({
   entityName: '单位',
   approveFn: approveUnit,
@@ -192,18 +168,11 @@ const handleSortChange = ({ prop, order }: { prop: string, order: string | null 
   queryParams.page = 1
   fetchData()
 }
-const dialogVisible = ref(false)
-const dialogType = ref<'create' | 'edit'>('create')
-const isReadonly = computed(() => dialogType.value === 'edit' && (form.fStatus === 40 || form.fDisabled))
-const defaultForm = { uid: undefined as string | undefined, fStatus: 0, fNumber: '', fName: '', fDescription: '', fUnitGroupId: '', fIsBaseUnit: false, fPrecision: 0, fRoundType: '', fConvertType: '', fCoefficient: 1, fGroupId: '', fDisabled: false }
-const form = reactive({ ...defaultForm })
-
 async function fetchData() { loading.value = true; try { const res: any = await getUnits(queryParams); list.value = res.data.items; total.value = res.data.totalCount } catch (e) { console.error(e) } finally { loading.value = false } }
-const handleAdd = () => { dialogType.value = 'create'; Object.assign(form, { ...defaultForm }); dialogVisible.value = true }
-const handleEdit = async (row: Unit) => { dialogType.value = 'edit'; try { const res: any = await getUnit(row.uid!); const d = res.data; Object.assign(form, { uid: d.uid, fStatus: d.fStatus || 0, fNumber: d.fNumber||'', fName: d.fName||'', fDescription: d.fDescription||'', fUnitGroupId: d.fUnitGroupId||'', fIsBaseUnit: d.fIsBaseUnit||false, fPrecision: d.fPrecision??0, fRoundType: d.fRoundType||'', fConvertType: d.fConvertType||'', fCoefficient: d.fCoefficient??1, fGroupId: d.fGroupId||'', fDisabled: d.fDisabled||false }) } catch (e) { console.error(e) }; dialogVisible.value = true }
+const handleAdd = () => { router.push({ name: 'UnitEdit', query: queryParams.groupId ? { groupId: queryParams.groupId } : {} }) }
+const handleEdit = (row: Unit) => { router.push({ name: 'UnitEdit', query: { uid: row.uid } }) }
 const handleEditSelected = () => { const rows = tableRef.value?.getSelectionRows() as Unit[]; if (rows?.length === 1) handleEdit(rows[0]) }
 const handleRowDblClick = (row: Unit) => { handleEdit(row) }
-const submitForm = async () => { if (!form.fNumber || !form.fName) { ElMessage.warning('请输入单位代码和名称'); return }; try { if (dialogType.value === 'create') { await createUnit({ fNumber: form.fNumber, fName: form.fName, fDescription: form.fDescription, fUnitGroupId: form.fUnitGroupId, fIsBaseUnit: form.fIsBaseUnit, fPrecision: form.fPrecision, fRoundType: form.fRoundType, fConvertType: form.fConvertType, fCoefficient: form.fCoefficient, fGroupId: form.fGroupId }); ElMessage.success('创建成功') } else { await updateUnit(form.uid!, { fName: form.fName, fDescription: form.fDescription, fUnitGroupId: form.fUnitGroupId, fIsBaseUnit: form.fIsBaseUnit, fPrecision: form.fPrecision, fRoundType: form.fRoundType, fConvertType: form.fConvertType, fCoefficient: form.fCoefficient, fGroupId: form.fGroupId }); ElMessage.success('更新成功') }; dialogVisible.value = false; fetchData() } catch (error: any) { const msg = error.response?.data?.message || '提交失败'; ElMessage.error(msg) } }
 onMounted(() => { fetchData() })
 </script>
 <style scoped>

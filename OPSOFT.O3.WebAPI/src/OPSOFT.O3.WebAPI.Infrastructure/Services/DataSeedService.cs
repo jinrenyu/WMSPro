@@ -527,7 +527,7 @@ public class DataSeedService
         // 重指向：基础资料下"仓位管理"(StockPlace) → "仓位"(仓位集 T_BAS_FLEXVALUES 维护页)
         // 菜单按 Uid 仅补缺、不更新存量，故对已存在的该菜单行显式重指向（幂等）
         await _db.Updateable<SysMenu>()
-            .SetColumns(m => m.MenuName == "仓位")
+            .SetColumns(m => m.MenuName == "仓位管理")
             .SetColumns(m => m.RoutePath == "/master/flexvalues")
             .Where(m => m.Uid == stockPlaceMenuId)
             .ExecuteCommandAsync();

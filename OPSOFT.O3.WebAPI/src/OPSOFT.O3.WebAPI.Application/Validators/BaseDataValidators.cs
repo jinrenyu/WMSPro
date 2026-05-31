@@ -245,8 +245,10 @@ public class CreateUnitRequestValidator : AbstractValidator<CreateUnitRequest>
     {
         RuleFor(x => x.FNumber).NotEmpty().WithMessage("编码不能为空").MaximumLength(50);
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
+        RuleFor(x => x.FUnitGroupId).NotEmpty().WithMessage("请选择所属分组");
         RuleFor(x => x.FDescription).MaximumLength(500);
-        RuleFor(x => x.FCoefficient).GreaterThan(0).WithMessage("换算系数必须大于0");
+        RuleFor(x => x.FConvertDenominator).GreaterThan(0).WithMessage("换算分母必须大于0");
+        RuleFor(x => x.FConvertNumerator).GreaterThan(0).WithMessage("换算分子必须大于0");
         RuleFor(x => x.FPrecision).GreaterThanOrEqualTo(0);
     }
 }
@@ -256,8 +258,10 @@ public class UpdateUnitRequestValidator : AbstractValidator<UpdateUnitRequest>
     public UpdateUnitRequestValidator()
     {
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
+        RuleFor(x => x.FUnitGroupId).NotEmpty().WithMessage("请选择所属分组");
         RuleFor(x => x.FDescription).MaximumLength(500);
-        RuleFor(x => x.FCoefficient).GreaterThan(0).WithMessage("换算系数必须大于0");
+        RuleFor(x => x.FConvertDenominator).GreaterThan(0).WithMessage("换算分母必须大于0");
+        RuleFor(x => x.FConvertNumerator).GreaterThan(0).WithMessage("换算分子必须大于0");
         RuleFor(x => x.FPrecision).GreaterThanOrEqualTo(0);
     }
 }

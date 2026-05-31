@@ -33,6 +33,7 @@ public class DemoDataSeedService
     public async Task SeedAsync()
     {
         await SeedBaseDataGroupsAsync();
+        await SeedUnitGroupsAsync();
         await SeedUnitsAsync();
         await SeedStockStatusAsync();
         await SeedFlexValuesAsync();
@@ -199,6 +200,55 @@ public class DemoDataSeedService
 
     #endregion
 
+    // 单位组（T_BD_UNITGROUP）：所属分组下拉来源；FInterId=代码，与单位 FUNITGROUPID 对应；含基准单位
+    private async Task SeedUnitGroupsAsync()
+    {
+        var now = DateTime.Now;
+        const string company = "DEFAULT";
+        const string user = "demo-seed";
+
+        var groups = new List<TBdUnitgroup>
+        {
+            CreateUnitGroup("UG_WEIGHT", "重量组", "KG",  "千克",  now, company, user),
+            CreateUnitGroup("UG_LENGTH", "长度组", "M",   "米",    now, company, user),
+            CreateUnitGroup("UG_QTY",    "数量组", "PCS", "个",    now, company, user),
+            CreateUnitGroup("UG_TIME",   "时间组", "HR",  "小时",  now, company, user),
+            CreateUnitGroup("UG_VOLUME", "体积组", "L",   "升",    now, company, user),
+            CreateUnitGroup("UG_AREA",   "面积组", "M2",  "平方米", now, company, user),
+        };
+
+        var existing = new HashSet<string>(
+            await _db.Queryable<TBdUnitgroup>().Where(g => !g.FDeleted).Select(g => g.Fnumber).ToListAsync());
+        var missing = groups.Where(g => !existing.Contains(g.Fnumber)).ToList();
+        if (missing.Count > 0)
+            await _db.Insertable(missing).ExecuteCommandAsync();
+    }
+
+    private static TBdUnitgroup CreateUnitGroup(
+        string code, string name, string baseNumber, string baseName,
+        DateTime now, string company, string user)
+    {
+        return new TBdUnitgroup
+        {
+            Uid = code,
+            FInterId = code,
+            Fnumber = code,
+            Fname = name,
+            Fbaseunitnumber = baseNumber,
+            Fbaseunitname = baseName,
+            Fcheckdate = DateTime.MinValue,
+            Fdisabledate = DateTime.MinValue,
+            FStatus = 0,
+            FDeleted = false,
+            FDisabled = false,
+            FCompanyId = company,
+            CYmd = now,
+            CUser = user,
+            MYmd = now,
+            MUser = user
+        };
+    }
+
     private async Task SeedUnitsAsync()
     {
         var now = DateTime.Now;
@@ -213,48 +263,48 @@ public class DemoDataSeedService
         var units = new List<TBdUnit>
         {
             // 重量单位组
-            CreateUnit("KG",  "千克", "重量基本单位",       "UG_WEIGHT", true,  3, "四舍五入", "固定换算", 1m,      now, company, user, grpWgt),
-            CreateUnit("G",   "克",   "千分之一千克",       "UG_WEIGHT", false, 3, "四舍五入", "固定换算", 0.001m,  now, company, user, grpWgt),
-            CreateUnit("T",   "吨",   "一千千克",           "UG_WEIGHT", false, 3, "四舍五入", "固定换算", 1000m,   now, company, user, grpWgt),
-            CreateUnit("MG",  "毫克", "百万分之一千克",     "UG_WEIGHT", false, 6, "四舍五入", "固定换算", 0.000001m, now, company, user, grpWgt),
-            CreateUnit("LB",  "磅",   "英制重量单位",       "UG_WEIGHT", false, 3, "四舍五入", "固定换算", 0.4536m, now, company, user, grpWgt),
-            CreateUnit("OZ",  "盎司", "英制重量单位",       "UG_WEIGHT", false, 3, "四舍五入", "固定换算", 0.02835m, now, company, user, grpWgt),
+            CreateUnit("KG",  "千克", "重量基本单位",       "UG_WEIGHT", true,  3, "1", "固定换算", 1m,      now, company, user, grpWgt),
+            CreateUnit("G",   "克",   "千分之一千克",       "UG_WEIGHT", false, 3, "1", "固定换算", 0.001m,  now, company, user, grpWgt),
+            CreateUnit("T",   "吨",   "一千千克",           "UG_WEIGHT", false, 3, "1", "固定换算", 1000m,   now, company, user, grpWgt),
+            CreateUnit("MG",  "毫克", "百万分之一千克",     "UG_WEIGHT", false, 6, "1", "固定换算", 0.000001m, now, company, user, grpWgt),
+            CreateUnit("LB",  "磅",   "英制重量单位",       "UG_WEIGHT", false, 3, "1", "固定换算", 0.4536m, now, company, user, grpWgt),
+            CreateUnit("OZ",  "盎司", "英制重量单位",       "UG_WEIGHT", false, 3, "1", "固定换算", 0.02835m, now, company, user, grpWgt),
 
             // 长度单位组
-            CreateUnit("M",   "米",   "长度基本单位",       "UG_LENGTH", true,  3, "四舍五入", "固定换算", 1m,      now, company, user, grpLen),
-            CreateUnit("CM",  "厘米", "百分之一米",         "UG_LENGTH", false, 3, "四舍五入", "固定换算", 0.01m,   now, company, user, grpLen),
-            CreateUnit("MM",  "毫米", "千分之一米",         "UG_LENGTH", false, 3, "四舍五入", "固定换算", 0.001m,  now, company, user, grpLen),
-            CreateUnit("KM",  "千米", "一千米",             "UG_LENGTH", false, 3, "四舍五入", "固定换算", 1000m,   now, company, user, grpLen),
-            CreateUnit("IN",  "英寸", "英制长度单位",       "UG_LENGTH", false, 3, "四舍五入", "固定换算", 0.0254m, now, company, user, grpLen),
-            CreateUnit("FT",  "英尺", "英制长度单位",       "UG_LENGTH", false, 3, "四舍五入", "固定换算", 0.3048m, now, company, user, grpLen),
+            CreateUnit("M",   "米",   "长度基本单位",       "UG_LENGTH", true,  3, "1", "固定换算", 1m,      now, company, user, grpLen),
+            CreateUnit("CM",  "厘米", "百分之一米",         "UG_LENGTH", false, 3, "1", "固定换算", 0.01m,   now, company, user, grpLen),
+            CreateUnit("MM",  "毫米", "千分之一米",         "UG_LENGTH", false, 3, "1", "固定换算", 0.001m,  now, company, user, grpLen),
+            CreateUnit("KM",  "千米", "一千米",             "UG_LENGTH", false, 3, "1", "固定换算", 1000m,   now, company, user, grpLen),
+            CreateUnit("IN",  "英寸", "英制长度单位",       "UG_LENGTH", false, 3, "1", "固定换算", 0.0254m, now, company, user, grpLen),
+            CreateUnit("FT",  "英尺", "英制长度单位",       "UG_LENGTH", false, 3, "1", "固定换算", 0.3048m, now, company, user, grpLen),
 
             // 数量单位组
-            CreateUnit("PCS", "个",   "数量基本单位",       "UG_QTY",    true,  0, "四舍五入", "固定换算", 1m,      now, company, user, grpQty),
-            CreateUnit("SET", "套",   "成套计量",           "UG_QTY",    false, 0, "四舍五入", "固定换算", 1m,      now, company, user, grpQty),
-            CreateUnit("PR",  "双",   "成对计量",           "UG_QTY",    false, 0, "四舍五入", "固定换算", 2m,      now, company, user, grpQty),
-            CreateUnit("DOZ", "打",   "十二个为一打",       "UG_QTY",    false, 0, "四舍五入", "固定换算", 12m,     now, company, user, grpQty),
-            CreateUnit("BOX", "箱",   "包装箱",             "UG_QTY",    false, 0, "四舍五入", "固定换算", 1m,      now, company, user, grpQty),
-            CreateUnit("BAG", "袋",   "包装袋",             "UG_QTY",    false, 0, "四舍五入", "固定换算", 1m,      now, company, user, grpQty),
-            CreateUnit("PKG", "包",   "包装单位",           "UG_QTY",    false, 0, "四舍五入", "固定换算", 1m,      now, company, user, grpQty),
-            CreateUnit("PLT", "托盘", "托盘计量",           "UG_QTY",    false, 0, "四舍五入", "固定换算", 1m,      now, company, user, grpQty),
-            CreateUnit("CTN", "纸箱", "纸箱包装",           "UG_QTY",    false, 0, "四舍五入", "固定换算", 1m,      now, company, user, grpQty),
-            CreateUnit("ROL", "卷",   "卷装计量",           "UG_QTY",    false, 0, "四舍五入", "固定换算", 1m,      now, company, user, grpQty),
+            CreateUnit("PCS", "个",   "数量基本单位",       "UG_QTY",    true,  0, "1", "固定换算", 1m,      now, company, user, grpQty),
+            CreateUnit("SET", "套",   "成套计量",           "UG_QTY",    false, 0, "1", "固定换算", 1m,      now, company, user, grpQty),
+            CreateUnit("PR",  "双",   "成对计量",           "UG_QTY",    false, 0, "1", "固定换算", 2m,      now, company, user, grpQty),
+            CreateUnit("DOZ", "打",   "十二个为一打",       "UG_QTY",    false, 0, "1", "固定换算", 12m,     now, company, user, grpQty),
+            CreateUnit("BOX", "箱",   "包装箱",             "UG_QTY",    false, 0, "1", "固定换算", 1m,      now, company, user, grpQty),
+            CreateUnit("BAG", "袋",   "包装袋",             "UG_QTY",    false, 0, "1", "固定换算", 1m,      now, company, user, grpQty),
+            CreateUnit("PKG", "包",   "包装单位",           "UG_QTY",    false, 0, "1", "固定换算", 1m,      now, company, user, grpQty),
+            CreateUnit("PLT", "托盘", "托盘计量",           "UG_QTY",    false, 0, "1", "固定换算", 1m,      now, company, user, grpQty),
+            CreateUnit("CTN", "纸箱", "纸箱包装",           "UG_QTY",    false, 0, "1", "固定换算", 1m,      now, company, user, grpQty),
+            CreateUnit("ROL", "卷",   "卷装计量",           "UG_QTY",    false, 0, "1", "固定换算", 1m,      now, company, user, grpQty),
 
             // 体积单位组
-            CreateUnit("L",   "升",   "体积基本单位",       "UG_VOLUME", true,  3, "四舍五入", "固定换算", 1m,      now, company, user, grpVol),
-            CreateUnit("ML",  "毫升", "千分之一升",         "UG_VOLUME", false, 3, "四舍五入", "固定换算", 0.001m,  now, company, user, grpVol),
-            CreateUnit("M3",  "立方米","一千升",            "UG_VOLUME", false, 3, "四舍五入", "固定换算", 1000m,   now, company, user, grpVol),
-            CreateUnit("GAL", "加仑", "英制体积单位",       "UG_VOLUME", false, 3, "四舍五入", "固定换算", 3.7854m, now, company, user, grpVol),
+            CreateUnit("L",   "升",   "体积基本单位",       "UG_VOLUME", true,  3, "1", "固定换算", 1m,      now, company, user, grpVol),
+            CreateUnit("ML",  "毫升", "千分之一升",         "UG_VOLUME", false, 3, "1", "固定换算", 0.001m,  now, company, user, grpVol),
+            CreateUnit("M3",  "立方米","一千升",            "UG_VOLUME", false, 3, "1", "固定换算", 1000m,   now, company, user, grpVol),
+            CreateUnit("GAL", "加仑", "英制体积单位",       "UG_VOLUME", false, 3, "1", "固定换算", 3.7854m, now, company, user, grpVol),
 
             // 面积单位组
-            CreateUnit("M2",  "平方米", "面积基本单位",     "UG_AREA",   true,  3, "四舍五入", "固定换算", 1m,      now, company, user, grpArea),
-            CreateUnit("CM2", "平方厘米","万分之一平方米",   "UG_AREA",   false, 3, "四舍五入", "固定换算", 0.0001m, now, company, user, grpArea),
-            CreateUnit("KM2", "平方千米","一百万平方米",     "UG_AREA",   false, 3, "四舍五入", "固定换算", 1000000m, now, company, user, grpArea),
+            CreateUnit("M2",  "平方米", "面积基本单位",     "UG_AREA",   true,  3, "1", "固定换算", 1m,      now, company, user, grpArea),
+            CreateUnit("CM2", "平方厘米","万分之一平方米",   "UG_AREA",   false, 3, "1", "固定换算", 0.0001m, now, company, user, grpArea),
+            CreateUnit("KM2", "平方千米","一百万平方米",     "UG_AREA",   false, 3, "1", "固定换算", 1000000m, now, company, user, grpArea),
 
             // 时间单位组
-            CreateUnit("HR",  "小时", "时间基本单位",       "UG_TIME",   true,  2, "四舍五入", "固定换算", 1m,      now, company, user, grpTime),
-            CreateUnit("MIN", "分钟", "六十分之一小时",     "UG_TIME",   false, 2, "四舍五入", "固定换算", 1m / 60m, now, company, user, grpTime),
-            CreateUnit("DAY", "天",   "二十四小时",         "UG_TIME",   false, 2, "四舍五入", "固定换算", 24m,     now, company, user, grpTime),
+            CreateUnit("HR",  "小时", "时间基本单位",       "UG_TIME",   true,  2, "1", "固定换算", 1m,      now, company, user, grpTime),
+            CreateUnit("MIN", "分钟", "六十分之一小时",     "UG_TIME",   false, 2, "1", "固定换算", 1m / 60m, now, company, user, grpTime),
+            CreateUnit("DAY", "天",   "二十四小时",         "UG_TIME",   false, 2, "1", "固定换算", 24m,     now, company, user, grpTime),
         };
 
         // 幂等：只插入数据库中不存在的记录（按 FNumber 判断）

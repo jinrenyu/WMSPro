@@ -5,14 +5,43 @@ export interface Unit {
     fNumber: string
     fName: string
     fStatus?: number
+    fDisabled?: boolean
     fUnitGroupId?: string
+    fUnitGroupName?: string
+    fBaseUnitNumber?: string
+    fBaseUnitName?: string
     fIsBaseUnit?: boolean
     fPrecision?: number
     fCoefficient?: number
+    fConvertNumerator?: number
+    fConvertDenominator?: number
     cYmd?: string
     fDescription?: string
     fRoundType?: string
     fConvertType?: string
+    // 使用组织 / 审计（只读）
+    fCompanyId?: string
+    fCompanyName?: string
+    cUser?: string
+    mUser?: string
+    mYmd?: string
+    fCheckerId?: string
+    fCheckDate?: string
+    fdisableid?: string
+    fdisabledate?: string
+}
+
+export interface UnitGroupOption {
+    uid: string
+    fNumber: string
+    fName: string
+    fBaseUnitNumber: string
+    fBaseUnitName: string
+}
+
+// GET /api/unit/unit-groups - 所属分组（单位组）下拉（含基准单位）
+export const getUnitGroups = (keyword?: string) => {
+    return request({ url: '/unit/unit-groups', method: 'get', params: { keyword } })
 }
 
 export const getUnits = (params?: any) => {

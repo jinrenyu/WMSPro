@@ -118,6 +118,12 @@ const routes = [
                 meta: { title: '单位管理' }
             },
             {
+                path: 'master/units/edit',
+                name: 'UnitEdit',
+                component: () => import('../views/master/UnitEdit.vue'),
+                meta: { title: '计量单位-维护' }
+            },
+            {
                 path: 'master/stockplaces',
                 name: 'StockPlaceList',
                 component: () => import('../views/master/StockPlaceList.vue'),
