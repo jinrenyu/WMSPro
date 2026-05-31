@@ -1,12 +1,13 @@
+using OPSOFT.O3.WebAPI.Domain.Interfaces;
 using SqlSugar;
 
 namespace OPSOFT.O3.WebAPI.Domain.Entities;
 
 /// <summary>
-/// 仓位值集
+/// 仓位值集（仓位集，仓库"启用仓位管理"引用；本页作为"仓位"主数据维护）
 /// </summary>
 [SugarTable("T_BAS_FLEXVALUES")]
-public class TBasFlexvalues : BaseEntity
+public class TBasFlexvalues : BaseEntity, IApprovable, IDisableable
 {
     /// <summary>
     /// 仓位集代码
@@ -48,13 +49,13 @@ public class TBasFlexvalues : BaseEntity
     /// 仓位集审核人
     /// </summary>
     [SugarColumn(ColumnName = "FCHECKERID")]
-    public string Fcheckerid { get; set; } = string.Empty;
+    public string FCheckerId { get; set; } = string.Empty;
 
     /// <summary>
     /// 仓位集审核日期
     /// </summary>
     [SugarColumn(ColumnName = "FCHECKDATE")]
-    public DateTime? Fcheckdate { get; set; }
+    public DateTime FCheckDate { get; set; } = DateTime.MinValue;
 
     /// <summary>
     /// 仓位集禁用人
@@ -66,7 +67,7 @@ public class TBasFlexvalues : BaseEntity
     /// 仓位集禁用日期
     /// </summary>
     [SugarColumn(ColumnName = "FDISABLEDATE")]
-    public DateTime? Fdisabledate { get; set; }
+    public DateTime Fdisabledate { get; set; } = DateTime.MinValue;
 
     /// <summary>
     /// 长

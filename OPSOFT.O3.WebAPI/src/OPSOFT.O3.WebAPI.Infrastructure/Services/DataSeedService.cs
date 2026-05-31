@@ -456,11 +456,19 @@ public class DataSeedService
             MenuType = "M", RoutePath = "/master/stockplaces", Icon = "Grid", PermCode = "", SortOrder = 8,
             FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
         });
-        AddButton(menus, "menu_stockplace_list", stockPlaceMenuId, "查看仓位", "stockplace:list", 1, now);
-        AddButton(menus, "menu_stockplace_add", stockPlaceMenuId, "新增仓位", "stockplace:add", 2, now);
-        AddButton(menus, "menu_stockplace_edit", stockPlaceMenuId, "编辑仓位", "stockplace:edit", 3, now);
-        AddButton(menus, "menu_stockplace_delete", stockPlaceMenuId, "删除仓位", "stockplace:delete", 4, now);
-        AddButton(menus, "menu_stockplace_approve", stockPlaceMenuId, "审核仓位", "stockplace:approve", 5, now);
+        // 仓位（仓位集 FlexValues）按钮 —— "仓位管理"菜单已重指向 T_BAS_FLEXVALUES 维护页
+        AddButton(menus, "menu_flexvalues_list", stockPlaceMenuId, "查看仓位", "flexvalues:list", 1, now);
+        AddButton(menus, "menu_flexvalues_add", stockPlaceMenuId, "新增仓位", "flexvalues:add", 2, now);
+        AddButton(menus, "menu_flexvalues_edit", stockPlaceMenuId, "编辑仓位", "flexvalues:edit", 3, now);
+        AddButton(menus, "menu_flexvalues_delete", stockPlaceMenuId, "删除仓位", "flexvalues:delete", 4, now);
+        AddButton(menus, "menu_flexvalues_approve", stockPlaceMenuId, "审核仓位", "flexvalues:approve", 5, now);
+        AddButton(menus, "menu_flexvalues_disable", stockPlaceMenuId, "禁用仓位", "flexvalues:disable", 6, now);
+        // 旧 StockPlace 按钮保留（不再有界面引用）
+        AddButton(menus, "menu_stockplace_list", stockPlaceMenuId, "查看仓位", "stockplace:list", 7, now);
+        AddButton(menus, "menu_stockplace_add", stockPlaceMenuId, "新增仓位", "stockplace:add", 8, now);
+        AddButton(menus, "menu_stockplace_edit", stockPlaceMenuId, "编辑仓位", "stockplace:edit", 9, now);
+        AddButton(menus, "menu_stockplace_delete", stockPlaceMenuId, "删除仓位", "stockplace:delete", 10, now);
+        AddButton(menus, "menu_stockplace_approve", stockPlaceMenuId, "审核仓位", "stockplace:approve", 11, now);
 
         // 辅助资料 (M)
         var assistantDataMenuId = "menu_assistantdata";
@@ -515,6 +523,14 @@ public class DataSeedService
         {
             await _db.Insertable(missingMenus).ExecuteCommandAsync();
         }
+
+        // 重指向：基础资料下"仓位管理"(StockPlace) → "仓位"(仓位集 T_BAS_FLEXVALUES 维护页)
+        // 菜单按 Uid 仅补缺、不更新存量，故对已存在的该菜单行显式重指向（幂等）
+        await _db.Updateable<SysMenu>()
+            .SetColumns(m => m.MenuName == "仓位")
+            .SetColumns(m => m.RoutePath == "/master/flexvalues")
+            .Where(m => m.Uid == stockPlaceMenuId)
+            .ExecuteCommandAsync();
     }
 
     private static void AddButton(List<SysMenu> menus, string uid, string parentId, string name, string permCode, int sort, DateTime now)

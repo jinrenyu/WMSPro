@@ -104,7 +104,30 @@ public class UpdateWarehouseRequestValidator : AbstractValidator<UpdateWarehouse
     }
 }
 
-// ===== 仓位 =====
+// ===== 仓位（仓位集 FlexValues）=====
+
+public class CreateFlexValuesRequestValidator : AbstractValidator<CreateFlexValuesRequest>
+{
+    public CreateFlexValuesRequestValidator()
+    {
+        RuleFor(x => x.FNumber).NotEmpty().WithMessage("代码不能为空").MaximumLength(50);
+        RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
+        RuleFor(x => x.FDescription).MaximumLength(500);
+        RuleFor(x => x.FMixTypeLimit).MaximumLength(200);
+    }
+}
+
+public class UpdateFlexValuesRequestValidator : AbstractValidator<UpdateFlexValuesRequest>
+{
+    public UpdateFlexValuesRequestValidator()
+    {
+        RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
+        RuleFor(x => x.FDescription).MaximumLength(500);
+        RuleFor(x => x.FMixTypeLimit).MaximumLength(200);
+    }
+}
+
+// ===== 仓位（物理仓位 StockPlace，T_BD_STOCKPLACE）=====
 
 public class CreateStockPlaceRequestValidator : AbstractValidator<CreateStockPlaceRequest>
 {

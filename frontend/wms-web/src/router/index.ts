@@ -124,6 +124,18 @@ const routes = [
                 meta: { title: '仓位管理' }
             },
             {
+                path: 'master/flexvalues',
+                name: 'FlexValuesList',
+                component: () => import('../views/master/FlexValuesList.vue'),
+                meta: { title: '仓位' }
+            },
+            {
+                path: 'master/flexvalues/edit',
+                name: 'FlexValuesEdit',
+                component: () => import('../views/master/FlexValuesEdit.vue'),
+                meta: { title: '仓位-维护' }
+            },
+            {
                 path: 'master/assistantdata',
                 name: 'AssistantDataList',
                 component: () => import('../views/master/AssistantDataList.vue'),
