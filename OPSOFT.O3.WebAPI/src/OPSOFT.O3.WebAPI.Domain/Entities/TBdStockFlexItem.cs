@@ -9,7 +9,7 @@ namespace OPSOFT.O3.WebAPI.Domain.Entities;
 public class TBdStockflexitem : BaseEntity
 {
     /// <summary>
-    /// 仓位值集内码
+    /// 仓位值集内码（关联 T_BAS_FLEXVALUES.FINTERID，仓位集代码/名称/描述由此 JOIN 得到）
     /// </summary>
     [SugarColumn(ColumnName = "FFLEXID")]
     public string Fflexid { get; set; } = string.Empty;

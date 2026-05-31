@@ -27,12 +27,15 @@ public class DemoDataSeedService
     private static string StockUid(string number) => SeedUid("STOCK", number);
     private static string SpUid(string number) => SeedUid("SP", number);
     private static string StockStatusUid(string number) => SeedUid("STOCKSTATUS", number);
+    private static string FlexValUid(string number) => SeedUid("FLEXVAL", number);
+    private static string FlexValEntryUid(string flexNumber, string valueCode) => SeedUid("FLEXVALENTRY", $"{flexNumber}_{valueCode}");
 
     public async Task SeedAsync()
     {
         await SeedBaseDataGroupsAsync();
         await SeedUnitsAsync();
         await SeedStockStatusAsync();
+        await SeedFlexValuesAsync();
         await SeedWarehousesAsync();
         await SeedStockPlacesAsync();
         await SeedCurrenciesAsync();
@@ -363,6 +366,97 @@ public class DemoDataSeedService
             MYmd = now,
             MUser = user
         };
+    }
+
+    #endregion
+
+    #region 仓位集（仓位值集）主数据种子
+
+    private async Task SeedFlexValuesAsync()
+    {
+        var now = DateTime.Now;
+        const string company = "DEFAULT";
+        const string user = "demo-seed";
+
+        // 仓位集（T_BAS_FLEXVALUES）头 + 仓位集值（T_BAS_FLEXVALUESENTRY）明细
+        // 明细 FINTERID 关联其所属仓位集的 FINTERID；明细 FDETAILID 为仓位集值的关联键（被 STOCKFLEXDETAIL.FFLEXENTRYID 引用）
+        var sets = new[]
+        {
+            (Number: "AQKQ", Name: "A区库区", Prefix: "A1-", Count: 20),
+            (Number: "BQKQ", Name: "B区库区", Prefix: "B1-", Count: 10),
+        };
+
+        var heads = new List<TBasFlexvalues>();
+        var entries = new List<TBasFlexvaluesentry>();
+        foreach (var s in sets)
+        {
+            var headInterId = FlexValUid(s.Number);
+            heads.Add(new TBasFlexvalues
+            {
+                Uid = headInterId,
+                FInterId = headInterId,
+                Fnumber = s.Number,
+                Fname = s.Name,
+                Fflexnumber = s.Number,
+                Fcheckdate = DateTime.MinValue,
+                Fdisabledate = DateTime.MinValue,
+                FStatus = 0,
+                FDeleted = false,
+                FDisabled = false,
+                FCompanyId = company,
+                CYmd = now,
+                CUser = user,
+                MYmd = now,
+                MUser = user
+            });
+
+            for (var n = 1; n <= s.Count; n++)
+            {
+                var code = $"{s.Prefix}{n}";
+                entries.Add(new TBasFlexvaluesentry
+                {
+                    Uid = FlexValEntryUid(s.Number, code),
+                    FInterId = headInterId,
+                    Fdetailid = FlexValEntryUid(s.Number, code),
+                    Fentryid = n,
+                    Fnumber = code,
+                    Fname = code,
+                    Fforbid = false,
+                    FStatus = 0,
+                    FDeleted = false,
+                    FDisabled = false,
+                    FCompanyId = company,
+                    CYmd = now,
+                    CUser = user,
+                    MYmd = now,
+                    MUser = user
+                });
+            }
+        }
+
+        // 幂等：按 FNumber 判断仓位集头是否已存在
+        var existingHeadNumbers = new HashSet<string>(
+            await _db.Queryable<TBasFlexvalues>().Where(v => !v.FDeleted).Select(v => v.Fnumber).ToListAsync());
+        var missingHeads = heads.Where(h => !existingHeadNumbers.Contains(h.Fnumber)).ToList();
+        if (missingHeads.Count > 0)
+        {
+            // 头与明细原子插入：避免中途失败留下"有头无值"的孤立仓位集（幂等键只判头 FNumber，孤立头将无法自愈）
+            var newHeadIds = new HashSet<string>(missingHeads.Select(h => h.FInterId));
+            var missingEntries = entries.Where(e => newHeadIds.Contains(e.FInterId)).ToList();
+            try
+            {
+                _db.Ado.BeginTran();
+                await _db.Insertable(missingHeads).ExecuteCommandAsync();
+                if (missingEntries.Count > 0)
+                    await _db.Insertable(missingEntries).ExecuteCommandAsync();
+                _db.Ado.CommitTran();
+            }
+            catch
+            {
+                _db.Ado.RollbackTran();
+                throw;
+            }
+        }
     }
 
     #endregion

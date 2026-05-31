@@ -80,6 +80,56 @@ public class CreateWarehouseRequest
     public string FGroupId { get; set; } = string.Empty;
 }
 
+// ============ 仓位信息（启用仓位管理时维护，两级主从：仓位集 → 仓位集值）============
+// 仓位集/值的 代码·名称·描述 来自主表 JOIN：
+//   T_BD_STOCKFLEXITEM.FFLEXID      -> T_BAS_FLEXVALUES.FINTERID
+//   T_BD_STOCKFLEXDETAIL.FFLEXENTRYID -> T_BAS_FLEXVALUESENTRY.FDETAILID
+
+/// <summary>仓位集（T_BD_STOCKFLEXITEM）含其仓位集值明细</summary>
+public class WarehouseFlexItemDto
+{
+    public string Uid { get; set; } = string.Empty;
+    public int FEntryId { get; set; }
+    /// <summary>仓位集引用键（= T_BAS_FLEXVALUES.FINTERID）</summary>
+    public string FFlexId { get; set; } = string.Empty;
+    public string FNumber { get; set; } = string.Empty;
+    public string FName { get; set; } = string.Empty;
+    public string FDescription { get; set; } = string.Empty;
+    public bool FIsMustInput { get; set; }
+    public List<WarehouseFlexDetailDto> Details { get; set; } = new();
+}
+
+/// <summary>仓位集值（T_BD_STOCKFLEXDETAIL）</summary>
+public class WarehouseFlexDetailDto
+{
+    public string Uid { get; set; } = string.Empty;
+    public int FEntryId { get; set; }
+    /// <summary>仓位集值引用键（= T_BAS_FLEXVALUESENTRY.FDETAILID）</summary>
+    public string FFlexEntryId { get; set; } = string.Empty;
+    public string FNumber { get; set; } = string.Empty;
+    public string FName { get; set; } = string.Empty;
+    public string FDescription { get; set; } = string.Empty;
+}
+
+public class SaveWarehouseFlexRequest
+{
+    public List<SaveWarehouseFlexItem> Items { get; set; } = new();
+}
+
+public class SaveWarehouseFlexItem
+{
+    /// <summary>仓位集引用键（= T_BAS_FLEXVALUES.FINTERID）</summary>
+    public string FFlexId { get; set; } = string.Empty;
+    public bool FIsMustInput { get; set; }
+    public List<SaveWarehouseFlexDetailItem> Details { get; set; } = new();
+}
+
+public class SaveWarehouseFlexDetailItem
+{
+    /// <summary>仓位集值引用键（= T_BAS_FLEXVALUESENTRY.FDETAILID）</summary>
+    public string FFlexEntryId { get; set; } = string.Empty;
+}
+
 public class UpdateWarehouseRequest
 {
     [Required(ErrorMessage = "仓库名称不能为空")]
