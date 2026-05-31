@@ -3,7 +3,7 @@
     <div class="list-layout">
       <GroupPanel
         ref="groupPanelRef"
-        prg-key="BD_Stock"
+        prg-key="Warehouse"
         title="仓库分组"
         @select="handleGroupSelect"
       />
@@ -127,137 +127,16 @@
         @current-change="fetchData"
       />
     </div>
-
-    <!-- Create/Edit Dialog -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'create' ? '新增仓库' : isReadonly ? '查看仓库' : '编辑仓库'"
-      width="700px"
-    >
-      <el-form :model="form" label-width="110px" :disabled="isReadonly">
-        <el-tabs v-model="activeTab">
-          <!-- 基本信息 -->
-          <el-tab-pane label="基本信息" name="basic">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="仓库编码" required>
-                  <el-input v-model="form.fNumber" :disabled="dialogType === 'edit'" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="仓库名称" required>
-                  <el-input v-model="form.fName" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="仓库类型">
-                  <el-input v-model="form.fType" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="仓库属性">
-                  <el-input v-model="form.fStockProperty" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="负责人">
-                  <el-input v-model="form.fPrincipal" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="联系电话">
-                  <el-input v-model="form.fTel" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-form-item label="地址">
-              <el-input v-model="form.fAddress" />
-            </el-form-item>
-            <el-form-item label="分组">
-              <el-tree-select v-model="form.fGroupId" :data="groupPanelRef?.treeData || []" :props="{ label: 'fName', children: 'children', value: 'uid' }" placeholder="请选择分组" clearable check-strictly style="width: 100%" />
-            </el-form-item>
-            <el-form-item label="描述">
-              <el-input v-model="form.fDescription" type="textarea" :rows="2" />
-            </el-form-item>
-          </el-tab-pane>
-
-          <!-- 仓库设置 -->
-          <el-tab-pane label="仓库设置" name="settings">
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="允许负库存">
-                  <el-switch v-model="form.fAllowMinusQty" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="启用仓位">
-                  <el-switch v-model="form.fIsOpenLocation" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="是否保税">
-                  <el-switch v-model="form.fBonded" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="允许MRP">
-                  <el-switch v-model="form.fAllowMrpPlan" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="允许锁库">
-                  <el-switch v-model="form.fAllowLock" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="是否虚仓">
-                  <el-switch v-model="form.fIsVirtual" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="8">
-                <el-form-item label="参与预警">
-                  <el-switch v-model="form.fAvailableAlert" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="参与拣货">
-                  <el-switch v-model="form.fAvailablePicking" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="8">
-                <el-form-item label="拣货优先级">
-                  <el-input-number v-model="form.fSortingPriority" :min="0" style="width: 100%" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-tab-pane>
-        </el-tabs>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">{{ isReadonly ? '关闭' : '取消' }}</el-button>
-          <el-button v-if="!isReadonly" type="primary" @click="submitForm">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { getWarehouses, getWarehouse, createWarehouse, updateWarehouse, deleteWarehouse, approveWarehouse, unapproveWarehouse, disableWarehouse, enableWarehouse, getWarehousesFields, type Warehouse } from '../../api/warehouse'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getWarehouses, deleteWarehouse, approveWarehouse, unapproveWarehouse, disableWarehouse, enableWarehouse, getWarehousesFields, type Warehouse } from '../../api/warehouse'
 import { formatDate } from '../../utils/format'
-import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
@@ -265,6 +144,7 @@ import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicF
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
+const router = useRouter()
 const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
@@ -311,7 +191,7 @@ const queryParams = reactive({
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
-  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable, clearSelection
+  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable
 } = useTableSelection<Warehouse>({
   entityName: '仓库',
   approveFn: approveWarehouse,
@@ -341,38 +221,6 @@ const handleSortChange = ({ prop, order }: { prop: string, order: string | null 
   fetchData()
 }
 
-const dialogVisible = ref(false)
-const dialogType = ref<'create' | 'edit'>('create')
-const activeTab = ref('basic')
-
-const isReadonly = computed(() => dialogType.value === 'edit' && (form.fStatus === 40 || form.fDisabled))
-
-const defaultForm = {
-  uid: undefined as string | undefined,
-  fStatus: 0,
-  fNumber: '',
-  fName: '',
-  fDescription: '',
-  fPrincipal: '',
-  fTel: '',
-  fType: '',
-  fAddress: '',
-  fStockProperty: '',
-  fAllowMinusQty: false,
-  fIsOpenLocation: false,
-  fBonded: false,
-  fAllowMrpPlan: false,
-  fAllowLock: false,
-  fAvailableAlert: false,
-  fAvailablePicking: false,
-  fSortingPriority: 0,
-  fIsVirtual: false,
-  fGroupId: '',
-  fDisabled: false
-}
-
-const form = reactive({ ...defaultForm })
-
 async function fetchData() {
   loading.value = true
   try {
@@ -387,45 +235,11 @@ async function fetchData() {
 }
 
 const handleAdd = () => {
-  dialogType.value = 'create'
-  activeTab.value = 'basic'
-  Object.assign(form, { ...defaultForm })
-  dialogVisible.value = true
+  router.push({ name: 'WarehouseEdit', query: queryParams.groupId ? { groupId: queryParams.groupId } : {} })
 }
 
-const handleEdit = async (row: Warehouse) => {
-  dialogType.value = 'edit'
-  activeTab.value = 'basic'
-  try {
-    const res: any = await getWarehouse(row.uid!)
-    const d = res.data
-    Object.assign(form, {
-      uid: d.uid,
-      fStatus: d.fStatus || 0,
-      fNumber: d.fNumber || '',
-      fName: d.fName || '',
-      fDescription: d.fDescription || '',
-      fPrincipal: d.fPrincipal || '',
-      fTel: d.fTel || '',
-      fType: d.fType || '',
-      fAddress: d.fAddress || '',
-      fStockProperty: d.fStockProperty || '',
-      fAllowMinusQty: d.fAllowMinusQty || false,
-      fIsOpenLocation: d.fIsOpenLocation || false,
-      fBonded: d.fBonded || false,
-      fAllowMrpPlan: d.fAllowMrpPlan || false,
-      fAllowLock: d.fAllowLock || false,
-      fAvailableAlert: d.fAvailableAlert || false,
-      fAvailablePicking: d.fAvailablePicking || false,
-      fSortingPriority: d.fSortingPriority || 0,
-      fIsVirtual: d.fIsVirtual || false,
-      fGroupId: d.fGroupId || '',
-      fDisabled: d.fDisabled || false
-    })
-  } catch (error) {
-    console.error('Fetch warehouse detail failed:', error)
-  }
-  dialogVisible.value = true
+const handleEdit = (row: Warehouse) => {
+  router.push({ name: 'WarehouseEdit', query: { uid: row.uid } })
 }
 
 const handleEditSelected = () => {
@@ -435,48 +249,6 @@ const handleEditSelected = () => {
 
 const handleRowDblClick = (row: Warehouse) => {
   handleEdit(row)
-}
-
-const submitForm = async () => {
-  if (!form.fNumber || !form.fName) {
-    ElMessage.warning('请输入仓库编码和名称')
-    return
-  }
-
-  const data = {
-    fNumber: form.fNumber,
-    fName: form.fName,
-    fDescription: form.fDescription,
-    fPrincipal: form.fPrincipal,
-    fTel: form.fTel,
-    fType: form.fType,
-    fAddress: form.fAddress,
-    fAllowMinusQty: form.fAllowMinusQty,
-    fIsOpenLocation: form.fIsOpenLocation,
-    fStockProperty: form.fStockProperty,
-    fGroupId: form.fGroupId
-  }
-
-  try {
-    if (dialogType.value === 'create') {
-      await createWarehouse(data)
-      ElMessage.success('创建成功')
-    } else {
-      const { fNumber, ...updateData } = data
-      await updateWarehouse(form.uid!, updateData)
-      ElMessage.success('更新成功')
-    }
-    dialogVisible.value = false
-    fetchData()
-  } catch (error: any) {
-    console.error('Submit warehouse failed:', error)
-    if (error.response && error.response.data) {
-      const errorMsg = error.response.data.message || JSON.stringify(error.response.data)
-      ElMessage.error(errorMsg)
-    } else {
-      ElMessage.error('提交失败')
-    }
-  }
 }
 
 onMounted(() => {

@@ -1,10 +1,12 @@
 import request from '../utils/request'
+import { getLookup, type LookupParams } from './lookup'
 
 export interface Warehouse {
     uid?: string
     fNumber: string
     fName: string
     fStatus?: number
+    fDisabled?: boolean
     fPrincipal?: string
     fTel?: string
     fType?: string
@@ -13,6 +15,10 @@ export interface Warehouse {
     // detail fields
     fDescription?: string
     fStockProperty?: string
+    fStockStatusType?: string
+    fDefStockStatusId?: string
+    fDefReceiveStatusId?: string
+    fWorkshopId?: string
     fAllowMinusQty?: boolean
     fIsOpenLocation?: boolean
     fBonded?: boolean
@@ -23,7 +29,22 @@ export interface Warehouse {
     fSortingPriority?: number
     fIsVirtual?: boolean
     erpNumber?: string
+    fGroupId?: string
+    fGroupName?: string
+    // 使用组织 / 审计（只读）
+    fCompanyId?: string
+    fCompanyName?: string
+    cUser?: string
+    mUser?: string
+    mYmd?: string
+    fCheckerId?: string
+    fCheckDate?: string
+    fdisableid?: string
+    fdisabledate?: string
 }
+
+// 库存状态下拉（默认库存状态、默认收料状态）
+export const getStockStatusLookup = (params?: LookupParams) => getLookup('stockstatus', params)
 
 export const getWarehouses = (params?: any) => {
     return request({

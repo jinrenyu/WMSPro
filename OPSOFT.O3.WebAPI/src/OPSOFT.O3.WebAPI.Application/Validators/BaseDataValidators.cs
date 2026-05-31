@@ -73,10 +73,16 @@ public class CreateWarehouseRequestValidator : AbstractValidator<CreateWarehouse
     {
         RuleFor(x => x.FNumber).NotEmpty().WithMessage("编码不能为空").MaximumLength(50);
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
+        RuleFor(x => x.FStockProperty).NotEmpty().WithMessage("请选择仓库属性").MaximumLength(50);
+        RuleFor(x => x.FType).NotEmpty().WithMessage("请选择仓库类型").MaximumLength(50);
+        RuleFor(x => x.FStockStatusType).NotEmpty().WithMessage("请选择库存状态类型").MaximumLength(200);
         RuleFor(x => x.FDescription).MaximumLength(500);
         RuleFor(x => x.FPrincipal).MaximumLength(100);
         RuleFor(x => x.FTel).MaximumLength(50);
         RuleFor(x => x.FAddress).MaximumLength(500);
+        RuleFor(x => x.FDefStockStatusId).MaximumLength(100);
+        RuleFor(x => x.FDefReceiveStatusId).MaximumLength(100);
+        RuleFor(x => x.FWorkshopId).MaximumLength(100);
     }
 }
 
@@ -85,10 +91,16 @@ public class UpdateWarehouseRequestValidator : AbstractValidator<UpdateWarehouse
     public UpdateWarehouseRequestValidator()
     {
         RuleFor(x => x.FName).NotEmpty().WithMessage("名称不能为空").MaximumLength(200);
+        RuleFor(x => x.FStockProperty).NotEmpty().WithMessage("请选择仓库属性").MaximumLength(50);
+        RuleFor(x => x.FType).NotEmpty().WithMessage("请选择仓库类型").MaximumLength(50);
+        RuleFor(x => x.FStockStatusType).NotEmpty().WithMessage("请选择库存状态类型").MaximumLength(200);
         RuleFor(x => x.FDescription).MaximumLength(500);
         RuleFor(x => x.FPrincipal).MaximumLength(100);
         RuleFor(x => x.FTel).MaximumLength(50);
         RuleFor(x => x.FAddress).MaximumLength(500);
+        RuleFor(x => x.FDefStockStatusId).MaximumLength(100);
+        RuleFor(x => x.FDefReceiveStatusId).MaximumLength(100);
+        RuleFor(x => x.FWorkshopId).MaximumLength(100);
     }
 }
 

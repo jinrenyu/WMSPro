@@ -26,11 +26,13 @@ public class DemoDataSeedService
     private static string UnitUid(string number) => SeedUid("UNIT", number);
     private static string StockUid(string number) => SeedUid("STOCK", number);
     private static string SpUid(string number) => SeedUid("SP", number);
+    private static string StockStatusUid(string number) => SeedUid("STOCKSTATUS", number);
 
     public async Task SeedAsync()
     {
         await SeedBaseDataGroupsAsync();
         await SeedUnitsAsync();
+        await SeedStockStatusAsync();
         await SeedWarehousesAsync();
         await SeedStockPlacesAsync();
         await SeedCurrenciesAsync();
@@ -300,6 +302,71 @@ public class DemoDataSeedService
 
     #region 仓库种子数据
 
+    #region 库存状态种子数据
+
+    private async Task SeedStockStatusAsync()
+    {
+        var now = DateTime.Now;
+        const string company = "DEFAULT";
+        const string user = "demo-seed";
+
+        // 库存状态来源：T_BD_STOCKSTATUS（FINTERID / FNUMBER / FNAME），用于默认库存状态、默认收料状态等下拉
+        var statuses = new List<TBdStockstatus>
+        {
+            CreateStockStatus("10000",  "KCZT01_SYS", "可用",     now, company, user),
+            CreateStockStatus("10001",  "KCZT02_SYS", "待检",     now, company, user),
+            CreateStockStatus("10002",  "KCZT03_SYS", "冻结",     now, company, user),
+            CreateStockStatus("10003",  "KCZT04_SYS", "退回冻结", now, company, user),
+            CreateStockStatus("10004",  "KCZT05_SYS", "在途",     now, company, user),
+            CreateStockStatus("10005",  "KCZT06_SYS", "收货冻结", now, company, user),
+            CreateStockStatus("10006",  "KCZT07_SYS", "废品",     now, company, user),
+            CreateStockStatus("10257",  "KCZT08_SYS", "不良",     now, company, user),
+            CreateStockStatus("103401", "KCZT99_SYS", "外借",     now, company, user),
+        };
+
+        // 幂等：只插入数据库中不存在的记录（按 FNumber 判断）
+        var existingNumbers = await _db.Queryable<TBdStockstatus>()
+            .Where(s => !s.FDeleted)
+            .Select(s => s.Fnumber)
+            .ToListAsync();
+
+        var existingSet = new HashSet<string>(existingNumbers);
+        var missing = statuses.Where(s => !existingSet.Contains(s.Fnumber)).ToList();
+
+        if (missing.Count > 0)
+        {
+            await _db.Insertable(missing).ExecuteCommandAsync();
+        }
+    }
+
+    private static TBdStockstatus CreateStockStatus(
+        string interId, string number, string name,
+        DateTime now, string company, string user)
+    {
+        return new TBdStockstatus
+        {
+            Uid = StockStatusUid(number),
+            FInterId = interId,
+            Fnumber = number,
+            Fname = name,
+            Favailable = true,
+            Isdefault = true,
+            // NOT NULL 日期列需赋 DateTime.MinValue（SQLite 该列不可空）
+            Fcheckdate = DateTime.MinValue,
+            Fdisabledate = DateTime.MinValue,
+            FStatus = 0,
+            FDeleted = false,
+            FDisabled = false,
+            FCompanyId = company,
+            CYmd = now,
+            CUser = user,
+            MYmd = now,
+            MUser = user
+        };
+    }
+
+    #endregion
+
     private async Task SeedWarehousesAsync()
     {
         var now = DateTime.Now;
@@ -311,33 +378,34 @@ public class DemoDataSeedService
         var grpWhFg  = GroupUid("WH-FG");  var grpWhPkg = GroupUid("WH-PKG");
         var grpWhRt  = GroupUid("WH-RT");  var grpWhVt  = GroupUid("WH-VT");
 
+        // 仓库类型 type：1=物料类;2=TPM类  仓库属性 property：1=普通仓库;2=车间仓库;3=供应商仓库;4=客户仓库;5=第三方仓储
         var warehouses = new List<TBdStock>
         {
             // 原材料仓库
-            CreateWarehouse("WH-RM01", "原材料仓库A", "存放金属、塑料等原材料",     "张伟",   "13800001001", "自有仓", "原材料", true,  false, false, "深圳市宝安区工业园A栋1层", now, company, user, grpWhRm),
-            CreateWarehouse("WH-RM02", "原材料仓库B", "存放化工、橡胶等原材料",     "李强",   "13800001002", "自有仓", "原材料", true,  false, false, "深圳市宝安区工业园A栋2层", now, company, user, grpWhRm),
+            CreateWarehouse("WH-RM01", "原材料仓库A", "存放金属、塑料等原材料",     "张伟",   "13800001001", "1", "1", true,  false, false, "深圳市宝安区工业园A栋1层", now, company, user, grpWhRm),
+            CreateWarehouse("WH-RM02", "原材料仓库B", "存放化工、橡胶等原材料",     "李强",   "13800001002", "1", "1", true,  false, false, "深圳市宝安区工业园A栋2层", now, company, user, grpWhRm),
 
             // 半成品仓库
-            CreateWarehouse("WH-WIP01", "半成品仓库",  "存放生产线在制品及半成品",   "王芳",   "13800001003", "自有仓", "半成品", true,  false, false, "深圳市宝安区工业园B栋1层", now, company, user, grpWhWip),
+            CreateWarehouse("WH-WIP01", "半成品仓库",  "存放生产线在制品及半成品",   "王芳",   "13800001003", "1", "1", true,  false, false, "深圳市宝安区工业园B栋1层", now, company, user, grpWhWip),
 
             // 成品仓库
-            CreateWarehouse("WH-FG01", "成品仓库A",   "存放已完工待发货的成品",     "赵敏",   "13800001004", "自有仓", "产成品", true,  false, false, "深圳市宝安区工业园C栋1层", now, company, user, grpWhFg),
-            CreateWarehouse("WH-FG02", "成品仓库B",   "大件成品及出口产品存放",     "刘洋",   "13800001005", "自有仓", "产成品", true,  false, false, "深圳市宝安区工业园C栋2层", now, company, user, grpWhFg),
+            CreateWarehouse("WH-FG01", "成品仓库A",   "存放已完工待发货的成品",     "赵敏",   "13800001004", "1", "1", true,  false, false, "深圳市宝安区工业园C栋1层", now, company, user, grpWhFg),
+            CreateWarehouse("WH-FG02", "成品仓库B",   "大件成品及出口产品存放",     "刘洋",   "13800001005", "1", "1", true,  false, false, "深圳市宝安区工业园C栋2层", now, company, user, grpWhFg),
 
             // 包材仓库
-            CreateWarehouse("WH-PK01", "包材仓库",    "存放纸箱、泡沫、标签等包材", "陈静",   "13800001006", "自有仓", "原材料", false, false, false, "深圳市宝安区工业园D栋1层", now, company, user, grpWhPkg),
+            CreateWarehouse("WH-PK01", "包材仓库",    "存放纸箱、泡沫、标签等包材", "陈静",   "13800001006", "1", "1", false, false, false, "深圳市宝安区工业园D栋1层", now, company, user, grpWhPkg),
 
             // 退货仓库
-            CreateWarehouse("WH-RT01", "退货仓库",    "存放客户退回的产品",         "孙磊",   "13800001007", "自有仓", "其他",   false, true,  false, "深圳市宝安区工业园E栋1层", now, company, user, grpWhRt),
+            CreateWarehouse("WH-RT01", "退货仓库",    "存放客户退回的产品",         "孙磊",   "13800001007", "1", "1", false, true,  false, "深圳市宝安区工业园E栋1层", now, company, user, grpWhRt),
 
             // 不良品仓库
-            CreateWarehouse("WH-NG01", "不良品仓库",  "存放质检不合格的物料和产品", "周杰",   "13800001008", "自有仓", "其他",   false, true,  false, "深圳市宝安区工业园E栋2层", now, company, user, grpWhRt),
+            CreateWarehouse("WH-NG01", "不良品仓库",  "存放质检不合格的物料和产品", "周杰",   "13800001008", "1", "1", false, true,  false, "深圳市宝安区工业园E栋2层", now, company, user, grpWhRt),
 
-            // 外租仓库
-            CreateWarehouse("WH-EX01", "外租仓库",    "第三方物流外租仓库",         "吴涛",   "13800001009", "外租仓", "产成品", true,  false, false, "东莞市虎门镇物流园3号库",  now, company, user, grpWhFg),
+            // 外租仓库（第三方仓储）
+            CreateWarehouse("WH-EX01", "外租仓库",    "第三方物流外租仓库",         "吴涛",   "13800001009", "1", "5", true,  false, false, "东莞市虎门镇物流园3号库",  now, company, user, grpWhFg),
 
             // 虚拟仓库
-            CreateWarehouse("WH-VT01", "在途虚拟仓",  "记录在途物料的虚拟仓库",     "郑华",   "13800001010", "虚拟仓", "其他",   false, false, true,  "",                         now, company, user, grpWhVt),
+            CreateWarehouse("WH-VT01", "在途虚拟仓",  "记录在途物料的虚拟仓库",     "郑华",   "13800001010", "1", "1", false, false, true,  "",                         now, company, user, grpWhVt),
         };
 
         // 幂等：只插入数据库中不存在的记录（按 FNumber 判断）
@@ -372,6 +440,10 @@ public class DemoDataSeedService
             FTel = tel,
             FType = type,
             FStockProperty = property,
+            // 默认库存状态相关：库存状态类型默认“可用(0)”，默认库存/收料状态指向库存状态表“可用(KCZT01_SYS)”
+            FStockStatusType = "0",
+            FDefStockStatusId = StockStatusUid("KCZT01_SYS"),
+            FDefReceiveStatusId = StockStatusUid("KCZT01_SYS"),
             FIsOpenLocation = isOpenLocation,
             FAllowMinusQty = allowMinusQty,
             FIsVirtual = isVirtual,

@@ -106,6 +106,12 @@ const routes = [
                 meta: { title: '仓库管理' }
             },
             {
+                path: 'master/warehouses/edit',
+                name: 'WarehouseEdit',
+                component: () => import('../views/master/WarehouseEdit.vue'),
+                meta: { title: '仓库-维护' }
+            },
+            {
                 path: 'master/units',
                 name: 'UnitList',
                 component: () => import('../views/master/UnitList.vue'),
