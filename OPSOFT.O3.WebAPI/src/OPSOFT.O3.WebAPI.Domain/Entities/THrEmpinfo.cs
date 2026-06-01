@@ -1,12 +1,13 @@
+using OPSOFT.O3.WebAPI.Domain.Interfaces;
 using SqlSugar;
 
 namespace OPSOFT.O3.WebAPI.Domain.Entities;
 
 /// <summary>
-/// 员工
+/// 员工（职员维护：T_HR_EMPINFO）
 /// </summary>
 [SugarTable("T_HR_EMPINFO")]
-public class THrEmpinfo : BaseEntity
+public class THrEmpinfo : BaseEntity, IApprovable, IDisableable
 {
     /// <summary>
     /// 员工代码
@@ -69,7 +70,7 @@ public class THrEmpinfo : BaseEntity
     public string Fsaldeptid { get; set; } = string.Empty;
 
     /// <summary>
-    /// 工资系数
+    /// 人员系数
     /// </summary>
     [SugarColumn(ColumnName = "FCOEFFICIENT")]
     public decimal Fcoefficient { get; set; }
@@ -129,16 +130,16 @@ public class THrEmpinfo : BaseEntity
     public string Fuseorgid { get; set; } = string.Empty;
 
     /// <summary>
-    /// 审核人
+    /// 审核人（IApprovable）
     /// </summary>
     [SugarColumn(ColumnName = "FCHECKERID")]
-    public string Fcheckerid { get; set; } = string.Empty;
+    public string FCheckerId { get; set; } = string.Empty;
 
     /// <summary>
-    /// 审核日期
+    /// 审核日期（IApprovable）
     /// </summary>
     [SugarColumn(ColumnName = "FCHECKDATE")]
-    public DateTime? Fcheckdate { get; set; }
+    public DateTime FCheckDate { get; set; } = DateTime.MinValue;
 
     /// <summary>
     /// 禁用人
@@ -150,7 +151,7 @@ public class THrEmpinfo : BaseEntity
     /// 禁用日期
     /// </summary>
     [SugarColumn(ColumnName = "FDISABLEDATE")]
-    public DateTime? Fdisabledate { get; set; }
+    public DateTime Fdisabledate { get; set; } = DateTime.MinValue;
 
     /// <summary>
     /// 调岗日期

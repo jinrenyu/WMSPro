@@ -43,6 +43,8 @@ public class DemoDataSeedService
         await SeedDepartmentsAsync();
         await SeedCustomersAsync();
         await SeedSuppliersAsync();
+        await SeedCostCentersAsync();
+        await SeedDutiesAsync();
         await SeedEmployeesAsync();
         await SeedMaterialsAsync();
         await SeedMaterialBarTypesAsync();
@@ -1162,45 +1164,46 @@ public class DemoDataSeedService
         var grpEmpProd = GroupUid("EMP-PROD"); var grpEmpWh   = GroupUid("EMP-WH");
         var grpEmpFin  = GroupUid("EMP-FIN");  var grpEmpTech = GroupUid("EMP-TECH");
 
-        var employees = new List<TBdEmpinfo>
+        // 性别按新约定 0=男;1=女
+        var employees = new List<THrEmpinfo>
         {
             // 管理层 → 集团总裁办 (GRP_OFFICE)
-            CreateEmployee("EMP-001", "张建国", 1, "本科",   new DateTime(1975, 3, 15), new DateTime(2010, 1, 5),  "13700001001", "zhangjg@opsoft.com",  DeptUid("GRP_OFFICE"),  "深圳市南山区科技园1栋501",   "张秀兰", "13700009001", now, company, user, grpEmpMgt),
-            CreateEmployee("EMP-002", "李明华", 1, "硕士",   new DateTime(1978, 7, 22), new DateTime(2012, 3, 12), "13700001002", "limh@opsoft.com",     DeptUid("GRP_OFFICE"),  "深圳市南山区蛇口花园3栋202", "李芳",   "13700009002", now, company, user, grpEmpMgt),
+            CreateEmployee("EMP-001", "张建国", 0, "本科",   new DateTime(1975, 3, 15), new DateTime(2010, 1, 5),  "13700001001", "zhangjg@opsoft.com",  DeptUid("GRP_OFFICE"),  "深圳市南山区科技园1栋501",   "张秀兰", "13700009001", now, company, user, grpEmpMgt),
+            CreateEmployee("EMP-002", "李明华", 0, "硕士",   new DateTime(1978, 7, 22), new DateTime(2012, 3, 12), "13700001002", "limh@opsoft.com",     DeptUid("GRP_OFFICE"),  "深圳市南山区蛇口花园3栋202", "李芳",   "13700009002", now, company, user, grpEmpMgt),
 
             // 销售部 → 上海贸易-销售部 (SH_SALES)
-            CreateEmployee("EMP-010", "张明",   1, "本科",   new DateTime(1985, 5, 10), new DateTime(2015, 6, 1),  "13700001010", "zhangm@opsoft.com",   DeptUid("SH_SALES"),    "深圳市宝安区西乡街道108号",  "张丽",   "13700009010", now, company, user, grpEmpSale),
-            CreateEmployee("EMP-011", "刘伟",   1, "本科",   new DateTime(1988, 11, 3), new DateTime(2016, 8, 15), "13700001011", "liuw@opsoft.com",     DeptUid("SH_SALES"),    "深圳市龙华区民治街道56号",   "刘芳",   "13700009011", now, company, user, grpEmpSale),
-            CreateEmployee("EMP-012", "王丽",   0, "大专",   new DateTime(1990, 2, 28), new DateTime(2017, 4, 10), "13700001012", "wangl@opsoft.com",    DeptUid("SH_SALES"),    "深圳市福田区景田路88号",     "王强",   "13700009012", now, company, user, grpEmpSale),
-            CreateEmployee("EMP-013", "赵阳",   1, "本科",   new DateTime(1992, 8, 16), new DateTime(2019, 7, 1),  "13700001013", "zhaoy@opsoft.com",    DeptUid("SH_SALES"),    "深圳市南山区前海路12号",     "赵敏",   "13700009013", now, company, user, grpEmpSale),
+            CreateEmployee("EMP-010", "张明",   0, "本科",   new DateTime(1985, 5, 10), new DateTime(2015, 6, 1),  "13700001010", "zhangm@opsoft.com",   DeptUid("SH_SALES"),    "深圳市宝安区西乡街道108号",  "张丽",   "13700009010", now, company, user, grpEmpSale),
+            CreateEmployee("EMP-011", "刘伟",   0, "本科",   new DateTime(1988, 11, 3), new DateTime(2016, 8, 15), "13700001011", "liuw@opsoft.com",     DeptUid("SH_SALES"),    "深圳市龙华区民治街道56号",   "刘芳",   "13700009011", now, company, user, grpEmpSale),
+            CreateEmployee("EMP-012", "王丽",   1, "大专",   new DateTime(1990, 2, 28), new DateTime(2017, 4, 10), "13700001012", "wangl@opsoft.com",    DeptUid("SH_SALES"),    "深圳市福田区景田路88号",     "王强",   "13700009012", now, company, user, grpEmpSale),
+            CreateEmployee("EMP-013", "赵阳",   0, "本科",   new DateTime(1992, 8, 16), new DateTime(2019, 7, 1),  "13700001013", "zhaoy@opsoft.com",    DeptUid("SH_SALES"),    "深圳市南山区前海路12号",     "赵敏",   "13700009013", now, company, user, grpEmpSale),
 
             // 采购部 → 深圳制造-采购部 (SZ_PURCHASE)
-            CreateEmployee("EMP-020", "陈志远", 1, "本科",   new DateTime(1986, 4, 20), new DateTime(2014, 9, 1),  "13700001020", "chenzy@opsoft.com",   DeptUid("SZ_PURCHASE"), "深圳市宝安区沙井街道22号",   "陈芳",   "13700009020", now, company, user, grpEmpMgt),
-            CreateEmployee("EMP-021", "孙丽娟", 0, "本科",   new DateTime(1989, 12, 5), new DateTime(2016, 3, 20), "13700001021", "sunlj@opsoft.com",    DeptUid("SZ_PURCHASE"), "深圳市龙岗区坂田街道66号",   "孙强",   "13700009021", now, company, user, grpEmpMgt),
-            CreateEmployee("EMP-022", "周海涛", 1, "大专",   new DateTime(1991, 6, 18), new DateTime(2018, 5, 8),  "13700001022", "zhouht@opsoft.com",   DeptUid("SZ_PURCHASE"), "深圳市光明区公明街道33号",   "周敏",   "13700009022", now, company, user, grpEmpMgt),
+            CreateEmployee("EMP-020", "陈志远", 0, "本科",   new DateTime(1986, 4, 20), new DateTime(2014, 9, 1),  "13700001020", "chenzy@opsoft.com",   DeptUid("SZ_PURCHASE"), "深圳市宝安区沙井街道22号",   "陈芳",   "13700009020", now, company, user, grpEmpMgt),
+            CreateEmployee("EMP-021", "孙丽娟", 1, "本科",   new DateTime(1989, 12, 5), new DateTime(2016, 3, 20), "13700001021", "sunlj@opsoft.com",    DeptUid("SZ_PURCHASE"), "深圳市龙岗区坂田街道66号",   "孙强",   "13700009021", now, company, user, grpEmpMgt),
+            CreateEmployee("EMP-022", "周海涛", 0, "大专",   new DateTime(1991, 6, 18), new DateTime(2018, 5, 8),  "13700001022", "zhouht@opsoft.com",   DeptUid("SZ_PURCHASE"), "深圳市光明区公明街道33号",   "周敏",   "13700009022", now, company, user, grpEmpMgt),
 
             // 仓储部 → 深圳制造-仓储部 (SZ_WH)
-            CreateEmployee("EMP-030", "张伟",   1, "大专",   new DateTime(1984, 9, 8),  new DateTime(2013, 2, 18), "13700001030", "zhangw@opsoft.com",   DeptUid("SZ_WH"),       "深圳市宝安区福永街道45号",   "张芳",   "13700009030", now, company, user, grpEmpWh),
-            CreateEmployee("EMP-031", "王芳",   0, "大专",   new DateTime(1987, 1, 25), new DateTime(2015, 11, 5), "13700001031", "wangf@opsoft.com",    DeptUid("SZ_WH"),       "深圳市宝安区松岗街道78号",   "王强",   "13700009031", now, company, user, grpEmpWh),
-            CreateEmployee("EMP-032", "赵敏",   0, "高中",   new DateTime(1993, 3, 12), new DateTime(2018, 8, 20), "13700001032", "zhaom@opsoft.com",    DeptUid("SZ_WH"),       "深圳市宝安区石岩街道15号",   "赵刚",   "13700009032", now, company, user, grpEmpWh),
-            CreateEmployee("EMP-033", "刘洋",   1, "大专",   new DateTime(1990, 10, 7), new DateTime(2017, 6, 12), "13700001033", "liuy@opsoft.com",     DeptUid("SZ_WH"),       "深圳市宝安区西乡街道99号",   "刘芳",   "13700009033", now, company, user, grpEmpWh),
+            CreateEmployee("EMP-030", "张伟",   0, "大专",   new DateTime(1984, 9, 8),  new DateTime(2013, 2, 18), "13700001030", "zhangw@opsoft.com",   DeptUid("SZ_WH"),       "深圳市宝安区福永街道45号",   "张芳",   "13700009030", now, company, user, grpEmpWh),
+            CreateEmployee("EMP-031", "王芳",   1, "大专",   new DateTime(1987, 1, 25), new DateTime(2015, 11, 5), "13700001031", "wangf@opsoft.com",    DeptUid("SZ_WH"),       "深圳市宝安区松岗街道78号",   "王强",   "13700009031", now, company, user, grpEmpWh),
+            CreateEmployee("EMP-032", "赵敏",   1, "高中",   new DateTime(1993, 3, 12), new DateTime(2018, 8, 20), "13700001032", "zhaom@opsoft.com",    DeptUid("SZ_WH"),       "深圳市宝安区石岩街道15号",   "赵刚",   "13700009032", now, company, user, grpEmpWh),
+            CreateEmployee("EMP-033", "刘洋",   0, "大专",   new DateTime(1990, 10, 7), new DateTime(2017, 6, 12), "13700001033", "liuy@opsoft.com",     DeptUid("SZ_WH"),       "深圳市宝安区西乡街道99号",   "刘芳",   "13700009033", now, company, user, grpEmpWh),
 
             // 生产部 → 深圳制造-生产部 (SZ_PROD)
-            CreateEmployee("EMP-040", "吴建华", 1, "本科",   new DateTime(1982, 6, 30), new DateTime(2011, 4, 1),  "13700001040", "wujh@opsoft.com",     DeptUid("SZ_PROD"),     "深圳市宝安区沙井街道88号",   "吴芳",   "13700009040", now, company, user, grpEmpProd),
-            CreateEmployee("EMP-041", "郑国强", 1, "大专",   new DateTime(1988, 8, 14), new DateTime(2015, 10, 8), "13700001041", "zhenggq@opsoft.com",  DeptUid("SZ_PROD"),     "深圳市宝安区松岗街道55号",   "郑丽",   "13700009041", now, company, user, grpEmpProd),
-            CreateEmployee("EMP-042", "林小红", 0, "大专",   new DateTime(1991, 4, 22), new DateTime(2018, 1, 15), "13700001042", "linxh@opsoft.com",    DeptUid("SZ_PROD"),     "深圳市光明区光明街道28号",   "林强",   "13700009042", now, company, user, grpEmpProd),
+            CreateEmployee("EMP-040", "吴建华", 0, "本科",   new DateTime(1982, 6, 30), new DateTime(2011, 4, 1),  "13700001040", "wujh@opsoft.com",     DeptUid("SZ_PROD"),     "深圳市宝安区沙井街道88号",   "吴芳",   "13700009040", now, company, user, grpEmpProd),
+            CreateEmployee("EMP-041", "郑国强", 0, "大专",   new DateTime(1988, 8, 14), new DateTime(2015, 10, 8), "13700001041", "zhenggq@opsoft.com",  DeptUid("SZ_PROD"),     "深圳市宝安区松岗街道55号",   "郑丽",   "13700009041", now, company, user, grpEmpProd),
+            CreateEmployee("EMP-042", "林小红", 1, "大专",   new DateTime(1991, 4, 22), new DateTime(2018, 1, 15), "13700001042", "linxh@opsoft.com",    DeptUid("SZ_PROD"),     "深圳市光明区光明街道28号",   "林强",   "13700009042", now, company, user, grpEmpProd),
 
             // 质检部 → 深圳制造-品质部 (SZ_QC)
-            CreateEmployee("EMP-050", "黄志刚", 1, "本科",   new DateTime(1985, 11, 9), new DateTime(2014, 7, 1),  "13700001050", "huangzg@opsoft.com",  DeptUid("SZ_QC"),       "深圳市龙华区大浪街道36号",   "黄芳",   "13700009050", now, company, user, grpEmpTech),
-            CreateEmployee("EMP-051", "何晓燕", 0, "本科",   new DateTime(1990, 7, 3),  new DateTime(2017, 9, 18), "13700001051", "hexy@opsoft.com",     DeptUid("SZ_QC"),       "深圳市龙华区观湖街道42号",   "何强",   "13700009051", now, company, user, grpEmpTech),
+            CreateEmployee("EMP-050", "黄志刚", 0, "本科",   new DateTime(1985, 11, 9), new DateTime(2014, 7, 1),  "13700001050", "huangzg@opsoft.com",  DeptUid("SZ_QC"),       "深圳市龙华区大浪街道36号",   "黄芳",   "13700009050", now, company, user, grpEmpTech),
+            CreateEmployee("EMP-051", "何晓燕", 1, "本科",   new DateTime(1990, 7, 3),  new DateTime(2017, 9, 18), "13700001051", "hexy@opsoft.com",     DeptUid("SZ_QC"),       "深圳市龙华区观湖街道42号",   "何强",   "13700009051", now, company, user, grpEmpTech),
 
             // 财务部 → 深圳制造-财务部 (SZ_FIN)
-            CreateEmployee("EMP-060", "杨秀芳", 0, "本科",   new DateTime(1983, 2, 14), new DateTime(2012, 5, 6),  "13700001060", "yangxf@opsoft.com",   DeptUid("SZ_FIN"),      "深圳市福田区梅林路18号",     "杨刚",   "13700009060", now, company, user, grpEmpFin),
-            CreateEmployee("EMP-061", "徐文斌", 1, "硕士",   new DateTime(1987, 9, 27), new DateTime(2016, 2, 22), "13700001061", "xuwb@opsoft.com",     DeptUid("SZ_FIN"),      "深圳市福田区景田北路25号",   "徐芳",   "13700009061", now, company, user, grpEmpFin),
+            CreateEmployee("EMP-060", "杨秀芳", 1, "本科",   new DateTime(1983, 2, 14), new DateTime(2012, 5, 6),  "13700001060", "yangxf@opsoft.com",   DeptUid("SZ_FIN"),      "深圳市福田区梅林路18号",     "杨刚",   "13700009060", now, company, user, grpEmpFin),
+            CreateEmployee("EMP-061", "徐文斌", 0, "硕士",   new DateTime(1987, 9, 27), new DateTime(2016, 2, 22), "13700001061", "xuwb@opsoft.com",     DeptUid("SZ_FIN"),      "深圳市福田区景田北路25号",   "徐芳",   "13700009061", now, company, user, grpEmpFin),
         };
 
         // 幂等：只插入数据库中不存在的记录（按 Fnumber 判断）
-        var existingNumbers = await _db.Queryable<TBdEmpinfo>()
+        var existingNumbers = await _db.Queryable<THrEmpinfo>()
             .Where(e => !e.FDeleted)
             .Select(e => e.Fnumber)
             .ToListAsync();
@@ -1214,26 +1217,31 @@ public class DemoDataSeedService
         }
     }
 
-    private static TBdEmpinfo CreateEmployee(
+    private static THrEmpinfo CreateEmployee(
         string number, string name, int sex, string education,
         DateTime birthDate, DateTime entryDate,
         string tel, string email, string deptId, string address,
         string emergencyContact, string emergencyTel,
         DateTime now, string company, string user, string groupId = "")
     {
-        return new TBdEmpinfo
+        return new THrEmpinfo
         {
-            Uid = Guid.NewGuid().ToString("N"),
-            FInterId = $"EMP_{number}",
+            Uid = SeedUid("EMP", number),
+            FInterId = SeedUid("EMP", number),
             Fnumber = number,
             Fname = name,
             Fsex = sex,
             Feducation = education,
             Fbirthdate = birthDate,
             Fentrydate = entryDate,
+            Fdeparturedate = DateTime.MinValue,
+            Ftransferdate = DateTime.MinValue,
+            FCheckDate = DateTime.MinValue,
+            Fdisabledate = DateTime.MinValue,
             Fisdeparture = false,
+            Fpicture = Array.Empty<byte>(),
             Ftel = tel,
-            Fmail = email,
+            Femail = email,
             Fsaldeptid = deptId,
             Faddress = address,
             Emergency = emergencyContact,
@@ -1247,6 +1255,110 @@ public class DemoDataSeedService
             MYmd = now,
             MUser = user
         };
+    }
+
+    #endregion
+
+    #region 成本中心 / 职务（辅助资料）种子数据
+
+    // 成本中心（T_CB_COSTCENTER）：FInterId=代码
+    private async Task SeedCostCentersAsync()
+    {
+        var now = DateTime.Now;
+        const string company = "DEFAULT";
+        const string user = "demo-seed";
+
+        var centers = new[]
+        {
+            ("CC001", "综合管理中心"), ("CC002", "销售中心"), ("CC003", "生产中心"),
+            ("CC004", "采购中心"), ("CC005", "财务中心"), ("CC006", "技术中心"),
+        };
+        var list = centers.Select(c => new TCbCostcenter
+        {
+            Uid = c.Item1,
+            FInterId = c.Item1,
+            Fnumber = c.Item1,
+            Fname = c.Item2,
+            Fcheckdate = DateTime.MinValue,
+            Fdisabledate = DateTime.MinValue,
+            FStatus = 0,
+            FDeleted = false,
+            FDisabled = false,
+            FCompanyId = company,
+            CYmd = now,
+            CUser = user,
+            MYmd = now,
+            MUser = user
+        }).ToList();
+
+        var existing = new HashSet<string>(
+            await _db.Queryable<TCbCostcenter>().Where(c => !c.FDeleted).Select(c => c.Fnumber).ToListAsync());
+        var missing = list.Where(c => !existing.Contains(c.Fnumber)).ToList();
+        if (missing.Count > 0)
+            await _db.Insertable(missing).ExecuteCommandAsync();
+    }
+
+    // 职务：辅助资料类别(FNUMBER='D') + 其下条目；职务下拉按"类别 FNUMBER='D' AND FSTATUS=40"取条目
+    private async Task SeedDutiesAsync()
+    {
+        var now = DateTime.Now;
+        const string company = "DEFAULT";
+        const string user = "demo-seed";
+        const string dutyCatId = "AUXCAT_DUTY";
+
+        // 类别（FStatus=40 已审核，便于条目过滤）
+        if (!await _db.Queryable<TBasAssistantdata>().AnyAsync(c => c.Fnumber == "D"))
+        {
+            await _db.Insertable(new TBasAssistantdata
+            {
+                Uid = dutyCatId,
+                FInterId = dutyCatId,
+                Fnumber = "D",
+                Fname = "职务",
+                FCheckDate = DateTime.MinValue,
+                Fdisabledate = DateTime.MinValue,
+                FStatus = 40,
+                FDeleted = false,
+                FDisabled = false,
+                FCompanyId = company,
+                CYmd = now,
+                CUser = user,
+                MYmd = now,
+                MUser = user
+            }).ExecuteCommandAsync();
+        }
+
+        var duties = new[]
+        {
+            ("DUTY-01", "总经理"), ("DUTY-02", "副总经理"), ("DUTY-03", "部门经理"),
+            ("DUTY-04", "主管"), ("DUTY-05", "组长"), ("DUTY-06", "员工"),
+        };
+        var entries = duties.Select((d, i) => new TBasAssistantdataentry
+        {
+            Uid = SeedUid("DUTY", d.Item1),
+            FInterId = SeedUid("DUTY", d.Item1),
+            Fid = dutyCatId,
+            Fnumber = d.Item1,
+            Fdatavalue = d.Item2,
+            Fseq = i + 1,
+            FCheckDate = DateTime.MinValue,
+            Fdisabledate = DateTime.MinValue,
+            FStatus = 40,
+            FDeleted = false,
+            FDisabled = false,
+            FCompanyId = company,
+            CYmd = now,
+            CUser = user,
+            MYmd = now,
+            MUser = user
+        }).ToList();
+
+        var existing = new HashSet<string>(
+            await _db.Queryable<TBasAssistantdataentry>().Where(e => e.Fid == dutyCatId && !e.FDeleted)
+                .Select(e => e.Fnumber).ToListAsync());
+        var missing = entries.Where(e => !existing.Contains(e.Fnumber)).ToList();
+        if (missing.Count > 0)
+            await _db.Insertable(missing).ExecuteCommandAsync();
     }
 
     #endregion

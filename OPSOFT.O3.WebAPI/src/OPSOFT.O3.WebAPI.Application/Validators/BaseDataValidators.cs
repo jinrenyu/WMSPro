@@ -159,6 +159,8 @@ public class CreateEmployeeRequestValidator : AbstractValidator<CreateEmployeeRe
     {
         RuleFor(x => x.FNumber).NotEmpty().WithMessage("编码不能为空").MaximumLength(50);
         RuleFor(x => x.FName).NotEmpty().WithMessage("姓名不能为空").MaximumLength(200);
+        RuleFor(x => x.FSalDeptId).NotEmpty().WithMessage("请选择部门");
+        RuleFor(x => x.FEntryDate).NotNull().WithMessage("请选择入职日期");
         RuleFor(x => x.FTel).MaximumLength(50);
         RuleFor(x => x.FMail).MaximumLength(200);
         RuleFor(x => x.FNote).MaximumLength(500);
@@ -171,6 +173,7 @@ public class UpdateEmployeeRequestValidator : AbstractValidator<UpdateEmployeeRe
     public UpdateEmployeeRequestValidator()
     {
         RuleFor(x => x.FName).NotEmpty().WithMessage("姓名不能为空").MaximumLength(200);
+        RuleFor(x => x.FSalDeptId).NotEmpty().WithMessage("请选择部门");
         RuleFor(x => x.FTel).MaximumLength(50);
         RuleFor(x => x.FMail).MaximumLength(200);
         RuleFor(x => x.FNote).MaximumLength(500);

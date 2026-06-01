@@ -18,18 +18,19 @@ public class BaseDataGroupService : IBaseDataGroupService
     /// <summary>
     /// prgKey → 业务表名映射
     /// </summary>
+    // 键须与各服务 PrgKey / 前端 GroupPanel prg-key 一致（裸键，非 BD_ 前缀），否则分组删除引用校验会被静默跳过
     private static readonly Dictionary<string, string> PrgKeyTableMap = new()
     {
-        ["BD_Material"] = "T_BD_MATERIAL",
-        ["BD_Customer"] = "T_BD_CUSTOMER",
-        ["BD_Supplier"] = "T_BD_SUPPLIER",
-        ["BD_Stock"] = "T_BD_STOCK",
-        ["BD_StockPlace"] = "T_BD_STOCKPLACE",
-        ["BD_Unit"] = "T_BD_UNIT",
-        ["BD_Employee"] = "T_BD_EMPINFO",
-        ["BD_Currency"] = "T_BD_CURRENCY",
-        ["BD_AssistantData"] = "T_BAS_ASSISTANTDATA",
-        ["BD_AssistantDataEntry"] = "T_BAS_ASSISTANTDATAENTRY"
+        ["Material"] = "T_BD_MATERIAL",
+        ["Customer"] = "T_BD_CUSTOMER",
+        ["Supplier"] = "T_BD_SUPPLIER",
+        ["Warehouse"] = "T_BD_STOCK",
+        ["StockPlace"] = "T_BD_STOCKPLACE",
+        ["Unit"] = "T_BD_UNIT",
+        ["Employee"] = "T_HR_EMPINFO",
+        ["Currency"] = "T_BD_CURRENCY",
+        ["AssistantData"] = "T_BAS_ASSISTANTDATA",
+        ["AssistantDataEntry"] = "T_BAS_ASSISTANTDATAENTRY"
     };
 
     public BaseDataGroupService(IRepository<SysBaseDataGroup> repository, ISqlSugarClient db)

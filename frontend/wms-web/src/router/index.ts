@@ -154,6 +154,12 @@ const routes = [
                 meta: { title: '职员管理' }
             },
             {
+                path: 'master/employees/edit',
+                name: 'EmployeeEdit',
+                component: () => import('../views/master/EmployeeEdit.vue'),
+                meta: { title: '职员-维护' }
+            },
+            {
                 path: 'master/materialbartypes',
                 name: 'MaterialBarTypeList',
                 component: () => import('../views/master/MaterialBarTypeList.vue'),
