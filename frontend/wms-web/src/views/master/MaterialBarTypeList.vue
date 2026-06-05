@@ -3,7 +3,7 @@
     <div class="list-layout">
       <GroupPanel
         ref="groupPanelRef"
-        prg-key="BD_MaterialBarType"
+        prg-key="MaterialBarType"
         title="物料条码类型分组"
         @select="handleGroupSelect"
       />
@@ -103,10 +103,10 @@
               <span v-else>{{ scope.row.fbartype }}</span>
             </template>
             <template v-else-if="col.slotName === 'fcheckdate'">
-              {{ formatDate(scope.row.fcheckdate) }}
+              {{ fmtAuditDate(scope.row.fcheckdate) }}
             </template>
             <template v-else-if="col.slotName === 'fdisabledate'">
-              {{ formatDate(scope.row.fdisabledate) }}
+              {{ fmtAuditDate(scope.row.fdisabledate) }}
             </template>
             <template v-else-if="col.slotName === 'fstatus'">
               <el-tag :type="scope.row.fStatus === 40 ? 'success' : 'warning'" size="small">
@@ -134,84 +134,24 @@
         @current-change="fetchData"
       />
     </div>
-
-    <!-- Create/Edit Dialog -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'create' ? '新增物料条码类型' : isReadonly ? '查看物料条码类型' : '编辑物料条码类型'"
-      width="550px"
-    >
-      <el-form :model="form" label-width="100px" :disabled="isReadonly">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="物料" required>
-              <LookupSelect v-model="form.fmaterialid" module="material" placeholder="请选择物料" :disabled="dialogType === 'edit'" preload @change="handleMaterialChange" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="条码类型" required>
-              <el-select v-model="form.fbartype" style="width: 100%">
-                <el-option :value="1" label="单品条码" />
-                <el-option :value="2" label="最小包装量条码" />
-                <el-option :value="3" label="批次条码" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="审核日期">
-              <el-date-picker v-model="form.fcheckdate" type="date" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="审核人">
-              <el-input v-model="form.fcheckerid" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="禁用日期">
-              <el-date-picker v-model="form.fdisabledate" type="date" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="禁用人">
-              <el-input v-model="form.fdisableid" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="分组">
-          <el-tree-select v-model="form.fGroupId" :data="groupPanelRef?.treeData || []" :props="{ label: 'fName', children: 'children', value: 'uid' }" placeholder="请选择分组" clearable check-strictly style="width: 100%" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">{{ isReadonly ? '关闭' : '取消' }}</el-button>
-          <el-button v-if="!isReadonly" type="primary" @click="submitForm">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { getMaterialBarTypes, getMaterialBarType, createMaterialBarType, updateMaterialBarType, deleteMaterialBarType, approveMaterialBarType, unapproveMaterialBarType, disableMaterialBarType, enableMaterialBarType, getMaterialBarTypesFields, type MaterialBarType } from '../../api/materialBarType'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getMaterialBarTypes, deleteMaterialBarType, approveMaterialBarType, unapproveMaterialBarType, disableMaterialBarType, enableMaterialBarType, getMaterialBarTypesFields, type MaterialBarType } from '../../api/materialBarType'
 import { formatDate } from '../../utils/format'
-import { ElMessage } from 'element-plus'
 import { Search, Plus, Edit, DArrowRight } from '@element-plus/icons-vue'
-import LookupSelect from '../../components/LookupSelect.vue'
-import type { LookupItem } from '../../api/lookup'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import GroupPanel from '../../components/GroupPanel.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
+const router = useRouter()
 const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
 
@@ -245,7 +185,7 @@ const queryParams = reactive({
 
 const {
   selectedCount, canEdit, canApprove, canUnapprove, canDelete, canDisable, canEnable, batchLoading,
-  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable, clearSelection
+  handleSelectionChange, handleBatchApprove, handleBatchUnapprove, handleBatchDelete, handleBatchDisable, handleBatchEnable
 } = useTableSelection<MaterialBarType>({
   entityName: '物料条码类型',
   approveFn: approveMaterialBarType,
@@ -255,6 +195,14 @@ const {
   enableFn: enableMaterialBarType,
   onSuccess: fetchData,
 })
+
+// 审核/禁用日期：未审核/未禁用记录为哨兵值（SqlSugar 把 DateTime.MinValue 落库为 1900-01-01），过滤为空（与 Edit 页口径一致）
+const fmtAuditDate = (d?: string) => {
+  if (!d) return ''
+  const date = new Date(d)
+  if (isNaN(date.getTime()) || date.getFullYear() <= 1900) return ''
+  return formatDate(d)
+}
 
 const handleGroupSelect = (groupId: string) => {
   queryParams.groupId = groupId
@@ -275,37 +223,6 @@ const handleSortChange = ({ prop, order }: { prop: string, order: string | null 
   fetchData()
 }
 
-const handleMaterialChange = (item: LookupItem | null) => {
-  if (item) {
-    form.fmaterialnumber = item.fNumber
-    form.fmaterialname = item.fName
-  } else {
-    form.fmaterialnumber = ''
-    form.fmaterialname = ''
-  }
-}
-
-const dialogVisible = ref(false)
-const dialogType = ref<'create' | 'edit'>('create')
-
-const defaultForm = {
-  uid: undefined as string | undefined,
-  fmaterialid: '',
-  fbartype: 1,
-  fmaterialnumber: '',
-  fmaterialname: '',
-  fcheckdate: undefined as string | undefined,
-  fcheckerid: '',
-  fdisabledate: undefined as string | undefined,
-  fdisableid: '',
-  fGroupId: '',
-  fStatus: 0,
-  fDisabled: false
-}
-
-const form = reactive({ ...defaultForm })
-const isReadonly = computed(() => dialogType.value === 'edit' && (form.fStatus === 40 || form.fDisabled))
-
 async function fetchData() {
   loading.value = true
   try {
@@ -320,34 +237,11 @@ async function fetchData() {
 }
 
 const handleAdd = () => {
-  dialogType.value = 'create'
-  Object.assign(form, { ...defaultForm })
-  dialogVisible.value = true
+  router.push({ name: 'MaterialBarTypeEdit', query: queryParams.groupId ? { groupId: queryParams.groupId } : {} })
 }
 
-const handleEdit = async (row: MaterialBarType) => {
-  dialogType.value = 'edit'
-  try {
-    const res: any = await getMaterialBarType(row.uid!)
-    const d = res.data
-    Object.assign(form, {
-      uid: d.uid,
-      fmaterialid: d.fmaterialid || '',
-      fbartype: d.fbartype ?? 1,
-      fmaterialnumber: d.fmaterialnumber || '',
-      fmaterialname: d.fmaterialname || '',
-      fcheckdate: d.fcheckdate,
-      fcheckerid: d.fcheckerid || '',
-      fdisabledate: d.fdisabledate,
-      fdisableid: d.fdisableid || '',
-      fGroupId: d.fGroupId || '',
-      fStatus: d.fStatus || 0,
-      fDisabled: d.fDisabled || false
-    })
-  } catch (error) {
-    console.error('Fetch material bar type detail failed:', error)
-  }
-  dialogVisible.value = true
+const handleEdit = (row: MaterialBarType) => {
+  router.push({ name: 'MaterialBarTypeEdit', query: { uid: row.uid } })
 }
 
 const handleEditSelected = () => {
@@ -357,53 +251,6 @@ const handleEditSelected = () => {
 
 const handleRowDblClick = (row: MaterialBarType) => {
   handleEdit(row)
-}
-
-const submitForm = async () => {
-  if (!form.fmaterialid) {
-    ElMessage.warning('请选择物料')
-    return
-  }
-
-  try {
-    if (dialogType.value === 'create') {
-      await createMaterialBarType({
-        fmaterialid: form.fmaterialid,
-        fbartype: form.fbartype,
-        fmaterialnumber: form.fmaterialnumber,
-        fmaterialname: form.fmaterialname,
-        fcheckdate: form.fcheckdate,
-        fcheckerid: form.fcheckerid,
-        fdisabledate: form.fdisabledate,
-        fdisableid: form.fdisableid,
-        fGroupId: form.fGroupId
-      })
-      ElMessage.success('创建成功')
-    } else {
-      await updateMaterialBarType(form.uid!, {
-        fmaterialid: form.fmaterialid,
-        fbartype: form.fbartype,
-        fmaterialnumber: form.fmaterialnumber,
-        fmaterialname: form.fmaterialname,
-        fcheckdate: form.fcheckdate,
-        fcheckerid: form.fcheckerid,
-        fdisabledate: form.fdisabledate,
-        fdisableid: form.fdisableid,
-        fGroupId: form.fGroupId
-      })
-      ElMessage.success('更新成功')
-    }
-    dialogVisible.value = false
-    fetchData()
-  } catch (error: any) {
-    console.error('Submit material bar type failed:', error)
-    if (error.response && error.response.data) {
-      const errorMsg = error.response.data.message || JSON.stringify(error.response.data)
-      ElMessage.error(errorMsg)
-    } else {
-      ElMessage.error('提交失败')
-    }
-  }
 }
 
 onMounted(() => {

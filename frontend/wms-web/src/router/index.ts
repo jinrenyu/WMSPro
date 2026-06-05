@@ -164,6 +164,12 @@ const routes = [
                 name: 'MaterialBarTypeList',
                 component: () => import('../views/master/MaterialBarTypeList.vue'),
                 meta: { title: '物料条码类型' }
+            },
+            {
+                path: 'master/materialbartypes/edit',
+                name: 'MaterialBarTypeEdit',
+                component: () => import('../views/master/MaterialBarTypeEdit.vue'),
+                meta: { title: '物料条码类型-维护' }
             }
         ]
     }

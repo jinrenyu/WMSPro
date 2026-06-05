@@ -226,8 +226,10 @@ public class CreateMaterialBarTypeRequestValidator : AbstractValidator<CreateMat
 {
     public CreateMaterialBarTypeRequestValidator()
     {
+        RuleFor(x => x.Fmaterialid).NotEmpty().WithMessage("请选择物料");
         RuleFor(x => x.Fmaterialnumber).NotEmpty().WithMessage("物料编码不能为空").MaximumLength(50);
         RuleFor(x => x.Fmaterialname).MaximumLength(200);
+        RuleFor(x => x.Fbartype).InclusiveBetween(1, 3).WithMessage("请选择条码类型");
     }
 }
 
@@ -235,8 +237,7 @@ public class UpdateMaterialBarTypeRequestValidator : AbstractValidator<UpdateMat
 {
     public UpdateMaterialBarTypeRequestValidator()
     {
-        RuleFor(x => x.Fmaterialnumber).MaximumLength(50);
-        RuleFor(x => x.Fmaterialname).MaximumLength(200);
+        RuleFor(x => x.Fbartype).InclusiveBetween(1, 3).WithMessage("请选择条码类型");
     }
 }
 

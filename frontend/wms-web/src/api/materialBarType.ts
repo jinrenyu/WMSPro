@@ -3,6 +3,7 @@ import request from '../utils/request'
 export interface MaterialBarType {
     uid?: string
     fStatus?: number
+    fDisabled?: boolean
     fmaterialid?: string
     fbartype?: number
     fmaterialnumber: string
@@ -13,6 +14,21 @@ export interface MaterialBarType {
     fdisableid?: string
     cYmd?: string
     fGroupId?: string
+    // ---- 使用组织 / 制单修改（只读） ----
+    fCompanyId?: string
+    fCompanyName?: string
+    fGroupName?: string
+    cUser?: string
+    mUser?: string
+    mYmd?: string
+    // ---- 物料带出 / 关联解析名（只读） ----
+    fSpecification?: string
+    fFeedSn?: boolean
+    cUserName?: string
+    mUserName?: string
+    fCheckerName?: string
+    fDisableName?: string
+    fStatusName?: string
 }
 
 export const getMaterialBarTypes = (params?: any) => {

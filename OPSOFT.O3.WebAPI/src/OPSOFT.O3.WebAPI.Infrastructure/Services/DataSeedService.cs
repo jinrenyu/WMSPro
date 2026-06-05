@@ -511,6 +511,7 @@ public class DataSeedService
         AddButton(menus, "menu_materialbartype_edit", materialBarTypeMenuId, "编辑物料条码类型", "materialbartype:edit", 3, now);
         AddButton(menus, "menu_materialbartype_delete", materialBarTypeMenuId, "删除物料条码类型", "materialbartype:delete", 4, now);
         AddButton(menus, "menu_materialbartype_approve", materialBarTypeMenuId, "审核物料条码类型", "materialbartype:approve", 5, now);
+        AddButton(menus, "menu_materialbartype_disable", materialBarTypeMenuId, "禁用物料条码类型", "materialbartype:disable", 6, now);
 
         // 过滤出数据库中不存在的菜单，补入
         var existingUids = await _db.Queryable<SysMenu>()

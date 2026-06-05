@@ -28,6 +28,7 @@ public class BaseDataGroupService : IBaseDataGroupService
         ["StockPlace"] = "T_BD_STOCKPLACE",
         ["Unit"] = "T_BD_UNIT",
         ["Employee"] = "T_HR_EMPINFO",
+        ["MaterialBarType"] = "T_BD_MATERIALBARTYPE",
         ["Currency"] = "T_BD_CURRENCY",
         ["AssistantData"] = "T_BAS_ASSISTANTDATA",
         ["AssistantDataEntry"] = "T_BAS_ASSISTANTDATAENTRY"

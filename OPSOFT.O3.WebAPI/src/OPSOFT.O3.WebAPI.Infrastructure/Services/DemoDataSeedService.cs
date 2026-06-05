@@ -156,6 +156,14 @@ public class DemoDataSeedService
             CreateGroup("EMP-SALE",  "Employee", "EMP-SALE",   "销售人员",     GroupUid("EMP"),       "EMP.EMP-SALE",       now, company, user),
             CreateGroup("EMP-FIN",   "Employee", "EMP-FIN",    "财务人员",     GroupUid("EMP"),       "EMP.EMP-FIN",        now, company, user),
             CreateGroup("EMP-WH",    "Employee", "EMP-WH",     "仓储人员",     GroupUid("EMP"),       "EMP.EMP-WH",         now, company, user),
+
+            // ═══════════════════════════════════════════════════════
+            // 物料条码类型分组（Fprgkey = "MaterialBarType"）
+            // ═══════════════════════════════════════════════════════
+            CreateGroup("MBT",       "MaterialBarType", "MBT",       "条码类型分组",   "",                  "MBT",                now, company, user),
+            CreateGroup("MBT-SINGLE","MaterialBarType", "MBT-SINGLE","单品条码",       GroupUid("MBT"),     "MBT.MBT-SINGLE",     now, company, user),
+            CreateGroup("MBT-PKG",   "MaterialBarType", "MBT-PKG",   "最小包装量条码", GroupUid("MBT"),     "MBT.MBT-PKG",        now, company, user),
+            CreateGroup("MBT-BATCH", "MaterialBarType", "MBT-BATCH", "批次条码",       GroupUid("MBT"),     "MBT.MBT-BATCH",      now, company, user),
         };
 
         var existingNumbers = await _db.Queryable<SysBaseDataGroup>()
@@ -1585,16 +1593,26 @@ public class DemoDataSeedService
         string materialNumber, string materialName, int barType,
         DateTime now, string company, string user)
     {
+        // 条码类型 → 分组：1=单品条码 2=最小包装量条码 3=批次条码
+        var groupId = barType switch
+        {
+            1 => GroupUid("MBT-SINGLE"),
+            2 => GroupUid("MBT-PKG"),
+            3 => GroupUid("MBT-BATCH"),
+            _ => string.Empty
+        };
+
         return new TBdMaterialbartype
         {
-            Uid = Guid.NewGuid().ToString("N"),
+            Uid = SeedUid("MBT", $"{materialNumber}_{barType}"),
             FInterId = $"MBT_{materialNumber}_{barType}",
-            Fmaterialid = SeedUid("MAT", materialNumber),
+            // 规范关系：FMATERIALID = 物料 FInterId（CreateMaterial 用 $"MAT_{number}"），否则前端取规格/序列号关联不到
+            Fmaterialid = $"MAT_{materialNumber}",
             Fbartype = barType,
             Fmaterialnumber = materialNumber,
             Fmaterialname = materialName,
-            FCheckDate = now,
-            FCheckerId = user,
+            FGroupId = groupId,
+            // 未审核（FStatus=0）→ 不写审核痕迹（FCheckDate 默认 MinValue / FCheckerId 默认空），与 Currency 种子一致
             FCompanyId = company,
             FStatus = 0,
             FDeleted = false,
