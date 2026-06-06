@@ -117,7 +117,8 @@ export const getMaterials = (params?: any) => {
             groupId: params?.groupId || '',
             dynamicFilters: params?.dynamicFilters || [],
             sortField: params?.sortField,
-            isAsc: params?.isAsc
+            isAsc: params?.isAsc,
+            onlyApproved: params?.onlyApproved || false
         }
     })
 }

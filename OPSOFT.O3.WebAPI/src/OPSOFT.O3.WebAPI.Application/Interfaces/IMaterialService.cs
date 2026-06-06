@@ -25,4 +25,7 @@ public interface IMaterialService : IApprovableDisableableService<TBdMaterial, M
 
     /// <summary>物料类别下拉（来源 TBdMaterialtype）</summary>
     Task<List<LookupDto>> GetMaterialTypeLookupAsync(string? keyword);
+
+    /// <summary>该物料是否启用了辅助属性（T_BD_MATERIALAUXPTY 中存在 FISENABLE=1 的记录）</summary>
+    Task<bool> IsAuxEnabledAsync(string materialUid);
 }

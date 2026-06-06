@@ -181,8 +181,14 @@ const routes = [
             {
                 path: 'purchase/orders',
                 name: 'PurchaseOrderList',
-                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                component: () => import('../views/purchase/PurchaseOrderList.vue'),
                 meta: { title: '采购订单' }
+            },
+            {
+                path: 'purchase/orders/edit',
+                name: 'PurchaseOrderEdit',
+                component: () => import('../views/purchase/PurchaseOrderEdit.vue'),
+                meta: { title: '采购订单-维护' }
             },
             {
                 path: 'purchase/receive-notices',

@@ -40,6 +40,9 @@ public static class DynamicFilterExtensions
             }
 
             var prop = properties.FirstOrDefault(p => string.Equals(p.Name, filter.Field, StringComparison.OrdinalIgnoreCase));
+            // 字段在该实体上不存在时跳过，避免生成引用不存在列的无效 SQL（如明细行展开列表里解析出来的名称列）
+            if (prop == null) continue;
+
             string csharpTypeName = string.Empty;
             string mappedFieldName = filter.Field;
 

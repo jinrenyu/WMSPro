@@ -33,6 +33,11 @@ public class PagedRequest
     public string? Fid { get; set; }
 
     /// <summary>
+    /// 仅返回已审核(FStatus=40)且未禁用的数据（单据从基础资料选择时使用，目前物料列表支持）
+    /// </summary>
+    public bool OnlyApproved { get; set; }
+
+    /// <summary>
     /// 动态筛选条件集合
     /// </summary>
     public List<DynamicFilterInfo>? DynamicFilters { get; set; }

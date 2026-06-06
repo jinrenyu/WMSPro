@@ -1,5 +1,5 @@
 <template>
-  <div class="material-list-container">
+  <div :class="selectMode ? 'material-list-embedded' : 'material-list-container'">
     <div class="material-layout">
       <!-- 左侧分组树面板（通用组件） -->
       <GroupPanel
@@ -51,7 +51,7 @@
           </div>
         </div>
 
-        <div class="toolbar-actions">
+        <div class="toolbar-actions" v-if="!selectMode">
           <el-button type="primary" @click="handleAdd" v-permission="'material:add'">
             <el-icon><Plus /></el-icon> 新增
           </el-button>
@@ -82,11 +82,12 @@
           style="width: 100%"
           border
           class="material-table"
+          :highlight-current-row="selectMode"
           @selection-change="handleSelectionChange"
           @row-dblclick="handleRowDblClick"
           @sort-change="handleSortChange"
         >
-          <el-table-column type="selection" width="45" fixed="left" />
+          <el-table-column v-if="!selectMode" type="selection" width="45" fixed="left" />
           <template v-for="col in allColumns" :key="col.key">
             <el-table-column
               v-if="isColumnVisible(col)"
@@ -150,6 +151,13 @@ import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicF
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 import { useTableSelection } from '../../composables/useTableSelection'
 
+// 双模式：默认管理页；selectMode 时作为"选择器"嵌入弹窗（隐藏管理工具栏，双击=选中回填）
+const props = withDefaults(defineProps<{
+  selectMode?: boolean
+  onlyApproved?: boolean
+}>(), { selectMode: false, onlyApproved: false })
+const emit = defineEmits<{ 'select': [row: Material] }>()
+
 const router = useRouter()
 const groupPanelRef = ref<InstanceType<typeof GroupPanel>>()
 const tableRef = ref()
@@ -193,7 +201,8 @@ const columns: ColumnDef[] = [
   { key: 'cYmd', label: '创建时间', prop: 'cYmd', width: 180, slotName: 'createTime', sortable: 'custom' },
 ]
 
-const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('material', columns)
+// 选择器用独立的列配置 key，避免与"物料管理"页相互影响
+const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig(props.selectMode ? 'material-picker' : 'material', columns)
 
 const loading = ref(false)
 const materialList = ref<Material[]>([])
@@ -205,7 +214,8 @@ const queryParams = reactive({
   groupId: '',
   dynamicFilters: [] as DynamicFilterInfo[],
   sortField: undefined as string | undefined,
-  isAsc: undefined as boolean | undefined
+  isAsc: undefined as boolean | undefined,
+  onlyApproved: false
 })
 
 const {
@@ -267,10 +277,12 @@ const handleEditSelected = () => {
 }
 
 const handleRowDblClick = (row: Material) => {
+  if (props.selectMode) { emit('select', row); return }
   handleEdit(row)
 }
 
 onMounted(() => {
+  queryParams.onlyApproved = props.onlyApproved
   fetchData()
 })
 </script>
@@ -281,6 +293,12 @@ onMounted(() => {
   background-color: var(--bg-card);
   border-radius: 8px;
   box-shadow: var(--shadow-card);
+}
+
+/* 选择器嵌入弹窗时去掉整页卡片样式 */
+.material-list-embedded {
+  padding: 0;
+  background-color: transparent;
 }
 
 .material-layout {

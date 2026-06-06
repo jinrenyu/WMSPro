@@ -83,6 +83,24 @@ public class MaterialService : ApprovableDisableableCrudService<TBdMaterial, Mat
             }
         }
 
+        // 选择器：仅已审核(40)+非禁用
+        if (request.OnlyApproved)
+        {
+            Expression<Func<TBdMaterial, bool>> approvedFilter = m => m.FStatus == 40 && !m.FDisabled;
+            if (predicate == null)
+            {
+                predicate = approvedFilter;
+            }
+            else
+            {
+                var ap = Expression.Parameter(typeof(TBdMaterial), "m");
+                var body = Expression.AndAlso(
+                    Expression.Invoke(predicate, ap),
+                    Expression.Invoke(approvedFilter, ap));
+                predicate = Expression.Lambda<Func<TBdMaterial, bool>>(body, ap);
+            }
+        }
+
         // 动态高级筛选（与基类 CrudService 保持一致，修复物料列表高级筛选不生效的问题）
         var conditionalModels = request.DynamicFilters?.ToConditionalModels<TBdMaterial>() ?? new List<IConditionalModel>();
 
@@ -681,6 +699,20 @@ public class MaterialService : ApprovableDisableableCrudService<TBdMaterial, Mat
     }
 
     // ============ 辅助属性下拉（TBdFlexauxproperty）============
+
+    /// <summary>该物料是否启用了辅助属性（按物料 Uid 或 FInterId 关联 T_BD_MATERIALAUXPTY）</summary>
+    public async Task<bool> IsAuxEnabledAsync(string materialUid)
+    {
+        if (string.IsNullOrWhiteSpace(materialUid)) return false;
+        var mat = await Repository.AsQueryable().Where(m => m.Uid == materialUid)
+            .Select(m => new { m.Uid, m.FInterId }).FirstAsync();
+        if (mat == null) return false;
+        var keys = new List<string> { mat.Uid };
+        if (!string.IsNullOrEmpty(mat.FInterId) && mat.FInterId != mat.Uid) keys.Add(mat.FInterId);
+        return await _auxPtyRepo.AsQueryable()
+            .Where(a => a.FIsEnable && !a.FDeleted && (keys.Contains(a.FInterId) || keys.Contains(a.FMasterId)))
+            .AnyAsync();
+    }
 
     public async Task<List<LookupDto>> GetAuxPropertyLookupAsync(string? keyword)
     {

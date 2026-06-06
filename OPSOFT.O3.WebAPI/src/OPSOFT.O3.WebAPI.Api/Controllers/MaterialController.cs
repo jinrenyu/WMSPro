@@ -49,6 +49,11 @@ public class MaterialController : ApprovableDisableableMasterDataController<TBdM
     public async Task<ActionResult<ApiResponse<List<LookupDto>>>> AuxPropertyLookup([FromQuery] string? keyword)
         => Ok(ApiResponse<List<LookupDto>>.Ok(await _materialService.GetAuxPropertyLookupAsync(keyword)));
 
+    // ---- 物料是否启用辅助属性（订单明细据此决定“辅助属性”是否可选/只读）----
+    [HttpGet("{id}/aux-enabled")]
+    public async Task<ActionResult<ApiResponse<bool>>> AuxEnabled(string id)
+        => Ok(ApiResponse<bool>.Ok(await _materialService.IsAuxEnabledAsync(id)));
+
     [HttpGet("material-types/lookup")]
     public async Task<ActionResult<ApiResponse<List<LookupDto>>>> MaterialTypeLookup([FromQuery] string? keyword)
         => Ok(ApiResponse<List<LookupDto>>.Ok(await _materialService.GetMaterialTypeLookupAsync(keyword)));

@@ -131,7 +131,7 @@ public static class DependencyInjection
         services.AddScoped<IBaseDataGroupService, BaseDataGroupService>();
 
         // Phase 3: 业务单据
-        services.AddScoped<IDocumentService<OdkSrmPOOrder, OdkSrmPOOrderEntry, PurchaseOrderListDto, PurchaseOrderDetailDto, CreatePurchaseOrderRequest, UpdatePurchaseOrderRequest>, PurchaseOrderService>();
+        services.AddScoped<IDocumentService<TPurPoOrder, TPurPoOrderEntry, PurchaseOrderListDto, PurchaseOrderDetailDto, CreatePurchaseOrderRequest, UpdatePurchaseOrderRequest>, PurchaseOrderService>();
         services.AddScoped<IDocumentService<TSalOrder, TSalOrderentry, SalesOrderListDto, SalesOrderDetailDto, CreateSalesOrderRequest, UpdateSalesOrderRequest>, SalesOrderService>();
         services.AddScoped<IDocumentService<OdkSrmDelivery, OdkSrmDeliveryEntry, DeliveryListDto, DeliveryDetailDto, CreateDeliveryRequest, UpdateDeliveryRequest>, DeliveryService>();
         services.AddScoped<IDocumentService<OdkSrmInvoice, OdkSrmInvoiceEntry, InvoiceListDto, InvoiceDetailDto, CreateInvoiceRequest, UpdateInvoiceRequest>, InvoiceService>();

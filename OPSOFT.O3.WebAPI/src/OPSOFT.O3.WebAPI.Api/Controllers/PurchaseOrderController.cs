@@ -6,16 +6,19 @@ using OPSOFT.O3.WebAPI.Domain.Entities;
 
 namespace OPSOFT.O3.WebAPI.Api.Controllers;
 
+/// <summary>
+/// 采购订单（真实表 T_PUR_POORDER / T_PUR_POORDERENTRY）
+/// </summary>
 [ApiController]
-[Route("api/purchase-order")]
+[Route("api/purchaseorder")]
 [Authorize]
 public class PurchaseOrderController : ControllerBase
 {
-    private readonly IDocumentService<OdkSrmPOOrder, OdkSrmPOOrderEntry,
+    private readonly IDocumentService<TPurPoOrder, TPurPoOrderEntry,
         PurchaseOrderListDto, PurchaseOrderDetailDto, CreatePurchaseOrderRequest, UpdatePurchaseOrderRequest> _service;
 
     public PurchaseOrderController(
-        IDocumentService<OdkSrmPOOrder, OdkSrmPOOrderEntry,
+        IDocumentService<TPurPoOrder, TPurPoOrderEntry,
             PurchaseOrderListDto, PurchaseOrderDetailDto, CreatePurchaseOrderRequest, UpdatePurchaseOrderRequest> service)
     {
         _service = service;
@@ -58,6 +61,7 @@ public class PurchaseOrderController : ControllerBase
         return Ok(ApiResponse<bool>.Ok(result, "删除成功"));
     }
 
+    /// <summary>审核</summary>
     [HttpPost("{id}/approve")]
     public async Task<ActionResult<ApiResponse<bool>>> Approve(string id)
     {
@@ -65,13 +69,15 @@ public class PurchaseOrderController : ControllerBase
         return Ok(ApiResponse<bool>.Ok(result, "审核成功"));
     }
 
-    [HttpPost("{id}/reject")]
-    public async Task<ActionResult<ApiResponse<bool>>> Reject(string id, [FromBody] RejectRequest? request = null)
+    /// <summary>反审核（回到草稿）</summary>
+    [HttpPost("{id}/unapprove")]
+    public async Task<ActionResult<ApiResponse<bool>>> Unapprove(string id, [FromBody] RejectRequest? request = null)
     {
         var result = await _service.RejectAsync(id, request?.Reason);
-        return Ok(ApiResponse<bool>.Ok(result, "驳回成功"));
+        return Ok(ApiResponse<bool>.Ok(result, "反审核成功"));
     }
 
+    /// <summary>关闭</summary>
     [HttpPost("{id}/close")]
     public async Task<ActionResult<ApiResponse<bool>>> Close(string id)
     {
@@ -81,7 +87,7 @@ public class PurchaseOrderController : ControllerBase
 }
 
 /// <summary>
-/// 驳回请求（所有单据共用）
+/// 驳回/反审核请求（所有单据共用）
 /// </summary>
 public class RejectRequest
 {

@@ -10,14 +10,12 @@ public class CreatePurchaseOrderRequestValidator : AbstractValidator<CreatePurch
     public CreatePurchaseOrderRequestValidator()
     {
         RuleFor(x => x.Fsupplyid).NotEmpty().WithMessage("供应商不能为空");
-        RuleFor(x => x.Fcurrencyid).NotEmpty().WithMessage("币别不能为空");
+        RuleFor(x => x.Fsettlecurrid).NotEmpty().WithMessage("交易币别不能为空");
         RuleFor(x => x.Fnote).MaximumLength(500);
-        RuleFor(x => x.Fphone).MaximumLength(50);
-        RuleFor(x => x.Fdeliverysite).MaximumLength(500);
         RuleFor(x => x.Entries).NotEmpty().WithMessage("明细不能为空");
         RuleForEach(x => x.Entries).ChildRules(entry =>
         {
-            entry.RuleFor(e => e.Fitemid).NotEmpty().WithMessage("物料不能为空");
+            entry.RuleFor(e => e.Fmaterialid).NotEmpty().WithMessage("物料不能为空");
             entry.RuleFor(e => e.Funitid).NotEmpty().WithMessage("单位不能为空");
             entry.RuleFor(e => e.Fqty).GreaterThan(0).WithMessage("数量必须大于0");
             entry.RuleFor(e => e.Fprice).GreaterThanOrEqualTo(0);
@@ -31,14 +29,12 @@ public class UpdatePurchaseOrderRequestValidator : AbstractValidator<UpdatePurch
     public UpdatePurchaseOrderRequestValidator()
     {
         RuleFor(x => x.Fsupplyid).NotEmpty().WithMessage("供应商不能为空");
-        RuleFor(x => x.Fcurrencyid).NotEmpty().WithMessage("币别不能为空");
+        RuleFor(x => x.Fsettlecurrid).NotEmpty().WithMessage("交易币别不能为空");
         RuleFor(x => x.Fnote).MaximumLength(500);
-        RuleFor(x => x.Fphone).MaximumLength(50);
-        RuleFor(x => x.Fdeliverysite).MaximumLength(500);
         RuleFor(x => x.Entries).NotEmpty().WithMessage("明细不能为空");
         RuleForEach(x => x.Entries).ChildRules(entry =>
         {
-            entry.RuleFor(e => e.Fitemid).NotEmpty().WithMessage("物料不能为空");
+            entry.RuleFor(e => e.Fmaterialid).NotEmpty().WithMessage("物料不能为空");
             entry.RuleFor(e => e.Funitid).NotEmpty().WithMessage("单位不能为空");
             entry.RuleFor(e => e.Fqty).GreaterThan(0).WithMessage("数量必须大于0");
             entry.RuleFor(e => e.Fprice).GreaterThanOrEqualTo(0);

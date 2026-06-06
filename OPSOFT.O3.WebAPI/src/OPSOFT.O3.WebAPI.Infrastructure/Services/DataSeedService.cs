@@ -29,6 +29,8 @@ public class DataSeedService
         await SeedFlexAuxPropertiesAsync();
         await SeedOrgsAsync();
         await SeedMaterialTypesAsync();
+        await SeedBillTypesAsync();
+        await SeedApproveExistingMaterialsAsync();
     }
 
     private async Task SeedFlexAuxPropertiesAsync()
@@ -556,6 +558,8 @@ public class DataSeedService
         AddButton(menus, "menu_purchase_order_list", purchaseOrderId, "查看采购订单", "purchaseorder:list", 1, now);
         AddButton(menus, "menu_purchase_order_add", purchaseOrderId, "新增采购订单", "purchaseorder:add", 2, now);
         AddButton(menus, "menu_purchase_order_edit", purchaseOrderId, "编辑采购订单", "purchaseorder:edit", 3, now);
+        AddButton(menus, "menu_purchase_order_approve", purchaseOrderId, "审核采购订单", "purchaseorder:approve", 4, now);
+        AddButton(menus, "menu_purchase_order_delete", purchaseOrderId, "删除采购订单", "purchaseorder:delete", 5, now);
 
         // 收料通知单 (M)
         var receiveNoticeId = "menu_receive_notice";
@@ -769,5 +773,64 @@ public class DataSeedService
         {
             await _db.Insertable(missingStatus).ExecuteCommandAsync();
         }
+    }
+
+    /// <summary>
+    /// 采购订单单据类型（T_BAS_BILLTYPE，FBillFormid = PUR_PurchaseOrder）。
+    /// Uid 直接采用 K3 的 FInterId，幂等：按 Uid 判重。
+    /// </summary>
+    private async Task SeedBillTypesAsync()
+    {
+        var now = DateTime.Now;
+        var bills = new (string Uid, string Number, string Name)[]
+        {
+            ("83d822ca3e374b4ab01e5dd46a0062bd", "CGDD01_SYS", "标准采购订单"),
+            ("6d01d059713d42a28bb976c90a121142", "CGDD02_SYS", "标准委外订单"),
+            ("b8df755fd92b4c2baedef2439c29f793", "CGDD03_SYS", "直运采购订单"),
+            ("b0677860cd16433895be5f520086b69f", "CGDD04_SYS", "资产采购订单"),
+            ("b1985f24f35841fdb418329af6ed7bd0", "CGDD05_SYS", "费用采购订单"),
+            ("ba3ad5fc48d44271a048da26b615b589", "CGDD06-SYS", "补料采购订单"),
+            ("0023240234df807511e308990e04cf6a", "CGDD07_SYS", "VMI采购订单"),
+            ("5abd9deba59210",                   "CGDD08_SYS", "现购订单"),
+        };
+        foreach (var (uid, number, name) in bills)
+        {
+            var exists = await _db.Queryable<TBasBilltype>().Where(b => b.Uid == uid).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBasBilltype
+            {
+                Uid = uid,
+                FInterId = uid,
+                Fnumber = number,
+                Fname = name,
+                Fbillformid = "PUR_PurchaseOrder",
+                Isdefault = number == "CGDD01_SYS",
+                Fcheckdate = DateTime.MinValue,
+                Fdisabledate = DateTime.MinValue,
+                FStatus = 40,
+                FCompanyId = "DEFAULT",
+                CYmd = now,
+                CUser = "system",
+                MYmd = now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+    }
+
+    /// <summary>
+    /// 一次性把开发库中现有未审核物料置为已审核(FStatus=40)，使采购订单等单据的"已审核物料"下拉可用。
+    /// 自禁用守卫：库中一旦已存在已审核物料即跳过，避免误审用户后续新建的草稿物料。
+    /// </summary>
+    private async Task SeedApproveExistingMaterialsAsync()
+    {
+        var hasApproved = await _db.Queryable<TBdMaterial>().Where(m => !m.FDeleted && m.FStatus == 40).AnyAsync();
+        if (hasApproved) return;
+
+        var now = DateTime.Now;
+        await _db.Updateable<TBdMaterial>()
+            .SetColumns(m => m.FStatus == 40)
+            .SetColumns(m => m.MYmd == now)
+            .Where(m => !m.FDeleted && m.FStatus != 40)
+            .ExecuteCommandAsync();
     }
 }

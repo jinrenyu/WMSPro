@@ -84,7 +84,9 @@ public abstract class DocumentService<THeader, TEntry, TListDto, TDetailDto, TCr
             header.CUser = CurrentUser.UserId ?? string.Empty;
             header.MYmd = DateTime.Now;
             header.MUser = CurrentUser.UserId ?? string.Empty;
-            header.FCompanyId = CurrentUser.CompanyId ?? string.Empty;
+            // 仅当 MapToHeaderEntity 未设置组织时才回落当前登录组织，避免覆盖表单选择的组织（如采购订单的采购组织）
+            if (string.IsNullOrEmpty(header.FCompanyId))
+                header.FCompanyId = CurrentUser.CompanyId ?? string.Empty;
 
             await Db.Insertable(header).ExecuteCommandAsync();
 
