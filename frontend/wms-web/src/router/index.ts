@@ -170,6 +170,55 @@ const routes = [
                 name: 'MaterialBarTypeEdit',
                 component: () => import('../views/master/MaterialBarTypeEdit.vue'),
                 meta: { title: '物料条码类型-维护' }
+            },
+            // ── 采购管理（占位空页，后续逐张单据替换为真实页面）──
+            {
+                path: 'purchase/requests',
+                name: 'PurchaseRequestList',
+                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                meta: { title: '采购申请单' }
+            },
+            {
+                path: 'purchase/orders',
+                name: 'PurchaseOrderList',
+                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                meta: { title: '采购订单' }
+            },
+            {
+                path: 'purchase/receive-notices',
+                name: 'ReceiveNoticeList',
+                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                meta: { title: '收料通知单' }
+            },
+            {
+                path: 'purchase/inbounds',
+                name: 'PurchaseInboundList',
+                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                meta: { title: '采购入库单' }
+            },
+            {
+                path: 'purchase/return-requests',
+                name: 'ReturnRequestList',
+                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                meta: { title: '退料申请单' }
+            },
+            {
+                path: 'purchase/returns',
+                name: 'PurchaseReturnList',
+                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                meta: { title: '采购退料单' }
+            },
+            {
+                path: 'purchase/labels/receive-notice',
+                name: 'ReceiveNoticeLabelList',
+                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                meta: { title: '收料通知单标签' }
+            },
+            {
+                path: 'purchase/labels/purchase-order',
+                name: 'PurchaseOrderLabelList',
+                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                meta: { title: '采购订单标签' }
             }
         ]
     }

@@ -513,6 +513,138 @@ public class DataSeedService
         AddButton(menus, "menu_materialbartype_approve", materialBarTypeMenuId, "审核物料条码类型", "materialbartype:approve", 5, now);
         AddButton(menus, "menu_materialbartype_disable", materialBarTypeMenuId, "禁用物料条码类型", "materialbartype:disable", 6, now);
 
+        // ═══════════════════════════════════════════════════════════════
+        // 采购管理 (D) - 一级菜单，落在基础资料(1)与系统管理(99)之间
+        // ═══════════════════════════════════════════════════════════════
+        var purchaseId = "menu_purchase";
+        menus.Add(new SysMenu
+        {
+            Uid = purchaseId, FInterId = purchaseId, ParentId = "", MenuName = "采购管理",
+            MenuType = "D", RoutePath = "", Icon = "ShoppingCart", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // ── 二级分组：采购业务 (D) ──
+        var purchaseBizId = "menu_purchase_biz";
+        menus.Add(new SysMenu
+        {
+            Uid = purchaseBizId, FInterId = purchaseBizId, ParentId = purchaseId, MenuName = "采购业务",
+            MenuType = "D", RoutePath = "", Icon = "Tickets", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // 采购申请单 (M)
+        var purchaseReqId = "menu_purchase_req";
+        menus.Add(new SysMenu
+        {
+            Uid = purchaseReqId, FInterId = purchaseReqId, ParentId = purchaseBizId, MenuName = "采购申请单",
+            MenuType = "M", RoutePath = "/purchase/requests", Icon = "DocumentAdd", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_purchase_req_list", purchaseReqId, "查看采购申请单", "purchasereq:list", 1, now);
+        AddButton(menus, "menu_purchase_req_add", purchaseReqId, "新增采购申请单", "purchasereq:add", 2, now);
+        AddButton(menus, "menu_purchase_req_edit", purchaseReqId, "编辑采购申请单", "purchasereq:edit", 3, now);
+
+        // 采购订单 (M)
+        var purchaseOrderId = "menu_purchase_order";
+        menus.Add(new SysMenu
+        {
+            Uid = purchaseOrderId, FInterId = purchaseOrderId, ParentId = purchaseBizId, MenuName = "采购订单",
+            MenuType = "M", RoutePath = "/purchase/orders", Icon = "Document", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_purchase_order_list", purchaseOrderId, "查看采购订单", "purchaseorder:list", 1, now);
+        AddButton(menus, "menu_purchase_order_add", purchaseOrderId, "新增采购订单", "purchaseorder:add", 2, now);
+        AddButton(menus, "menu_purchase_order_edit", purchaseOrderId, "编辑采购订单", "purchaseorder:edit", 3, now);
+
+        // 收料通知单 (M)
+        var receiveNoticeId = "menu_receive_notice";
+        menus.Add(new SysMenu
+        {
+            Uid = receiveNoticeId, FInterId = receiveNoticeId, ParentId = purchaseBizId, MenuName = "收料通知单",
+            MenuType = "M", RoutePath = "/purchase/receive-notices", Icon = "Bell", PermCode = "", SortOrder = 3,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_receive_notice_list", receiveNoticeId, "查看收料通知单", "receivenotice:list", 1, now);
+        AddButton(menus, "menu_receive_notice_add", receiveNoticeId, "新增收料通知单", "receivenotice:add", 2, now);
+        AddButton(menus, "menu_receive_notice_edit", receiveNoticeId, "编辑收料通知单", "receivenotice:edit", 3, now);
+
+        // 采购入库单 (M)
+        var purchaseInId = "menu_purchase_in";
+        menus.Add(new SysMenu
+        {
+            Uid = purchaseInId, FInterId = purchaseInId, ParentId = purchaseBizId, MenuName = "采购入库单",
+            MenuType = "M", RoutePath = "/purchase/inbounds", Icon = "Box", PermCode = "", SortOrder = 4,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_purchase_in_list", purchaseInId, "查看采购入库单", "purchasein:list", 1, now);
+        AddButton(menus, "menu_purchase_in_add", purchaseInId, "新增采购入库单", "purchasein:add", 2, now);
+        AddButton(menus, "menu_purchase_in_edit", purchaseInId, "编辑采购入库单", "purchasein:edit", 3, now);
+
+        // ── 二级分组：采购退料 (D) ──
+        var returnGroupId = "menu_return_group";
+        menus.Add(new SysMenu
+        {
+            Uid = returnGroupId, FInterId = returnGroupId, ParentId = purchaseId, MenuName = "采购退料",
+            MenuType = "D", RoutePath = "", Icon = "RefreshLeft", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // 退料申请单 (M)
+        var returnReqId = "menu_return_req";
+        menus.Add(new SysMenu
+        {
+            Uid = returnReqId, FInterId = returnReqId, ParentId = returnGroupId, MenuName = "退料申请单",
+            MenuType = "M", RoutePath = "/purchase/return-requests", Icon = "DocumentDelete", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_return_req_list", returnReqId, "查看退料申请单", "returnreq:list", 1, now);
+        AddButton(menus, "menu_return_req_add", returnReqId, "新增退料申请单", "returnreq:add", 2, now);
+        AddButton(menus, "menu_return_req_edit", returnReqId, "编辑退料申请单", "returnreq:edit", 3, now);
+
+        // 采购退料单 (M)
+        var purchaseReturnId = "menu_purchase_return";
+        menus.Add(new SysMenu
+        {
+            Uid = purchaseReturnId, FInterId = purchaseReturnId, ParentId = returnGroupId, MenuName = "采购退料单",
+            MenuType = "M", RoutePath = "/purchase/returns", Icon = "Back", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_purchase_return_list", purchaseReturnId, "查看采购退料单", "purchasereturn:list", 1, now);
+        AddButton(menus, "menu_purchase_return_add", purchaseReturnId, "新增采购退料单", "purchasereturn:add", 2, now);
+        AddButton(menus, "menu_purchase_return_edit", purchaseReturnId, "编辑采购退料单", "purchasereturn:edit", 3, now);
+
+        // ── 二级分组：采购标签打印 (D) ──
+        var purchaseLabelId = "menu_purchase_label";
+        menus.Add(new SysMenu
+        {
+            Uid = purchaseLabelId, FInterId = purchaseLabelId, ParentId = purchaseId, MenuName = "采购标签打印",
+            MenuType = "D", RoutePath = "", Icon = "Printer", PermCode = "", SortOrder = 3,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // 收料通知单标签 (M)
+        var labelReceiveNoticeId = "menu_label_receive_notice";
+        menus.Add(new SysMenu
+        {
+            Uid = labelReceiveNoticeId, FInterId = labelReceiveNoticeId, ParentId = purchaseLabelId, MenuName = "收料通知单标签",
+            MenuType = "M", RoutePath = "/purchase/labels/receive-notice", Icon = "PriceTag", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_label_receive_notice_list", labelReceiveNoticeId, "查看收料通知单标签", "labelreceivenotice:list", 1, now);
+        AddButton(menus, "menu_label_receive_notice_print", labelReceiveNoticeId, "打印收料通知单标签", "labelreceivenotice:print", 2, now);
+
+        // 采购订单标签 (M)
+        var labelPurchaseOrderId = "menu_label_purchase_order";
+        menus.Add(new SysMenu
+        {
+            Uid = labelPurchaseOrderId, FInterId = labelPurchaseOrderId, ParentId = purchaseLabelId, MenuName = "采购订单标签",
+            MenuType = "M", RoutePath = "/purchase/labels/purchase-order", Icon = "PriceTag", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_label_purchase_order_list", labelPurchaseOrderId, "查看采购订单标签", "labelpurchaseorder:list", 1, now);
+        AddButton(menus, "menu_label_purchase_order_print", labelPurchaseOrderId, "打印采购订单标签", "labelpurchaseorder:print", 2, now);
+
         // 过滤出数据库中不存在的菜单，补入
         var existingUids = await _db.Queryable<SysMenu>()
             .Select(m => m.Uid)
