@@ -180,10 +180,33 @@ public abstract class DocumentService<THeader, TEntry, TListDto, TDetailDto, TCr
 
     public virtual async Task<bool> DeleteAsync(string uid)
     {
-        var result = await HeaderRepo.SoftDeleteAsync(uid);
-        if (result && OperationLog != null && !string.IsNullOrEmpty(PrgKey))
-            _ = OperationLog.LogAsync(PrgKey, OperationType.Delete, uid);
-        return result;
+        try
+        {
+            Db.AsTenant().BeginTran();
+
+            var result = await HeaderRepo.SoftDeleteAsync(uid);
+            if (result)
+            {
+                // 级联软删明细，避免按明细行展开的列表出现"主单已删、明细残留"的孤儿行
+                await Db.Updateable<TEntry>()
+                    .SetColumns(e => e.FDeleted == true)
+                    .SetColumns(e => e.MYmd == DateTime.Now)
+                    .SetColumns(e => e.MUser == (CurrentUser.UserId ?? string.Empty))
+                    .Where(e => e.FInterId == uid)
+                    .ExecuteCommandAsync();
+            }
+
+            Db.AsTenant().CommitTran();
+
+            if (result && OperationLog != null && !string.IsNullOrEmpty(PrgKey))
+                _ = OperationLog.LogAsync(PrgKey, OperationType.Delete, uid);
+            return result;
+        }
+        catch
+        {
+            Db.AsTenant().RollbackTran();
+            throw;
+        }
     }
 
     public abstract Task<bool> ApproveAsync(string uid);

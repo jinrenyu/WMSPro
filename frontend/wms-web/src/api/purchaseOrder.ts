@@ -86,7 +86,8 @@ export const getPurchaseOrders = (params?: any) => {
             keyword: params?.keyword || '',
             dynamicFilters: params?.dynamicFilters || [],
             sortField: params?.sortField,
-            isAsc: params?.isAsc
+            isAsc: params?.isAsc,
+            onlyApproved: params?.onlyApproved || false
         }
     })
 }

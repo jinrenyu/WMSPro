@@ -572,6 +572,8 @@ public class DataSeedService
         AddButton(menus, "menu_receive_notice_list", receiveNoticeId, "查看收料通知单", "receivenotice:list", 1, now);
         AddButton(menus, "menu_receive_notice_add", receiveNoticeId, "新增收料通知单", "receivenotice:add", 2, now);
         AddButton(menus, "menu_receive_notice_edit", receiveNoticeId, "编辑收料通知单", "receivenotice:edit", 3, now);
+        AddButton(menus, "menu_receive_notice_approve", receiveNoticeId, "审核收料通知单", "receivenotice:approve", 4, now);
+        AddButton(menus, "menu_receive_notice_delete", receiveNoticeId, "删除收料通知单", "receivenotice:delete", 5, now);
 
         // 采购入库单 (M)
         var purchaseInId = "menu_purchase_in";
@@ -805,6 +807,36 @@ public class DataSeedService
                 Fname = name,
                 Fbillformid = "PUR_PurchaseOrder",
                 Isdefault = number == "CGDD01_SYS",
+                Fcheckdate = DateTime.MinValue,
+                Fdisabledate = DateTime.MinValue,
+                FStatus = 40,
+                FCompanyId = "DEFAULT",
+                CYmd = now,
+                CUser = "system",
+                MYmd = now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+
+        // 收料通知单单据类型（FBillFormid = PUR_ReceiveBill）。开发库原本无此业务表单的单据类型，幂等种入。
+        var receiveBills = new (string Uid, string Number, string Name)[]
+        {
+            ("slr_billtype_std_0001", "SLTZ01_SYS", "标准收料单"),
+            ("slr_billtype_ww_0002",  "SLTZ02_SYS", "委外收料单"),
+            ("slr_billtype_zy_0003",  "SLTZ03_SYS", "直运收料单"),
+        };
+        foreach (var (uid, number, name) in receiveBills)
+        {
+            var exists = await _db.Queryable<TBasBilltype>().Where(b => b.Uid == uid).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBasBilltype
+            {
+                Uid = uid,
+                FInterId = uid,
+                Fnumber = number,
+                Fname = name,
+                Fbillformid = "PUR_ReceiveBill",
+                Isdefault = number == "SLTZ01_SYS",
                 Fcheckdate = DateTime.MinValue,
                 Fdisabledate = DateTime.MinValue,
                 FStatus = 40,

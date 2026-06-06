@@ -1,5 +1,5 @@
 <template>
-  <div :class="selectMode ? 'po-list-embedded' : 'purchase-order-list-container'">
+  <div class="receive-notice-list-container">
     <div class="list-panel">
       <div class="header-actions">
         <el-input
@@ -32,20 +32,20 @@
         </div>
       </div>
 
-      <div class="toolbar-actions" v-if="!selectMode">
-        <el-button type="primary" @click="handleAdd" v-permission="'purchaseorder:add'">
+      <div class="toolbar-actions">
+        <el-button type="primary" @click="handleAdd" v-permission="'receivenotice:add'">
           <el-icon><Plus /></el-icon> 新增
         </el-button>
-        <el-button @click="handleEditSelected" :disabled="selectedOrderIds.length !== 1" v-permission="'purchaseorder:edit'">
+        <el-button @click="handleEditSelected" :disabled="selectedOrderIds.length !== 1" v-permission="'receivenotice:edit'">
           <el-icon><Edit /></el-icon> 修改
         </el-button>
-        <el-button type="success" @click="handleBatchApprove" :disabled="selectedOrderIds.length === 0" :loading="actionLoading" v-permission="'purchaseorder:approve'">
+        <el-button type="success" @click="handleBatchApprove" :disabled="selectedOrderIds.length === 0" :loading="actionLoading" v-permission="'receivenotice:approve'">
           审核{{ selectedOrderIds.length ? ` (${selectedOrderIds.length})` : '' }}
         </el-button>
-        <el-button type="warning" @click="handleBatchUnapprove" :disabled="selectedOrderIds.length === 0" :loading="actionLoading" v-permission="'purchaseorder:approve'">
+        <el-button type="warning" @click="handleBatchUnapprove" :disabled="selectedOrderIds.length === 0" :loading="actionLoading" v-permission="'receivenotice:approve'">
           反审核{{ selectedOrderIds.length ? ` (${selectedOrderIds.length})` : '' }}
         </el-button>
-        <el-button type="danger" @click="handleBatchDelete" :disabled="selectedOrderIds.length === 0" :loading="actionLoading" v-permission="'purchaseorder:delete'">
+        <el-button type="danger" @click="handleBatchDelete" :disabled="selectedOrderIds.length === 0" :loading="actionLoading" v-permission="'receivenotice:delete'">
           删除{{ selectedOrderIds.length ? ` (${selectedOrderIds.length})` : '' }}
         </el-button>
       </div>
@@ -57,11 +57,10 @@
         style="width: 100%"
         border
         size="small"
-        :highlight-current-row="selectMode"
         @selection-change="handleSelectionChange"
         @row-dblclick="handleRowDblClick"
       >
-        <el-table-column v-if="!selectMode" type="selection" width="45" fixed="left" />
+        <el-table-column type="selection" width="45" fixed="left" />
         <template v-for="col in allColumns" :key="col.key">
           <el-table-column
             v-if="isColumnVisible(col)"
@@ -76,9 +75,12 @@
               <template v-if="col.slotName === 'date'">
                 {{ fmtDate(scope.row[col.prop!]) }}
               </template>
+              <template v-else-if="col.slotName === 'bool'">
+                <el-checkbox :model-value="!!scope.row[col.prop!]" disabled />
+              </template>
               <template v-else-if="col.slotName === 'status'">
-                <el-tag :type="scope.row.fStatus === 40 ? 'success' : 'warning'" size="small">
-                  {{ scope.row.fStatus === 40 ? '已审核' : '未审核' }}
+                <el-tag :type="scope.row.fStatus === 40 ? 'success' : scope.row.fStatus === 70 ? 'info' : 'warning'" size="small">
+                  {{ scope.row.fStatus === 40 ? '已审核' : scope.row.fStatus === 70 ? '已关闭' : '未审核' }}
                 </el-tag>
               </template>
             </template>
@@ -105,53 +107,63 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Edit } from '@element-plus/icons-vue'
 import {
-  getPurchaseOrders, deletePurchaseOrder,
-  approvePurchaseOrder, unapprovePurchaseOrder
-} from '../../api/purchaseOrder'
+  getReceiveNotices, deleteReceiveNotice,
+  approveReceiveNotice, unapproveReceiveNotice
+} from '../../api/receiveNotice'
 import { formatDate } from '../../utils/format'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 
-// 双模式：默认管理页；selectMode 时作为"采购订单选择器"嵌入弹窗（隐藏管理工具栏，双击=选中回填）
-const props = withDefaults(defineProps<{
-  selectMode?: boolean
-  onlyApproved?: boolean
-}>(), { selectMode: false, onlyApproved: false })
-const emit = defineEmits<{ 'select': [row: any] }>()
-
 const router = useRouter()
 const tableRef = ref()
 
-// 列表按明细行展开（一条明细一行）
+// 列表按明细行展开（一条明细一行），参照设计列表
 const columns: ColumnDef[] = [
-  { key: 'fdate', label: '订单日期', prop: 'fdate', width: 110, slotName: 'date' },
+  { key: 'fdate', label: '单据日期', prop: 'fdate', width: 110, slotName: 'date' },
   { key: 'fbillno', label: '单据编号', prop: 'fbillno', width: 170 },
-  { key: 'fentryid', label: '行号', prop: 'fentryid', width: 60, align: 'center' },
-  { key: 'fpurchaserName', label: '采购员', prop: 'fpurchaserName', width: 100 },
-  { key: 'fmaterialNumber', label: '物料代码', prop: 'fmaterialNumber', width: 140 },
+  { key: 'fbilltypeName', label: '单据类型', prop: 'fbilltypeName', width: 110 },
+  { key: 'fentryid', label: '单据行号', prop: 'fentryid', width: 70, align: 'center' },
+  { key: 'fmaterialNumber', label: '物料编码', prop: 'fmaterialNumber', width: 140 },
   { key: 'fmaterialName', label: '物料名称', prop: 'fmaterialName', minWidth: 150 },
-  { key: 'fSpecification', label: '规格型号', prop: 'fSpecification', minWidth: 120 },
-  { key: 'fauxpropName', label: '辅助属性', prop: 'fauxpropName', width: 110, defaultVisible: false },
-  { key: 'fqty', label: '采购数量', prop: 'fqty', width: 100, align: 'right' },
+  { key: 'fSpecification', label: '规格型号', prop: 'fSpecification', minWidth: 120, defaultVisible: false },
+  { key: 'factreceiveqty', label: '收料数量', prop: 'factreceiveqty', width: 100, align: 'right' },
+  { key: 'fgodqty', label: '检验合格数量', prop: 'fgodqty', width: 110, align: 'right' },
+  { key: 'fscrapqty', label: '样本破坏数', prop: 'fscrapqty', width: 100, align: 'right', defaultVisible: false },
+  { key: 'finstockqty', label: '累计入库数量', prop: 'finstockqty', width: 110, align: 'right' },
   { key: 'funitName', label: '单位名称', prop: 'funitName', width: 90 },
-  { key: 'fsupplyNumber', label: '供应商代码', prop: 'fsupplyNumber', width: 120 },
+  { key: 'fbaseunitqty', label: '基本单位数量', prop: 'fbaseunitqty', width: 110, align: 'right', defaultVisible: false },
+  { key: 'fbaseunitName', label: '基本单位名称', prop: 'fbaseunitName', width: 110, defaultVisible: false },
+  { key: 'fauxpropName', label: '辅助属性', prop: 'fauxpropName', width: 110, defaultVisible: false },
+  { key: 'fpredeliverydate', label: '预计到货日期', prop: 'fpredeliverydate', width: 120, slotName: 'date', defaultVisible: false },
+  { key: 'fisBatchManage', label: '启用批号管理', prop: 'fisBatchManage', width: 100, align: 'center', slotName: 'bool', defaultVisible: false },
+  { key: 'flot', label: '批次', prop: 'flot', width: 110, defaultVisible: false },
+  { key: 'fprice', label: '单价', prop: 'fprice', width: 100, align: 'right', defaultVisible: false },
+  { key: 'fsupplyNumber', label: '供应商编码', prop: 'fsupplyNumber', width: 120, defaultVisible: false },
   { key: 'fsupplyName', label: '供应商名称', prop: 'fsupplyName', minWidth: 150 },
-  { key: 'fsupplierlot', label: '供应商批号', prop: 'fsupplierlot', width: 120 },
+  { key: 'fpurchaserName', label: '业务员名称', prop: 'fpurchaserName', width: 100, defaultVisible: false },
+  { key: 'freceivedeptNumber', label: '收料部门代码', prop: 'freceivedeptNumber', width: 110, defaultVisible: false },
+  { key: 'freceivedeptName', label: '收料部门名称', prop: 'freceivedeptName', width: 120, defaultVisible: false },
+  { key: 'fstockNumber', label: '仓库代码', prop: 'fstockNumber', width: 110, defaultVisible: false },
+  { key: 'fstockName', label: '仓库名称', prop: 'fstockName', width: 120 },
+  { key: 'fisOpenLocation', label: '启用仓位管理', prop: 'fisOpenLocation', width: 100, align: 'center', slotName: 'bool', defaultVisible: false },
+  { key: 'fstocklocName', label: '仓位名称', prop: 'fstocklocName', width: 110, defaultVisible: false },
+  { key: 'forderbillno', label: '订单编号', prop: 'forderbillno', width: 150, defaultVisible: false },
+  { key: 'forderentryid', label: '订单明细行号', prop: 'forderentryid', width: 100, align: 'center', defaultVisible: false },
+  { key: 'fpurorgName', label: '采购组织', prop: 'fpurorgName', width: 120, defaultVisible: false },
   { key: 'fStatus', label: '审核状态', prop: 'fStatus', width: 90, align: 'center', slotName: 'status', fixed: 'right' },
 ]
 
-// 高级筛选仅开放可在服务端过滤的真实列（表头：单据编号/订单日期/审核状态；明细：采购数量/供应商批号）
+// 高级筛选仅开放可在服务端过滤的真实列（表头：单据编号/单据日期/审核状态；明细：收料数量/批次）
 const filterColumns: ColumnDef[] = [
   { key: 'fbillno', label: '单据编号', prop: 'fbillno' },
-  { key: 'fdate', label: '订单日期', prop: 'fdate' },
-  { key: 'fqty', label: '采购数量', prop: 'fqty' },
-  { key: 'fsupplierlot', label: '供应商批号', prop: 'fsupplierlot' },
+  { key: 'fdate', label: '单据日期', prop: 'fdate' },
+  { key: 'factreceiveqty', label: '收料数量', prop: 'factreceiveqty' },
+  { key: 'flot', label: '批次', prop: 'flot' },
   { key: 'fStatus', label: '审核状态', prop: 'fStatus', slotName: 'status' },
 ]
 
-// 选择器用独立的列配置 key，避免与"采购订单管理"页相互影响
-const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig(props.selectMode ? 'purchaseOrder-picker' : 'purchaseOrder', columns)
+const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('receiveNotice', columns)
 
 const loading = ref(false)
 const actionLoading = ref(false)
@@ -163,11 +175,10 @@ const queryParams = reactive({
   page: 1,
   pageSize: 10,
   keyword: '',
-  dynamicFilters: [] as DynamicFilterInfo[],
-  onlyApproved: false
+  dynamicFilters: [] as DynamicFilterInfo[]
 })
 
-// 明细行可能属于同一订单；操作按去重后的订单 Uid 进行
+// 明细行可能属于同一单据；操作按去重后的单据 Uid 进行
 const selectedOrderIds = computed(() =>
   Array.from(new Set(selectedRows.value.map(r => r.uid).filter(Boolean)))
 )
@@ -184,25 +195,22 @@ const handleSelectionChange = (rows: any[]) => { selectedRows.value = rows }
 async function fetchData() {
   loading.value = true
   try {
-    const res: any = await getPurchaseOrders(queryParams)
+    const res: any = await getReceiveNotices(queryParams)
     dataList.value = res.data.items
     total.value = res.data.totalCount
   } catch (e) {
-    console.error('加载采购订单失败:', e)
+    console.error('加载收料通知单失败:', e)
   } finally {
     loading.value = false
   }
 }
 
-const handleAdd = () => router.push({ name: 'PurchaseOrderEdit' })
-const handleEdit = (uid: string) => router.push({ name: 'PurchaseOrderEdit', query: { uid } })
+const handleAdd = () => router.push({ name: 'ReceiveNoticeEdit' })
+const handleEdit = (uid: string) => router.push({ name: 'ReceiveNoticeEdit', query: { uid } })
 const handleEditSelected = () => {
   if (selectedOrderIds.value.length === 1) handleEdit(selectedOrderIds.value[0])
 }
-const handleRowDblClick = (row: any) => {
-  if (props.selectMode) { emit('select', row); return }
-  if (row.uid) handleEdit(row.uid)
-}
+const handleRowDblClick = (row: any) => { if (row.uid) handleEdit(row.uid) }
 
 async function runBatch(ids: string[], fn: (id: string) => Promise<any>, label: string) {
   actionLoading.value = true
@@ -224,28 +232,19 @@ const confirmBatch = async (title: string, msg: string, ids: string[], fn: (id: 
   if (r !== 'cancel') await runBatch(ids, fn, title)
 }
 
-const handleBatchApprove = () => confirmBatch('审核', `确认审核选中的 ${selectedOrderIds.value.length} 张采购订单？`, selectedOrderIds.value, approvePurchaseOrder)
-const handleBatchUnapprove = () => confirmBatch('反审核', `确认反审核选中的 ${selectedOrderIds.value.length} 张采购订单？`, selectedOrderIds.value, unapprovePurchaseOrder)
-const handleBatchDelete = () => confirmBatch('删除', `确认删除选中的 ${selectedOrderIds.value.length} 张采购订单？删除后不可恢复。`, selectedOrderIds.value, deletePurchaseOrder)
+const handleBatchApprove = () => confirmBatch('审核', `确认审核选中的 ${selectedOrderIds.value.length} 张收料通知单？`, selectedOrderIds.value, approveReceiveNotice)
+const handleBatchUnapprove = () => confirmBatch('反审核', `确认反审核选中的 ${selectedOrderIds.value.length} 张收料通知单？`, selectedOrderIds.value, unapproveReceiveNotice)
+const handleBatchDelete = () => confirmBatch('删除', `确认删除选中的 ${selectedOrderIds.value.length} 张收料通知单？删除后不可恢复。`, selectedOrderIds.value, deleteReceiveNotice)
 
-onMounted(() => {
-  queryParams.onlyApproved = props.onlyApproved
-  fetchData()
-})
+onMounted(() => { fetchData() })
 </script>
 
 <style scoped>
-.purchase-order-list-container {
+.receive-notice-list-container {
   padding: 20px;
   background-color: var(--bg-card);
   border-radius: 8px;
   box-shadow: var(--shadow-card);
-}
-
-/* 选择器嵌入弹窗时去掉整页卡片样式 */
-.po-list-embedded {
-  padding: 0;
-  background-color: transparent;
 }
 
 .list-panel {

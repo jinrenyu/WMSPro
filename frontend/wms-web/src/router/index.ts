@@ -193,8 +193,14 @@ const routes = [
             {
                 path: 'purchase/receive-notices',
                 name: 'ReceiveNoticeList',
-                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                component: () => import('../views/purchase/ReceiveNoticeList.vue'),
                 meta: { title: '收料通知单' }
+            },
+            {
+                path: 'purchase/receive-notices/edit',
+                name: 'ReceiveNoticeEdit',
+                component: () => import('../views/purchase/ReceiveNoticeEdit.vue'),
+                meta: { title: '收料通知单-维护' }
             },
             {
                 path: 'purchase/inbounds',

@@ -43,6 +43,44 @@ public class UpdatePurchaseOrderRequestValidator : AbstractValidator<UpdatePurch
     }
 }
 
+// ===== 收料通知单 =====
+
+public class CreateReceiveNoticeRequestValidator : AbstractValidator<CreateReceiveNoticeRequest>
+{
+    public CreateReceiveNoticeRequestValidator()
+    {
+        RuleFor(x => x.Fsupplyid).NotEmpty().WithMessage("供应商不能为空");
+        RuleFor(x => x.Fsettlecurrid).NotEmpty().WithMessage("结算币别不能为空");
+        RuleFor(x => x.Fnote).MaximumLength(500);
+        RuleFor(x => x.Entries).NotEmpty().WithMessage("明细不能为空");
+        RuleForEach(x => x.Entries).ChildRules(entry =>
+        {
+            entry.RuleFor(e => e.Fmaterialid).NotEmpty().WithMessage("物料不能为空");
+            entry.RuleFor(e => e.Funitid).NotEmpty().WithMessage("单位不能为空");
+            entry.RuleFor(e => e.Factreceiveqty).GreaterThan(0).WithMessage("交货数量必须大于0");
+            entry.RuleFor(e => e.Fprice).GreaterThanOrEqualTo(0);
+        });
+    }
+}
+
+public class UpdateReceiveNoticeRequestValidator : AbstractValidator<UpdateReceiveNoticeRequest>
+{
+    public UpdateReceiveNoticeRequestValidator()
+    {
+        RuleFor(x => x.Fsupplyid).NotEmpty().WithMessage("供应商不能为空");
+        RuleFor(x => x.Fsettlecurrid).NotEmpty().WithMessage("结算币别不能为空");
+        RuleFor(x => x.Fnote).MaximumLength(500);
+        RuleFor(x => x.Entries).NotEmpty().WithMessage("明细不能为空");
+        RuleForEach(x => x.Entries).ChildRules(entry =>
+        {
+            entry.RuleFor(e => e.Fmaterialid).NotEmpty().WithMessage("物料不能为空");
+            entry.RuleFor(e => e.Funitid).NotEmpty().WithMessage("单位不能为空");
+            entry.RuleFor(e => e.Factreceiveqty).GreaterThan(0).WithMessage("交货数量必须大于0");
+            entry.RuleFor(e => e.Fprice).GreaterThanOrEqualTo(0);
+        });
+    }
+}
+
 // ===== 销售订单 =====
 
 public class CreateSalesOrderRequestValidator : AbstractValidator<CreateSalesOrderRequest>
