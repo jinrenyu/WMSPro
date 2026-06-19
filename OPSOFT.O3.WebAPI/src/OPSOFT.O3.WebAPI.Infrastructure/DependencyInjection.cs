@@ -137,6 +137,14 @@ public static class DependencyInjection
         services.AddScoped<IDocumentService<OdkSrmDelivery, OdkSrmDeliveryEntry, DeliveryListDto, DeliveryDetailDto, CreateDeliveryRequest, UpdateDeliveryRequest>, DeliveryService>();
         services.AddScoped<IDocumentService<OdkSrmInvoice, OdkSrmInvoiceEntry, InvoiceListDto, InvoiceDetailDto, CreateInvoiceRequest, UpdateInvoiceRequest>, InvoiceService>();
 
+        // 采购标签打印（采购订单）：非单据 CRUD，独立服务（条码生成/作废/查询）
+        services.AddScoped<IPurchaseOrderLabelService, PurchaseOrderLabelService>();
+
+        // 编码规则：业务表单目录（数据驱动）+ 取号引擎（单据编号/条码编号统一取号）+ 配置维护（系统管理→编码规则）
+        services.AddScoped<IBillCodeFormCatalog, BillCodeFormCatalog>();
+        services.AddScoped<IBillCodeService, BillCodeService>();
+        services.AddScoped<IBillCodeRuleService, BillCodeRuleService>();
+
         // 数据种子服务
         services.AddScoped<DataSeedService>();
 

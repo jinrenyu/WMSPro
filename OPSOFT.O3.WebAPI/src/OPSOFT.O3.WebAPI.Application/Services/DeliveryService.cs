@@ -16,8 +16,9 @@ public class DeliveryService : DocumentService<OdkSrmDelivery, OdkSrmDeliveryEnt
         IRepository<OdkSrmDeliveryEntry> entryRepo,
         ISqlSugarClient db,
         ICurrentUserService currentUser,
+        IBillCodeService billCode,
         IOperationLogService? operationLog = null)
-        : base(headerRepo, entryRepo, db, currentUser, operationLog) { }
+        : base(headerRepo, entryRepo, db, currentUser, operationLog, billCode) { }
 
     protected override string PrgKey => "Delivery";
 

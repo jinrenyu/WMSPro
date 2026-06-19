@@ -16,8 +16,9 @@ public class InvoiceService : DocumentService<OdkSrmInvoice, OdkSrmInvoiceEntry,
         IRepository<OdkSrmInvoiceEntry> entryRepo,
         ISqlSugarClient db,
         ICurrentUserService currentUser,
+        IBillCodeService billCode,
         IOperationLogService? operationLog = null)
-        : base(headerRepo, entryRepo, db, currentUser, operationLog) { }
+        : base(headerRepo, entryRepo, db, currentUser, operationLog, billCode) { }
 
     protected override string PrgKey => "Invoice";
 

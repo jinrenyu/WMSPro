@@ -22,8 +22,11 @@ public class ReceiveNoticeService : DocumentService<TPurReceive, TPurReceiveEntr
         IRepository<TPurReceiveEntry> entryRepo,
         ISqlSugarClient db,
         ICurrentUserService currentUser,
+        IBillCodeService billCode,
         IOperationLogService? operationLog = null)
-        : base(headerRepo, entryRepo, db, currentUser, operationLog) { }
+        : base(headerRepo, entryRepo, db, currentUser, operationLog, billCode)
+    {
+    }
 
     protected override string PrgKey => "ReceiveNotice";
 
@@ -405,7 +408,7 @@ public class ReceiveNoticeService : DocumentService<TPurReceive, TPurReceiveEntr
 
     protected override TPurReceive MapToHeaderEntity(CreateReceiveNoticeRequest dto) => new()
     {
-        Fbillno = string.IsNullOrWhiteSpace(dto.Fbillno) ? $"SLTZ{DateTime.Now:yyyyMMddHHmmss}" : dto.Fbillno,
+        Fbillno = dto.Fbillno?.Trim() ?? string.Empty, // 为空时由 PrepareHeaderForCreateAsync 按编码规则取号
         Fbilltypeid = dto.Fbilltypeid,
         Fdate = dto.Fdate ?? DateTime.Now,
         Fbusinesstype = dto.Fbusinesstype,
@@ -426,6 +429,29 @@ public class ReceiveNoticeService : DocumentService<TPurReceive, TPurReceiveEntr
         Fdisabledate = DateTime.MinValue,
         FStatus = 10
     };
+
+    // ===== 编码规则取号：声明 formKey + 编号读写/查重 + 来源字段，通用取号逻辑在基类 =====
+    protected override string? BillCodeFormKey => BillCodeFormKeys.ReceiveBill;
+    protected override string GetBillNo(TPurReceive header) => header.Fbillno;
+    protected override void SetBillNo(TPurReceive header, string billNo) => header.Fbillno = billNo;
+    protected override Task<bool> BillNoExistsAsync(string billNo)
+        => Db.Queryable<TPurReceive>().AnyAsync(h => h.Fbillno == billNo);
+
+    /// <summary>收料通知单取号来源字段：单据日期 + 单据类型编码 + 供应商编码</summary>
+    protected override async Task PopulateBillCodeContextAsync(IDictionary<string, string> ctx, TPurReceive header, CreateReceiveNoticeRequest dto)
+    {
+        ctx[BillCodeFields.Date] = (header.Fdate ?? DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss");
+        if (!string.IsNullOrEmpty(header.Fbilltypeid))
+        {
+            var billTypeNo = await Db.Queryable<TBasBilltype>().Where(b => b.Uid == header.Fbilltypeid).Select(b => b.Fnumber).FirstAsync();
+            if (!string.IsNullOrEmpty(billTypeNo)) ctx[BillCodeFields.BillType] = billTypeNo;
+        }
+        if (!string.IsNullOrEmpty(header.Fsupplyid))
+        {
+            var supplierNo = await Db.Queryable<TBdSupplier>().Where(s => s.Uid == header.Fsupplyid).Select(s => s.FNumber).FirstAsync();
+            if (!string.IsNullOrEmpty(supplierNo)) ctx[BillCodeFields.Supplier] = supplierNo;
+        }
+    }
 
     protected override void UpdateHeaderEntity(TPurReceive entity, UpdateReceiveNoticeRequest dto)
     {

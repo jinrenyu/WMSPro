@@ -30,6 +30,8 @@ public class DataSeedService
         await SeedOrgsAsync();
         await SeedMaterialTypesAsync();
         await SeedBillTypesAsync();
+        await SeedBillCodeFormsAsync();
+        await SeedBillCodeRulesAsync();
         await SeedApproveExistingMaterialsAsync();
     }
 
@@ -436,6 +438,17 @@ public class DataSeedService
         AddButton(menus, "menu_dept_edit", deptMenuId, "编辑部门", "dept:edit", 3, now);
         AddButton(menus, "menu_dept_delete", deptMenuId, "删除部门", "dept:delete", 4, now);
 
+        // 编码规则 (M) - 系统管理下（单据编号/条码编号规则配置）
+        var billCodeRuleMenuId = "menu_billcoderule";
+        menus.Add(new SysMenu
+        {
+            Uid = billCodeRuleMenuId, FInterId = billCodeRuleMenuId, ParentId = sysManageId, MenuName = "编码规则",
+            MenuType = "M", RoutePath = "/system/code-rules", Icon = "Tickets", PermCode = "", SortOrder = 5,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_billcoderule_list", billCodeRuleMenuId, "查看编码规则", "billcoderule:list", 1, now);
+        AddButton(menus, "menu_billcoderule_edit", billCodeRuleMenuId, "编辑编码规则", "billcoderule:edit", 2, now);
+
         // 单位管理 (M)
         var unitMenuId = "menu_unit";
         menus.Add(new SysMenu
@@ -650,6 +663,8 @@ public class DataSeedService
         });
         AddButton(menus, "menu_label_purchase_order_list", labelPurchaseOrderId, "查看采购订单标签", "labelpurchaseorder:list", 1, now);
         AddButton(menus, "menu_label_purchase_order_print", labelPurchaseOrderId, "打印采购订单标签", "labelpurchaseorder:print", 2, now);
+        AddButton(menus, "menu_label_purchase_order_generate", labelPurchaseOrderId, "生成采购订单条码", "labelpurchaseorder:generate", 3, now);
+        AddButton(menus, "menu_label_purchase_order_void", labelPurchaseOrderId, "作废采购订单条码", "labelpurchaseorder:void", 4, now);
 
         // 过滤出数据库中不存在的菜单，补入
         var existingUids = await _db.Queryable<SysMenu>()
@@ -848,6 +863,146 @@ public class DataSeedService
             }).ExecuteCommandAsync();
         }
     }
+
+    /// <summary>
+    /// 编码规则业务表单目录种子（SYS_BILLCODEFORM，数据驱动"哪些单据可配编码规则"）：
+    /// 登记采购订单 / 收料通知单两张（含表头实体类名，供基类反射取号匹配）。
+    /// 幂等：按表单键存在（含软删）即跳过，尊重用户在界面的登记/注销。
+    /// </summary>
+    private async Task SeedBillCodeFormsAsync()
+    {
+        var now = DateTime.Now;
+        var forms = new (string FormKey, string FormName, string EntityName)[]
+        {
+            ("PUR_PurchaseOrder", "采购订单",   nameof(TPurPoOrder)),
+            ("PUR_ReceiveBill",   "收料通知单", nameof(TPurReceive)),
+        };
+        foreach (var (formKey, formName, entityName) in forms)
+        {
+            var exists = await _db.Queryable<SysBillCodeForm>().Where(f => f.Fformkey == formKey).AnyAsync();
+            if (exists) continue;
+            var uid = Guid.NewGuid().ToString("N");
+            await _db.Insertable(new SysBillCodeForm
+            {
+                Uid = uid, FInterId = uid, Fformkey = formKey, Fformname = formName, Fentityname = entityName,
+                FStatus = 40, FCompanyId = "DEFAULT",
+                CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+    }
+
+    /// <summary>
+    /// 默认编码规则（系统管理→编码规则可调整）：
+    /// 单据编号（SYS_LISTCODE/ENTRY）——采购订单 CGDD+yyyyMMdd+4位日流水、收料通知单 SLTZ+yyyyMMdd+4位日流水
+    ///（替代原"前缀+yyyyMMddHHmmss"时间戳硬编码，修复同秒并发重号隐患）；
+    /// 条码编号（SYS_BARCODE/ENTRY）——采购订单 yyyyMMdd+6位日流水（与原硬编码格式一致）。
+    /// 日期段勾选"编码依据"= 按日重置流水。幂等：规则头已存在（按表单键）则整套跳过，不覆盖用户修改。
+    /// 另：迁移旧硬编码时期 SYS_BARCODENO 的 FCLASSTYPEID='1' 计数行为表单键，保证切换当日条码流水连续不重号。
+    /// </summary>
+    private async Task SeedBillCodeRulesAsync()
+    {
+        var now = DateTime.Now;
+        const string poFormKey = "PUR_PurchaseOrder";
+        const string rnFormKey = "PUR_ReceiveBill";
+
+        // —— 单据编号规则 ——
+        var listRules = new (string Uid, string FormKey, string Name, string Prefix)[]
+        {
+            ("listcode_pur_order",   poFormKey, "采购订单编号规则",   "CGDD"),
+            ("listcode_pur_receive", rnFormKey, "收料通知单编号规则", "SLTZ"),
+        };
+        foreach (var (uid, formKey, name, prefix) in listRules)
+        {
+            var exists = await _db.Queryable<SysListCode>().Where(r => r.Uid == uid || r.Fclasstypeid == formKey).AnyAsync();
+            if (exists) continue;
+            // 头+分段同事务：避免中途失败留下"有头无段"的半配置规则（守卫只查头，残留后不自愈）
+            try
+            {
+                _db.AsTenant().BeginTran();
+                await _db.Insertable(new SysListCode
+                {
+                    Uid = uid, FInterId = uid, Fclasstypeid = formKey, Fname = name,
+                    Ismodify = true, Fhex = 10,
+                    Fcheckdate = DateTime.MinValue, // 开发库该列 NOT NULL（生产为 DATE NULL），按惯例赋 MinValue 哨兵
+                    FStatus = 40, FCompanyId = "DEFAULT",
+                    CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+                }).ExecuteCommandAsync();
+                await _db.Insertable(new List<SysListCodeEntry>
+                {
+                    NewListCodeEntry($"{uid}_e1", uid, formKey, 1, "1", now, value: prefix, note: "固定前缀"),
+                    NewListCodeEntry($"{uid}_e2", uid, formKey, 2, "3", now, fieldId: "FDATE", fieldName: "单据日期", format: "yyyyMMdd", isSerial: true, note: "日期段（依据=按日重置）"),
+                    NewListCodeEntry($"{uid}_e3", uid, formKey, 3, "4", now, length: 4, min: 1, step: 1, note: "日流水"),
+                }).ExecuteCommandAsync();
+                _db.AsTenant().CommitTran();
+            }
+            catch
+            {
+                _db.AsTenant().RollbackTran();
+                throw;
+            }
+        }
+
+        // —— 条码编号规则（采购订单标签）——
+        const string bcUid = "barcoderule_pur_order";
+        var bcExists = await _db.Queryable<SysBarcode>().Where(r => r.Uid == bcUid || r.Fclasstypeid == poFormKey).AnyAsync();
+        if (!bcExists)
+        {
+            try
+            {
+                _db.AsTenant().BeginTran();
+                await _db.Insertable(new SysBarcode
+                {
+                    Uid = bcUid, FInterId = bcUid, Fclasstypeid = poFormKey, Fprgkey = poFormKey,
+                    Fname = "采购订单条码规则", Ismodify = false, Fhex = 10,
+                    Fcheckdate = DateTime.MinValue, // 开发库该列 NOT NULL（生产为 DATE NULL），按惯例赋 MinValue 哨兵
+                    FStatus = 40, FCompanyId = "DEFAULT",
+                    CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+                }).ExecuteCommandAsync();
+                await _db.Insertable(new List<SysBarcodeEntry>
+                {
+                    NewBarcodeEntry($"{bcUid}_e1", bcUid, poFormKey, 1, "3", now, fieldId: "FDATE", fieldName: "打印日期", format: "yyyyMMdd", isSerial: true, note: "日期段（依据=按日重置）"),
+                    NewBarcodeEntry($"{bcUid}_e2", bcUid, poFormKey, 2, "4", now, length: 6, min: 1, step: 1, note: "日流水"),
+                }).ExecuteCommandAsync();
+                _db.AsTenant().CommitTran();
+            }
+            catch
+            {
+                _db.AsTenant().RollbackTran();
+                throw;
+            }
+        }
+
+        // 旧硬编码时期条码计数行迁移为表单键，幂等（迁移后不再命中）。
+        // 键 '1' 是旧 NextSeqAsync 最终版写入的 FCLASSTYPEID；'PO' 是更早中间版残留的死数据，一并收编
+        await _db.Updateable<SysBarcodeNo>()
+            .SetColumns(s => s.Fclasstypeid == poFormKey)
+            .Where(s => s.Fclasstypeid == "1" || s.Fclasstypeid == "PO")
+            .ExecuteCommandAsync();
+    }
+
+    private static SysListCodeEntry NewListCodeEntry(string uid, string headerUid, string formKey, int entryId, string type, DateTime now,
+        string value = "", string fieldId = "", string fieldName = "", string format = "",
+        int length = 0, int min = 0, int max = 0, int step = 0, bool isSerial = false, string note = "")
+        => new()
+        {
+            Uid = uid, FInterId = headerUid, FDETAILID = uid, Fclasstypeid = formKey, FENTRYID = entryId,
+            Ftype = type, FVALUE = value, FIELDID = fieldId, FIELDNAME = fieldName, FORMATSTRING = format,
+            FLENGHT = length, FMIN = min, FMAX = max, FSTEP = step, FCHAR = string.Empty, FCHARALIGNMENT = string.Empty,
+            ISSERIAL = isSerial, ISMEMBER = true, Fnote = note, FCODECONTRAST = string.Empty,
+            FStatus = 40, FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        };
+
+    private static SysBarcodeEntry NewBarcodeEntry(string uid, string headerUid, string formKey, int entryId, string type, DateTime now,
+        string value = "", string fieldId = "", string fieldName = "", string format = "",
+        int length = 0, int min = 0, int max = 0, int step = 0, bool isSerial = false, string note = "")
+        => new()
+        {
+            Uid = uid, FInterId = headerUid, FDETAILID = uid, Fclasstypeid = formKey, FENTRYID = entryId,
+            Ftype = type, FVALUE = value, FIELDID = fieldId, FIELDNAME = fieldName, FORMATSTRING = format,
+            FLENGHT = length, FMIN = min, FMAX = max, FSTEP = step, FCHAR = string.Empty, FCHARALIGNMENT = string.Empty,
+            ISSERIAL = isSerial, ISMEMBER = true, Fnote = note, FCODECONTRAST = string.Empty,
+            FStatus = 40, FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        };
 
     /// <summary>
     /// 一次性把开发库中现有未审核物料置为已审核(FStatus=40)，使采购订单等单据的"已审核物料"下拉可用。

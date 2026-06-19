@@ -52,6 +52,18 @@ const routes = [
                 meta: { title: '请求日志' }
             },
             {
+                path: 'system/code-rules',
+                name: 'BillCodeRuleList',
+                component: () => import('../views/system/BillCodeRuleList.vue'),
+                meta: { title: '编码规则' }
+            },
+            {
+                path: 'system/code-rules/edit',
+                name: 'BillCodeRuleEdit',
+                component: () => import('../views/system/BillCodeRuleEdit.vue'),
+                meta: { title: '编码规则配置' }
+            },
+            {
                 path: 'master/materials',
                 name: 'MaterialList',
                 component: () => import('../views/master/MaterialList.vue'),
@@ -229,8 +241,14 @@ const routes = [
             {
                 path: 'purchase/labels/purchase-order',
                 name: 'PurchaseOrderLabelList',
-                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                component: () => import('../views/purchase/PurchaseOrderLabelList.vue'),
                 meta: { title: '采购订单标签' }
+            },
+            {
+                path: 'purchase/labels/purchase-order/generate',
+                name: 'PurchaseOrderLabelGenerate',
+                component: () => import('../views/purchase/PurchaseOrderLabelGenerate.vue'),
+                meta: { title: '采购订单标签 - 条码生成' }
             }
         ]
     }

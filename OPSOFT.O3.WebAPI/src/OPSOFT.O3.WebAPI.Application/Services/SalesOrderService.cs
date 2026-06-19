@@ -16,8 +16,9 @@ public class SalesOrderService : DocumentService<TSalOrder, TSalOrderentry,
         IRepository<TSalOrderentry> entryRepo,
         ISqlSugarClient db,
         ICurrentUserService currentUser,
+        IBillCodeService billCode,
         IOperationLogService? operationLog = null)
-        : base(headerRepo, entryRepo, db, currentUser, operationLog) { }
+        : base(headerRepo, entryRepo, db, currentUser, operationLog, billCode) { }
 
     protected override string PrgKey => "SalesOrder";
 

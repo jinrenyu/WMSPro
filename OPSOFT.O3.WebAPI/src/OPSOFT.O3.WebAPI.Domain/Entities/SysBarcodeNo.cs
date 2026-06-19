@@ -3,9 +3,11 @@ using SqlSugar;
 namespace OPSOFT.O3.WebAPI.Domain.Entities;
 
 /// <summary>
-/// 条码编码流水号档
+/// 条码编码流水号档。(规码ID, 编码标识) 唯一索引与生产建表脚本一致（SYS_BARCODENO_1），
+/// 兜底并发首插重号——取号服务 INSERT 撞索引时回退重试 UPDATE 自增路径。
 /// </summary>
 [SugarTable("SYS_BARCODENO")]
+[SugarIndex("SYS_BARCODENO_1", nameof(Fclasstypeid), OrderByType.Asc, nameof(Fbillcode), OrderByType.Asc, true)]
 public class SysBarcodeNo : BaseEntity
 {
     /// <summary>

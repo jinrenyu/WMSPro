@@ -22,8 +22,11 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
         IRepository<TPurPoOrderEntry> entryRepo,
         ISqlSugarClient db,
         ICurrentUserService currentUser,
+        IBillCodeService billCode,
         IOperationLogService? operationLog = null)
-        : base(headerRepo, entryRepo, db, currentUser, operationLog) { }
+        : base(headerRepo, entryRepo, db, currentUser, operationLog, billCode)
+    {
+    }
 
     protected override string PrgKey => "PurchaseOrder";
 
@@ -348,7 +351,7 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
 
     protected override TPurPoOrder MapToHeaderEntity(CreatePurchaseOrderRequest dto) => new()
     {
-        Fbillno = string.IsNullOrWhiteSpace(dto.Fbillno) ? $"CGDD{DateTime.Now:yyyyMMddHHmmss}" : dto.Fbillno,
+        Fbillno = dto.Fbillno?.Trim() ?? string.Empty, // 为空时由 PrepareHeaderForCreateAsync 按编码规则取号
         Fbilltypeid = dto.Fbilltypeid,
         Fdate = dto.Fdate ?? DateTime.Now,
         Fbusinesstype = dto.Fbusinesstype,
@@ -364,6 +367,29 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
         Fdisabledate = DateTime.MinValue,
         FStatus = 10
     };
+
+    // ===== 编码规则取号：声明 formKey + 编号读写/查重 + 来源字段，通用取号逻辑在基类 =====
+    protected override string? BillCodeFormKey => BillCodeFormKeys.PurchaseOrder;
+    protected override string GetBillNo(TPurPoOrder header) => header.Fbillno;
+    protected override void SetBillNo(TPurPoOrder header, string billNo) => header.Fbillno = billNo;
+    protected override Task<bool> BillNoExistsAsync(string billNo)
+        => Db.Queryable<TPurPoOrder>().AnyAsync(h => h.Fbillno == billNo);
+
+    /// <summary>采购订单取号来源字段：单据日期 + 单据类型编码 + 供应商编码</summary>
+    protected override async Task PopulateBillCodeContextAsync(IDictionary<string, string> ctx, TPurPoOrder header, CreatePurchaseOrderRequest dto)
+    {
+        ctx[BillCodeFields.Date] = (header.Fdate ?? DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss");
+        if (!string.IsNullOrEmpty(header.Fbilltypeid))
+        {
+            var billTypeNo = await Db.Queryable<TBasBilltype>().Where(b => b.Uid == header.Fbilltypeid).Select(b => b.Fnumber).FirstAsync();
+            if (!string.IsNullOrEmpty(billTypeNo)) ctx[BillCodeFields.BillType] = billTypeNo;
+        }
+        if (!string.IsNullOrEmpty(header.Fsupplyid))
+        {
+            var supplierNo = await Db.Queryable<TBdSupplier>().Where(s => s.Uid == header.Fsupplyid).Select(s => s.FNumber).FirstAsync();
+            if (!string.IsNullOrEmpty(supplierNo)) ctx[BillCodeFields.Supplier] = supplierNo;
+        }
+    }
 
     protected override void UpdateHeaderEntity(TPurPoOrder entity, UpdatePurchaseOrderRequest dto)
     {
