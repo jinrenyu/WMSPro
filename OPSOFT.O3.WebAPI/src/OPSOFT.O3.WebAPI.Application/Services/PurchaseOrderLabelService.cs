@@ -200,7 +200,9 @@ public class PurchaseOrderLabelService : IPurchaseOrderLabelService
         }
         else dto.Fbartype = 1;
 
-        dto.GeneratedCount = await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpodetailid == entry.Uid && !s.FDeleted).CountAsync();
+        // 仅统计采购订单标签自身生成的条码：Fpurdetailid 为空。
+        // 收料通知单标签生成时会把源 PO 信息回填到 Fpodetailid 用于溯源，须用 Fpurdetailid 为空排除，避免收料条码串入采购订单标签明细。
+        dto.GeneratedCount = await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpodetailid == entry.Uid && !s.FDeleted && (s.Fpurdetailid == null || s.Fpurdetailid == "")).CountAsync();
         return dto;
     }
 
@@ -208,7 +210,8 @@ public class PurchaseOrderLabelService : IPurchaseOrderLabelService
 
     public async Task<List<BarcodeLineDto>> GetBarcodesAsync(string poEntryUid)
     {
-        var links = await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpodetailid == poEntryUid && !s.FDeleted).ToListAsync();
+        // 仅取采购订单标签自身生成的条码（Fpurdetailid 为空）；排除收料通知单标签回填了源 PO 的条码，避免串入。
+        var links = await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpodetailid == poEntryUid && !s.FDeleted && (s.Fpurdetailid == null || s.Fpurdetailid == "")).ToListAsync();
         if (links.Count == 0) return new();
         var codes = links.Select(l => l.Fbarcode).Distinct().ToList();
         var masters = await _db.Queryable<TBdBarcoders>().Where(m => codes.Contains(m.Fbarcode) && !m.FDeleted).ToListAsync();

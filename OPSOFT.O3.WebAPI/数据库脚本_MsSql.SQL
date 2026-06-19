@@ -85660,3 +85660,38 @@ GO
 
 GO
 
+
+
+/* 脚本    说明:T_BD_PRINTTEMPLATE 打印模板（条码标签设计模板）*/
+ -- DROP TABLE T_BD_PRINTTEMPLATE
+IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'T_BD_PRINTTEMPLATE') AND type in (N'U'))
+BEGIN
+CREATE TABLE T_BD_PRINTTEMPLATE(
+   FNUMBER          VARCHAR(50)   NOT NULL DEFAULT '' ,    -- 模板编码
+   FNAME            NVARCHAR(100) NOT NULL DEFAULT '' ,    -- 模板名称
+   FBILLSOURCE      VARCHAR(100)  NOT NULL DEFAULT '' ,    -- 适用单据来源(表单键 PUR_PurchaseOrder/PUR_ReceiveBill)
+   FTEMPLATE        NVARCHAR(MAX) NULL ,                   -- 模板内容(hiprint 模板 JSON)
+   FPAPERWIDTH      DECIMAL(18,2) NOT NULL DEFAULT 0 ,     -- 纸张宽度(mm)
+   FPAPERHEIGHT     DECIMAL(18,2) NOT NULL DEFAULT 0 ,     -- 纸张高度(mm)
+   FISDEFAULT       BIT           NOT NULL DEFAULT 0 ,     -- 是否默认模板
+   FDESCRIPTION     NVARCHAR(500) NOT NULL DEFAULT '' ,    -- 备注
+   FINTERID         VARCHAR(50)   NOT NULL DEFAULT '' ,    -- 表内码
+   FGROUPID         VARCHAR(50)   NOT NULL DEFAULT '' ,    -- 分组内码
+   FSTATUS          INT           NOT NULL DEFAULT 0 ,     -- 状态
+   FDELETED         BIT           NOT NULL DEFAULT 0 ,     -- 软删除标志
+   FDISABLED        BIT           NOT NULL DEFAULT 0 ,     -- 禁用状态 0=正常 1=禁用
+   FCOMPANYID       VARCHAR(50)   NOT NULL DEFAULT '' ,    -- 组织代码
+   C_YMD            DATETIME      NULL ,                   -- 资料创建日期
+   C_USER           VARCHAR(20)   NOT NULL DEFAULT '' ,    -- 资料创建帐号
+   M_YMD            DATETIME      NULL ,                   -- 最后异动日期
+   M_USER           VARCHAR(20)   NOT NULL DEFAULT '' ,    -- 最后异动帐号
+   UID VARCHAR(50) NOT NULL CONSTRAINT [PK_T_BD_PRINTTEMPLATE] PRIMARY KEY NONCLUSTERED
+ )
+END
+GO
+
+IF EXISTS (SELECT * FROM sysindexes WHERE id = OBJECT_ID(N'T_BD_PRINTTEMPLATE') AND name = N'T_BD_PRINTTEMPLATE_1' )
+   Drop Index T_BD_PRINTTEMPLATE.T_BD_PRINTTEMPLATE_1
+GO
+Create  unique index T_BD_PRINTTEMPLATE_1 on T_BD_PRINTTEMPLATE(FINTERID)
+GO

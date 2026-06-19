@@ -668,6 +668,19 @@ public class DataSeedService
         AddButton(menus, "menu_label_purchase_order_generate", labelPurchaseOrderId, "生成采购订单条码", "labelpurchaseorder:generate", 3, now);
         AddButton(menus, "menu_label_purchase_order_void", labelPurchaseOrderId, "作废采购订单条码", "labelpurchaseorder:void", 4, now);
 
+        // 标签模板设计 (M)
+        var labelTemplateId = "menu_label_template";
+        menus.Add(new SysMenu
+        {
+            Uid = labelTemplateId, FInterId = labelTemplateId, ParentId = purchaseLabelId, MenuName = "标签模板设计",
+            MenuType = "M", RoutePath = "/purchase/labels/template", Icon = "EditPen", PermCode = "", SortOrder = 3,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_label_template_list", labelTemplateId, "查看标签模板", "labeltemplate:list", 1, now);
+        AddButton(menus, "menu_label_template_add", labelTemplateId, "新增标签模板", "labeltemplate:add", 2, now);
+        AddButton(menus, "menu_label_template_edit", labelTemplateId, "编辑标签模板", "labeltemplate:edit", 3, now);
+        AddButton(menus, "menu_label_template_delete", labelTemplateId, "删除标签模板", "labeltemplate:delete", 4, now);
+
         // 过滤出数据库中不存在的菜单，补入
         var existingUids = await _db.Queryable<SysMenu>()
             .Select(m => m.Uid)

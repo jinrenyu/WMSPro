@@ -8,7 +8,13 @@
       <span class="toolbar-sep" />
       <el-button type="danger" plain :disabled="!canVoid" @click="handleVoid" v-permission="'labelpurchaseorder:void'">条码作废</el-button>
       <el-button type="warning" plain :disabled="!canUnvoid" @click="handleUnvoid" v-permission="'labelpurchaseorder:void'">条码反作废</el-button>
+      <span class="toolbar-sep" />
+      <span class="tpl-label">模板</span>
+      <el-select v-model="selectedTemplateUid" placeholder="选择标签模板" style="width: 200px" :disabled="templates.length === 0">
+        <el-option v-for="t in templates" :key="t.uid" :label="t.fName + (t.fIsDefault ? '（默认）' : '')" :value="t.uid" />
+      </el-select>
       <el-button plain :disabled="selectedBarcodes.length === 0" @click="handlePrint" v-permission="'labelpurchaseorder:print'">打印</el-button>
+      <el-button plain :disabled="selectedBarcodes.length === 0" @click="handleExportPdf" v-permission="'labelpurchaseorder:print'">导出PDF</el-button>
     </div>
 
     <el-form label-width="92px" class="head-form" size="small">
@@ -128,6 +134,8 @@ import {
   voidBarcodes, unvoidBarcodes, printBarcodes,
   type PurchaseOrderLabelHead, type BarcodeLine
 } from '../../api/purchaseOrderLabel'
+import { getPrintTemplatesBySource } from '../../api/labelTemplate'
+import { loadHiprint } from '../../utils/hiprintLoader'
 
 const route = useRoute()
 const router = useRouter()
@@ -139,6 +147,12 @@ const generating = ref(false)
 const head = ref<PurchaseOrderLabelHead>({} as any)
 const barcodes = ref<BarcodeLine[]>([])
 const selectedRows = ref<BarcodeLine[]>([])
+
+// 标签模板（适用单据来源固定为采购订单标签）
+const BILL_SOURCE = 'PUR_PurchaseOrder'
+const templates = ref<any[]>([])
+const selectedTemplateUid = ref('')
+const currentTemplate = computed(() => templates.value.find(t => t.uid === selectedTemplateUid.value))
 
 const barTypeOptions = [
   { label: '单品条码', value: 1 },
@@ -232,6 +246,17 @@ async function loadBarcodes() {
   barcodes.value = res.data || []
 }
 
+async function loadTemplates() {
+  try {
+    const res: any = await getPrintTemplatesBySource(BILL_SOURCE)
+    templates.value = res.data || []
+    const def = templates.value.find((t: any) => t.fIsDefault) || templates.value[0]
+    selectedTemplateUid.value = def?.uid || ''
+  } catch (e) {
+    console.error('加载标签模板失败:', e)
+  }
+}
+
 async function handleGenerate() {
   if (!form.printQty || form.printQty <= 0) { ElMessage.warning('请填写本次打印数量'); return }
   if (form.fbartype !== 1 && (!form.packageQty || form.packageQty <= 0)) { ElMessage.warning('请填写包装数量'); return }
@@ -284,19 +309,37 @@ async function handleUnvoid() {
   } catch (e: any) { ElMessage.error(e?.response?.data?.message || '反作废失败') }
 }
 
-async function handlePrint() {
-  const codes = selectedRows.value.filter(r => r.fbarcodestatus !== BC_VOID).map(r => r.fbarcode)
-  if (codes.length === 0) { ElMessage.warning('作废的条码不可打印'); return }
+// 用所选模板渲染选中条码：mode=print 走系统打印对话框（可另存PDF/选打印机），mode=pdf 直接生成PDF文件
+async function renderLabels(mode: 'print' | 'pdf') {
+  const rows = selectedRows.value.filter(r => r.fbarcodestatus !== BC_VOID)
+  if (rows.length === 0) { ElMessage.warning('作废的条码不可打印'); return }
+  const tpl = currentTemplate.value
+  if (!tpl || !tpl.fTemplate) { ElMessage.warning('请先选择标签模板（可在“标签模板设计”中创建并设为默认）'); return }
+  let json: any
+  try { json = JSON.parse(tpl.fTemplate) } catch { ElMessage.error('模板内容损坏，无法打印'); return }
   try {
+    const mod = await loadHiprint()
+    const ht = new mod.hiprint.PrintTemplate({ template: json })
+    if (mode === 'pdf') {
+      ht.toPdf(rows, head.value.fbillno || '标签')
+    } else {
+      ht.print(rows, { leftOffset: -1, topOffset: -1 })
+    }
+    // 渲染成功后回写“已打印”状态（沿用后端 print 端点记录打印日期）
+    const codes = rows.map(r => r.fbarcode)
     const res: any = await printBarcodes(codes)
-    if (res.data > 0) { ElMessage.success(`已打印 ${res.data} 个条码`); await loadBarcodes() }
-    else { ElMessage.warning('没有可打印的条码（可能状态已变更），请刷新后重试'); await loadBarcodes() }
-  } catch (e: any) { ElMessage.error(e?.response?.data?.message || '打印失败') }
+    if (res.data > 0) ElMessage.success(`已打印 ${res.data} 个条码`)
+    await loadBarcodes()
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || '打印失败')
+  }
 }
+const handlePrint = () => renderLabels('print')
+const handleExportPdf = () => renderLabels('pdf')
 
 const goBack = () => router.push({ name: 'PurchaseOrderLabelList' })
 
-onMounted(loadHead)
+onMounted(() => { loadHead(); loadTemplates() })
 </script>
 
 <style scoped>

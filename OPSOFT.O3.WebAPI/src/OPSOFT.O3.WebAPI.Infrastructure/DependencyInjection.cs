@@ -128,6 +128,7 @@ public static class DependencyInjection
         services.AddScoped<ICrudService<THrEmpinfo, EmployeeListDto, EmployeeDetailDto, CreateEmployeeRequest, UpdateEmployeeRequest>>(sp => sp.GetRequiredService<IApprovableDisableableService<THrEmpinfo, EmployeeListDto, EmployeeDetailDto, CreateEmployeeRequest, UpdateEmployeeRequest>>());
         services.AddScoped<IApprovableDisableableService<TBdMaterialbartype, MaterialBarTypeListDto, MaterialBarTypeDetailDto, CreateMaterialBarTypeRequest, UpdateMaterialBarTypeRequest>, MaterialBarTypeService>();
         services.AddScoped<ICrudService<TBdMaterialbartype, MaterialBarTypeListDto, MaterialBarTypeDetailDto, CreateMaterialBarTypeRequest, UpdateMaterialBarTypeRequest>>(sp => sp.GetRequiredService<IApprovableDisableableService<TBdMaterialbartype, MaterialBarTypeListDto, MaterialBarTypeDetailDto, CreateMaterialBarTypeRequest, UpdateMaterialBarTypeRequest>>());
+        services.AddScoped<ICrudService<TBdPrintTemplate, PrintTemplateListDto, PrintTemplateDetailDto, CreatePrintTemplateRequest, UpdatePrintTemplateRequest>, PrintTemplateService>();
         services.AddScoped<IBaseDataGroupService, BaseDataGroupService>();
 
         // Phase 3: 业务单据

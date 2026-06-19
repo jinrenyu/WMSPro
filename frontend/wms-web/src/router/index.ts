@@ -255,6 +255,18 @@ const routes = [
                 name: 'PurchaseOrderLabelGenerate',
                 component: () => import('../views/purchase/PurchaseOrderLabelGenerate.vue'),
                 meta: { title: '采购订单标签 - 条码生成' }
+            },
+            {
+                path: 'purchase/labels/template',
+                name: 'LabelTemplateList',
+                component: () => import('../views/purchase/LabelTemplateList.vue'),
+                meta: { title: '标签模板设计' }
+            },
+            {
+                path: 'purchase/labels/template/edit',
+                name: 'LabelTemplateEdit',
+                component: () => import('../views/purchase/LabelTemplateEdit.vue'),
+                meta: { title: '标签模板设计 - 编辑' }
             }
         ]
     }
