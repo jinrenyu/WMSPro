@@ -177,6 +177,60 @@ public class UpdateMaterialReturnApplyRequestValidator : AbstractValidator<Updat
     }
 }
 
+// ===== 采购退料单 / 外购退料 =====
+
+public class CreatePurchaseReturnRequestValidator : AbstractValidator<CreatePurchaseReturnRequest>
+{
+    public CreatePurchaseReturnRequestValidator()
+    {
+        RuleFor(x => x.Fsupplyid).NotEmpty().WithMessage("供应商不能为空");
+        When(x => x.Ftypeid == 2, () =>
+        {
+            RuleFor(x => x.BarcodeEntries).NotEmpty().WithMessage("请先扫码录入条码明细");
+            RuleForEach(x => x.BarcodeEntries).ChildRules(e =>
+            {
+                e.RuleFor(b => b.Fbarcode).NotEmpty().WithMessage("条码不能为空");
+                e.RuleFor(b => b.Fqty).GreaterThan(0).WithMessage("条码数量必须大于0");
+            });
+        }).Otherwise(() =>
+        {
+            RuleFor(x => x.Entries).NotEmpty().WithMessage("明细不能为空");
+            RuleForEach(x => x.Entries).ChildRules(e =>
+            {
+                e.RuleFor(m => m.Fmaterialid).NotEmpty().WithMessage("物料不能为空");
+                e.RuleFor(m => m.Funitid).NotEmpty().WithMessage("单位不能为空");
+                e.RuleFor(m => m.Frmrealqty).GreaterThan(0).WithMessage("实退数量必须大于0");
+            });
+        });
+    }
+}
+
+public class UpdatePurchaseReturnRequestValidator : AbstractValidator<UpdatePurchaseReturnRequest>
+{
+    public UpdatePurchaseReturnRequestValidator()
+    {
+        RuleFor(x => x.Fsupplyid).NotEmpty().WithMessage("供应商不能为空");
+        When(x => x.Ftypeid == 2, () =>
+        {
+            RuleFor(x => x.BarcodeEntries).NotEmpty().WithMessage("请先扫码录入条码明细");
+            RuleForEach(x => x.BarcodeEntries).ChildRules(e =>
+            {
+                e.RuleFor(b => b.Fbarcode).NotEmpty().WithMessage("条码不能为空");
+                e.RuleFor(b => b.Fqty).GreaterThan(0).WithMessage("条码数量必须大于0");
+            });
+        }).Otherwise(() =>
+        {
+            RuleFor(x => x.Entries).NotEmpty().WithMessage("明细不能为空");
+            RuleForEach(x => x.Entries).ChildRules(e =>
+            {
+                e.RuleFor(m => m.Fmaterialid).NotEmpty().WithMessage("物料不能为空");
+                e.RuleFor(m => m.Funitid).NotEmpty().WithMessage("单位不能为空");
+                e.RuleFor(m => m.Frmrealqty).GreaterThan(0).WithMessage("实退数量必须大于0");
+            });
+        });
+    }
+}
+
 // ===== 销售订单 =====
 
 public class CreateSalesOrderRequestValidator : AbstractValidator<CreateSalesOrderRequest>

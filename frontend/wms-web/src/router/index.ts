@@ -241,8 +241,14 @@ const routes = [
             {
                 path: 'purchase/returns',
                 name: 'PurchaseReturnList',
-                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                component: () => import('../views/purchase/PurchaseReturnList.vue'),
                 meta: { title: '采购退料单' }
+            },
+            {
+                path: 'purchase/returns/edit',
+                name: 'PurchaseReturnEdit',
+                component: () => import('../views/purchase/PurchaseReturnEdit.vue'),
+                meta: { title: '采购退料单-维护' }
             },
             {
                 path: 'purchase/labels/receive-notice',

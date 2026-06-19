@@ -138,6 +138,8 @@ public static class DependencyInjection
         services.AddScoped<IDocumentService<TPurMrApp, TPurMrAppEntry, MaterialReturnApplyListDto, MaterialReturnApplyDetailDto, CreateMaterialReturnApplyRequest, UpdateMaterialReturnApplyRequest>, MaterialReturnApplyService>();
         // 采购入库单（一主三从 ENTRY/ENTRY1/ENTRY2 + 扫码 + 源单类型）：暴露专有接口（含扫码/源单类型），其本身亦实现通用单据契约
         services.AddScoped<IInStockService, InStockService>();
+        // 采购退料单 / 外购退料（一主三从 + 扫码 + 出库过账，镜像入库单反向）
+        services.AddScoped<IPurchaseReturnService, PurchaseReturnService>();
         services.AddScoped<IDocumentService<TSalOrder, TSalOrderentry, SalesOrderListDto, SalesOrderDetailDto, CreateSalesOrderRequest, UpdateSalesOrderRequest>, SalesOrderService>();
         services.AddScoped<IDocumentService<OdkSrmDelivery, OdkSrmDeliveryEntry, DeliveryListDto, DeliveryDetailDto, CreateDeliveryRequest, UpdateDeliveryRequest>, DeliveryService>();
         services.AddScoped<IDocumentService<OdkSrmInvoice, OdkSrmInvoiceEntry, InvoiceListDto, InvoiceDetailDto, CreateInvoiceRequest, UpdateInvoiceRequest>, InvoiceService>();

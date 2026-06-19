@@ -12,6 +12,7 @@ public static class BillCodeFormKeys
     public const string ReceiveBill = "PUR_ReceiveBill";
     public const string InStock = "STK_InStock";
     public const string MrApp = "PUR_MRAPP"; // 退料申请单（料品退货申请 MaterialReturnApply）
+    public const string Mrb = "PUR_MRB";     // 采购退料单 / 外购退料（PurchaseReturn）
 }
 
 /// <summary>
@@ -60,7 +61,7 @@ public static class BillCodeFieldRegistry
     /// <summary>单据编号可用动态字段</summary>
     public static IReadOnlyList<BillCodeFieldDto> GetBillFields(string formKey) => formKey switch
     {
-        BillCodeFormKeys.PurchaseOrder or BillCodeFormKeys.ReceiveBill or BillCodeFormKeys.InStock or BillCodeFormKeys.MrApp => PurBillFields,
+        BillCodeFormKeys.PurchaseOrder or BillCodeFormKeys.ReceiveBill or BillCodeFormKeys.InStock or BillCodeFormKeys.MrApp or BillCodeFormKeys.Mrb => PurBillFields,
         _ => Array.Empty<BillCodeFieldDto>()
     };
 
