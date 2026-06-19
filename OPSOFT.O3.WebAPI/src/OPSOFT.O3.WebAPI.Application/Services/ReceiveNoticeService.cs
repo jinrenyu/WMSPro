@@ -123,11 +123,13 @@ public class ReceiveNoticeService : DocumentService<TPurReceive, TPurReceiveEntr
         var headerFilters = filters.Where(f => HeaderFilterFields.Contains(f.Field)).ToList();
         var entryFilters = filters.Where(f => !HeaderFilterFields.Contains(f.Field)).ToList();
 
-        // 1) 表头条件（关键字 + 表头动态筛选）-> 命中的主表 Uid 集合
+        // 1) 表头条件（关键字 + 表头动态筛选 + 仅已审核）-> 命中的主表 Uid 集合
         List<string>? headerIds = null;
-        if (!string.IsNullOrWhiteSpace(request.Keyword) || headerFilters.Count > 0)
+        if (!string.IsNullOrWhiteSpace(request.Keyword) || headerFilters.Count > 0 || request.OnlyApproved)
         {
             var hq = Db.Queryable<TPurReceive>().Where(h => !h.FDeleted);
+            if (request.OnlyApproved)  // 作为采购入库源单选择器时，仅取已审核(40)且非禁用的收料通知单
+                hq = hq.Where(h => h.FStatus == 40 && !h.FDisabled);
             if (!string.IsNullOrWhiteSpace(request.Keyword))
             {
                 var kw = request.Keyword.Trim();

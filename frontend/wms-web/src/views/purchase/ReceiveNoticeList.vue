@@ -1,5 +1,5 @@
 <template>
-  <div class="receive-notice-list-container">
+  <div :class="selectMode ? 'rn-list-embedded' : 'receive-notice-list-container'">
     <div class="list-panel">
       <div class="header-actions">
         <el-input
@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <div class="toolbar-actions">
+      <div class="toolbar-actions" v-if="!selectMode">
         <el-button type="primary" @click="handleAdd" v-permission="'receivenotice:add'">
           <el-icon><Plus /></el-icon> 新增
         </el-button>
@@ -57,10 +57,11 @@
         style="width: 100%"
         border
         size="small"
+        :highlight-current-row="selectMode"
         @selection-change="handleSelectionChange"
         @row-dblclick="handleRowDblClick"
       >
-        <el-table-column type="selection" width="45" fixed="left" />
+        <el-table-column v-if="!selectMode" type="selection" width="45" fixed="left" />
         <template v-for="col in allColumns" :key="col.key">
           <el-table-column
             v-if="isColumnVisible(col)"
@@ -115,6 +116,13 @@ import ColumnSetting from '../../components/ColumnSetting.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
 
+// 双模式：默认管理页；selectMode 时作为"收料通知单选择器"嵌入弹窗（隐藏管理工具栏，双击=选中回填）
+const props = withDefaults(defineProps<{
+  selectMode?: boolean
+  onlyApproved?: boolean
+}>(), { selectMode: false, onlyApproved: false })
+const emit = defineEmits<{ 'select': [row: any] }>()
+
 const router = useRouter()
 const tableRef = ref()
 
@@ -163,7 +171,8 @@ const filterColumns: ColumnDef[] = [
   { key: 'fStatus', label: '审核状态', prop: 'fStatus', slotName: 'status' },
 ]
 
-const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig('receiveNotice', columns)
+// 选择器用独立的列配置 key，避免与"收料通知单管理"页相互影响
+const { allColumns, visibleKeys, configurableColumns, toggleColumn, resetColumns, isColumnVisible } = useColumnConfig(props.selectMode ? 'receiveNotice-picker' : 'receiveNotice', columns)
 
 const loading = ref(false)
 const actionLoading = ref(false)
@@ -175,7 +184,8 @@ const queryParams = reactive({
   page: 1,
   pageSize: 10,
   keyword: '',
-  dynamicFilters: [] as DynamicFilterInfo[]
+  dynamicFilters: [] as DynamicFilterInfo[],
+  onlyApproved: false
 })
 
 // 明细行可能属于同一单据；操作按去重后的单据 Uid 进行
@@ -210,7 +220,10 @@ const handleEdit = (uid: string) => router.push({ name: 'ReceiveNoticeEdit', que
 const handleEditSelected = () => {
   if (selectedOrderIds.value.length === 1) handleEdit(selectedOrderIds.value[0])
 }
-const handleRowDblClick = (row: any) => { if (row.uid) handleEdit(row.uid) }
+const handleRowDblClick = (row: any) => {
+  if (props.selectMode) { emit('select', row); return }
+  if (row.uid) handleEdit(row.uid)
+}
 
 async function runBatch(ids: string[], fn: (id: string) => Promise<any>, label: string) {
   actionLoading.value = true
@@ -236,7 +249,10 @@ const handleBatchApprove = () => confirmBatch('审核', `确认审核选中的 $
 const handleBatchUnapprove = () => confirmBatch('反审核', `确认反审核选中的 ${selectedOrderIds.value.length} 张收料通知单？`, selectedOrderIds.value, unapproveReceiveNotice)
 const handleBatchDelete = () => confirmBatch('删除', `确认删除选中的 ${selectedOrderIds.value.length} 张收料通知单？删除后不可恢复。`, selectedOrderIds.value, deleteReceiveNotice)
 
-onMounted(() => { fetchData() })
+onMounted(() => {
+  queryParams.onlyApproved = props.onlyApproved
+  fetchData()
+})
 </script>
 
 <style scoped>
@@ -245,6 +261,12 @@ onMounted(() => { fetchData() })
   background-color: var(--bg-card);
   border-radius: 8px;
   box-shadow: var(--shadow-card);
+}
+
+/* 选择器嵌入弹窗时去掉整页卡片样式 */
+.rn-list-embedded {
+  padding: 0;
+  background-color: transparent;
 }
 
 .list-panel {

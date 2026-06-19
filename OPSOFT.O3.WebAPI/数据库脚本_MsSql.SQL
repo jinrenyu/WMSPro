@@ -32690,13 +32690,22 @@ IF EXISTS (SELECT * FROM sysindexes WHERE id = OBJECT_ID(N'T_STK_INVENTORY') AND
 GO
 Create  index T_STK_INVENTORY_4 on T_STK_INVENTORY(FSTOCKLOCID)
 GO
+-- 即时库存业务键唯一索引：防"同一库存维度"两张不同单据并发首次入库插出重复行；
+--   与 InStockService.ApplyInventoryAsync 的 upsert 业务键完全一致（物料+仓库+仓位+库存组织+辅助属性+库存状态+批次+生产日期+有效期）。
+--   注：① 建索引前须确保现有数据该键无重复行（如有须先合并/清理）；② 本表行不做软删（FDELETED 恒为0），故用普通唯一索引；
+--       ③ 若日后库存维度新增 保管者/货主/计划跟踪号 等，须与 ApplyInventoryAsync 的 upsert 键同步扩展本索引。
+IF EXISTS (SELECT * FROM sysindexes WHERE id = OBJECT_ID(N'T_STK_INVENTORY') AND name = N'T_STK_INVENTORY_UK' )
+   Drop Index T_STK_INVENTORY.T_STK_INVENTORY_UK
+GO
+Create  unique index T_STK_INVENTORY_UK on T_STK_INVENTORY(FMATERIALID,FSTOCKID,FSTOCKLOCID,FSTOCKORGID,FAUXPROPID,FSTOCKSTATUSID,FLOT,FKFDATE,FUSEFULDATE)
+GO
 
 
 GO
 
-/* 脚本导出时间:2026/01/27 03:32:53 */ 
-/* 脚本导出人员:系统管理员 */ 
-/* 脚本    说明:T_STK_STOCKCONVERTENTRY1 库存状态转换单-条码明细*/ 
+/* 脚本导出时间:2026/01/27 03:32:53 */
+/* 脚本导出人员:系统管理员 */
+/* 脚本    说明:T_STK_STOCKCONVERTENTRY1 库存状态转换单-条码明细*/
  -- DROP TABLE T_STK_STOCKCONVERTENTRY1
 IF  NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'T_STK_STOCKCONVERTENTRY1') AND type in (N'U'))
 BEGIN

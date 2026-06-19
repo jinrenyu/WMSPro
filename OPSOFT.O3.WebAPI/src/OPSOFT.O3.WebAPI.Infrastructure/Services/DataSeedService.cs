@@ -32,6 +32,7 @@ public class DataSeedService
         await SeedBillTypesAsync();
         await SeedBillCodeFormsAsync();
         await SeedBillCodeRulesAsync();
+        await SeedSourceBillsAsync();
         await SeedApproveExistingMaterialsAsync();
     }
 
@@ -599,6 +600,8 @@ public class DataSeedService
         AddButton(menus, "menu_purchase_in_list", purchaseInId, "查看采购入库单", "purchasein:list", 1, now);
         AddButton(menus, "menu_purchase_in_add", purchaseInId, "新增采购入库单", "purchasein:add", 2, now);
         AddButton(menus, "menu_purchase_in_edit", purchaseInId, "编辑采购入库单", "purchasein:edit", 3, now);
+        AddButton(menus, "menu_purchase_in_approve", purchaseInId, "审核采购入库单", "purchasein:approve", 4, now);
+        AddButton(menus, "menu_purchase_in_delete", purchaseInId, "删除采购入库单", "purchasein:delete", 5, now);
 
         // ── 二级分组：采购退料 (D) ──
         var returnGroupId = "menu_return_group";
@@ -877,6 +880,89 @@ public class DataSeedService
                 MUser = "system"
             }).ExecuteCommandAsync();
         }
+
+        // 采购入库单单据类型（FBillFormid = STK_InStock）。幂等种入。
+        var inStockBills = new (string Uid, string Number, string Name)[]
+        {
+            ("stk_billtype_std_0001", "RKD01_SYS", "标准采购入库"),
+            ("stk_billtype_ww_0002",  "RKD02_SYS", "委外采购入库"),
+            ("stk_billtype_zy_0003",  "RKD03_SYS", "直运采购入库"),
+        };
+        foreach (var (uid, number, name) in inStockBills)
+        {
+            var exists = await _db.Queryable<TBasBilltype>().Where(b => b.Uid == uid).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBasBilltype
+            {
+                Uid = uid,
+                FInterId = uid,
+                Fnumber = number,
+                Fname = name,
+                Fbillformid = "STK_InStock",
+                Isdefault = number == "RKD01_SYS",
+                Fcheckdate = DateTime.MinValue,
+                Fdisabledate = DateTime.MinValue,
+                FStatus = 40,
+                FCompanyId = "DEFAULT",
+                CYmd = now,
+                CUser = "system",
+                MYmd = now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+    }
+
+    /// <summary>
+    /// 源单配置种子：采购入库单（目标单据 STK_InStock）的可选源单（T_BOS_SELBILL），
+    /// 及源单类型名称解析所需的表单模板（SYS_BILLTEMPLATE）。开发库两表原本为空，前端"源单类型"下拉数据驱动取此处。
+    /// 幂等：T_BOS_SELBILL 按 Uid、SYS_BILLTEMPLATE 按 FNUMBER 判重。
+    /// </summary>
+    private async Task SeedSourceBillsAsync()
+    {
+        var now = DateTime.Now;
+
+        // 表单模板（仅用于源单类型/单据名称解析）
+        var templates = new (string Number, string Name)[]
+        {
+            ("PUR_PurchaseOrder", "采购订单"),
+            ("PUR_ReceiveBill",   "收料通知单"),
+            ("STK_InStock",       "采购入库单"),
+        };
+        foreach (var (number, name) in templates)
+        {
+            var exists = await _db.Queryable<SysBillTemplate>().Where(t => t.Fnumber == number).AnyAsync();
+            if (exists) continue;
+            var uid = Guid.NewGuid().ToString("N");
+            await _db.Insertable(new SysBillTemplate
+            {
+                Uid = uid, FInterId = uid, Fnumber = number, Fname = name,
+                FStatus = 40, FCompanyId = "DEFAULT",
+                CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+
+        // 采购入库单可选源单（数据驱动；目标=STK_InStock，含"无源单"空类型）
+        var sels = new (string Uid, string SourceType, string Name, bool IsDefault)[]
+        {
+            ("selbill_instock_none",    "",                  "无源单",     false),
+            ("selbill_instock_po",      "PUR_PurchaseOrder", "采购订单",   true),
+            ("selbill_instock_receive", "PUR_ReceiveBill",   "收料通知单", false),
+        };
+        foreach (var (uid, srcType, name, isDef) in sels)
+        {
+            var exists = await _db.Queryable<TBosSelbill>().Where(s => s.Uid == uid).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBosSelbill
+            {
+                Uid = uid, FInterId = uid, Fname = name, Fnumber = uid,
+                Fsourcetrantype = srcType, Fdesttrantype = "STK_InStock",
+                Fisuse = true, Fdefault = isDef, Fkind = string.Empty,
+                // 开发库该两列 NOT NULL；用 1900 哨兵：满足 SQLite NOT NULL，且生产 DATETIME(下限1753)安全，前端按<=1900过滤
+                Fcheckdate = new DateTime(1900, 1, 1), Fdisabledate = new DateTime(1900, 1, 1),
+                FStatus = 40, FCompanyId = "DEFAULT",
+                CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+            }).ExecuteCommandAsync();
+        }
     }
 
     /// <summary>
@@ -891,6 +977,7 @@ public class DataSeedService
         {
             ("PUR_PurchaseOrder", "采购订单",   nameof(TPurPoOrder)),
             ("PUR_ReceiveBill",   "收料通知单", nameof(TPurReceive)),
+            ("STK_InStock",       "采购入库单", nameof(TStkInstock)),
         };
         foreach (var (formKey, formName, entityName) in forms)
         {
@@ -921,10 +1008,12 @@ public class DataSeedService
         const string rnFormKey = "PUR_ReceiveBill";
 
         // —— 单据编号规则 ——
+        const string inFormKey = "STK_InStock";
         var listRules = new (string Uid, string FormKey, string Name, string Prefix)[]
         {
             ("listcode_pur_order",   poFormKey, "采购订单编号规则",   "CGDD"),
             ("listcode_pur_receive", rnFormKey, "收料通知单编号规则", "SLTZ"),
+            ("listcode_stk_instock", inFormKey, "采购入库单编号规则", "RKD"),
         };
         foreach (var (uid, formKey, name, prefix) in listRules)
         {

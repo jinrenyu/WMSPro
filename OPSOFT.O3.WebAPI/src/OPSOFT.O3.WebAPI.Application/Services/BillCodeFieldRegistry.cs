@@ -10,6 +10,7 @@ public static class BillCodeFormKeys
 {
     public const string PurchaseOrder = "PUR_PurchaseOrder";
     public const string ReceiveBill = "PUR_ReceiveBill";
+    public const string InStock = "STK_InStock";
 }
 
 /// <summary>
@@ -58,14 +59,14 @@ public static class BillCodeFieldRegistry
     /// <summary>单据编号可用动态字段</summary>
     public static IReadOnlyList<BillCodeFieldDto> GetBillFields(string formKey) => formKey switch
     {
-        BillCodeFormKeys.PurchaseOrder or BillCodeFormKeys.ReceiveBill => PurBillFields,
+        BillCodeFormKeys.PurchaseOrder or BillCodeFormKeys.ReceiveBill or BillCodeFormKeys.InStock => PurBillFields,
         _ => Array.Empty<BillCodeFieldDto>()
     };
 
     /// <summary>条码编号可用动态字段</summary>
     public static IReadOnlyList<BillCodeFieldDto> GetBarcodeFields(string formKey) => formKey switch
     {
-        BillCodeFormKeys.PurchaseOrder or BillCodeFormKeys.ReceiveBill => PurBarcodeFields,
+        BillCodeFormKeys.PurchaseOrder or BillCodeFormKeys.ReceiveBill or BillCodeFormKeys.InStock => PurBarcodeFields,
         _ => Array.Empty<BillCodeFieldDto>()
     };
 }

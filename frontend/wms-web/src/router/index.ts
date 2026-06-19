@@ -217,8 +217,14 @@ const routes = [
             {
                 path: 'purchase/inbounds',
                 name: 'PurchaseInboundList',
-                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                component: () => import('../views/purchase/PurchaseInboundList.vue'),
                 meta: { title: '采购入库单' }
+            },
+            {
+                path: 'purchase/inbounds/edit',
+                name: 'PurchaseInboundEdit',
+                component: () => import('../views/purchase/PurchaseInboundEdit.vue'),
+                meta: { title: '采购入库单-维护' }
             },
             {
                 path: 'purchase/return-requests',
