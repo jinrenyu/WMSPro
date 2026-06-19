@@ -235,8 +235,14 @@ const routes = [
             {
                 path: 'purchase/labels/receive-notice',
                 name: 'ReceiveNoticeLabelList',
-                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                component: () => import('../views/purchase/ReceiveNoticeLabelList.vue'),
                 meta: { title: '收料通知单标签' }
+            },
+            {
+                path: 'purchase/labels/receive-notice/generate',
+                name: 'ReceiveNoticeLabelGenerate',
+                component: () => import('../views/purchase/ReceiveNoticeLabelGenerate.vue'),
+                meta: { title: '收料通知单标签 - 条码生成' }
             },
             {
                 path: 'purchase/labels/purchase-order',

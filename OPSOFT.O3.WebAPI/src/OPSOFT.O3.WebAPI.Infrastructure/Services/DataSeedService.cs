@@ -652,6 +652,8 @@ public class DataSeedService
         });
         AddButton(menus, "menu_label_receive_notice_list", labelReceiveNoticeId, "查看收料通知单标签", "labelreceivenotice:list", 1, now);
         AddButton(menus, "menu_label_receive_notice_print", labelReceiveNoticeId, "打印收料通知单标签", "labelreceivenotice:print", 2, now);
+        AddButton(menus, "menu_label_receive_notice_generate", labelReceiveNoticeId, "生成收料通知单条码", "labelreceivenotice:generate", 3, now);
+        AddButton(menus, "menu_label_receive_notice_void", labelReceiveNoticeId, "作废收料通知单条码", "labelreceivenotice:void", 4, now);
 
         // 采购订单标签 (M)
         var labelPurchaseOrderId = "menu_label_purchase_order";
@@ -942,26 +944,31 @@ public class DataSeedService
             }
         }
 
-        // —— 条码编号规则（采购订单标签）——
-        const string bcUid = "barcoderule_pur_order";
-        var bcExists = await _db.Queryable<SysBarcode>().Where(r => r.Uid == bcUid || r.Fclasstypeid == poFormKey).AnyAsync();
-        if (!bcExists)
+        // —— 条码编号规则（采购订单标签 / 收料通知单标签，格式同：yyyyMMdd + 6位日流水）——
+        var barcodeRules = new (string Uid, string FormKey, string Name)[]
         {
+            ("barcoderule_pur_order",   poFormKey, "采购订单条码规则"),
+            ("barcoderule_pur_receive", rnFormKey, "收料通知单条码规则"),
+        };
+        foreach (var (bcUid, formKey, bcName) in barcodeRules)
+        {
+            var bcExists = await _db.Queryable<SysBarcode>().Where(r => r.Uid == bcUid || r.Fclasstypeid == formKey).AnyAsync();
+            if (bcExists) continue;
             try
             {
                 _db.AsTenant().BeginTran();
                 await _db.Insertable(new SysBarcode
                 {
-                    Uid = bcUid, FInterId = bcUid, Fclasstypeid = poFormKey, Fprgkey = poFormKey,
-                    Fname = "采购订单条码规则", Ismodify = false, Fhex = 10,
+                    Uid = bcUid, FInterId = bcUid, Fclasstypeid = formKey, Fprgkey = formKey,
+                    Fname = bcName, Ismodify = false, Fhex = 10,
                     Fcheckdate = DateTime.MinValue, // 开发库该列 NOT NULL（生产为 DATE NULL），按惯例赋 MinValue 哨兵
                     FStatus = 40, FCompanyId = "DEFAULT",
                     CYmd = now, CUser = "system", MYmd = now, MUser = "system"
                 }).ExecuteCommandAsync();
                 await _db.Insertable(new List<SysBarcodeEntry>
                 {
-                    NewBarcodeEntry($"{bcUid}_e1", bcUid, poFormKey, 1, "3", now, fieldId: "FDATE", fieldName: "打印日期", format: "yyyyMMdd", isSerial: true, note: "日期段（依据=按日重置）"),
-                    NewBarcodeEntry($"{bcUid}_e2", bcUid, poFormKey, 2, "4", now, length: 6, min: 1, step: 1, note: "日流水"),
+                    NewBarcodeEntry($"{bcUid}_e1", bcUid, formKey, 1, "3", now, fieldId: "FDATE", fieldName: "打印日期", format: "yyyyMMdd", isSerial: true, note: "日期段（依据=按日重置）"),
+                    NewBarcodeEntry($"{bcUid}_e2", bcUid, formKey, 2, "4", now, length: 6, min: 1, step: 1, note: "日流水"),
                 }).ExecuteCommandAsync();
                 _db.AsTenant().CommitTran();
             }
