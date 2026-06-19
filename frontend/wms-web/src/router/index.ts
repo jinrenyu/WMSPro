@@ -228,9 +228,15 @@ const routes = [
             },
             {
                 path: 'purchase/return-requests',
-                name: 'ReturnRequestList',
-                component: () => import('../views/purchase/PlaceholderPage.vue'),
+                name: 'MaterialReturnApplyList',
+                component: () => import('../views/purchase/MaterialReturnApplyList.vue'),
                 meta: { title: '退料申请单' }
+            },
+            {
+                path: 'purchase/return-requests/edit',
+                name: 'MaterialReturnApplyEdit',
+                component: () => import('../views/purchase/MaterialReturnApplyEdit.vue'),
+                meta: { title: '退料申请单-维护' }
             },
             {
                 path: 'purchase/returns',

@@ -135,6 +135,48 @@ public class UpdateInStockRequestValidator : AbstractValidator<UpdateInStockRequ
     }
 }
 
+// ===== 退料申请单 =====
+
+public class CreateMaterialReturnApplyRequestValidator : AbstractValidator<CreateMaterialReturnApplyRequest>
+{
+    public CreateMaterialReturnApplyRequestValidator()
+    {
+        RuleFor(x => x.Frmtype).NotEmpty().WithMessage("退料类型不能为空");
+        RuleFor(x => x.Frmmode).NotEmpty().WithMessage("退料方式不能为空");
+        RuleFor(x => x.Fpurchaseorgid).NotEmpty().WithMessage("采购组织不能为空");
+        RuleFor(x => x.Fstockorgid).NotEmpty().WithMessage("退料组织不能为空");
+        RuleFor(x => x.Fnote).MaximumLength(250);
+        RuleFor(x => x.Entries).NotEmpty().WithMessage("明细不能为空");
+        RuleForEach(x => x.Entries).ChildRules(entry =>
+        {
+            entry.RuleFor(e => e.Fmaterialid).NotEmpty().WithMessage("物料不能为空");
+            entry.RuleFor(e => e.Funitid).NotEmpty().WithMessage("单位不能为空");
+            entry.RuleFor(e => e.Fmrappqty).GreaterThan(0).WithMessage("申请退料数量必须大于0");
+            entry.RuleFor(e => e.Fprice).GreaterThanOrEqualTo(0);
+        });
+    }
+}
+
+public class UpdateMaterialReturnApplyRequestValidator : AbstractValidator<UpdateMaterialReturnApplyRequest>
+{
+    public UpdateMaterialReturnApplyRequestValidator()
+    {
+        RuleFor(x => x.Frmtype).NotEmpty().WithMessage("退料类型不能为空");
+        RuleFor(x => x.Frmmode).NotEmpty().WithMessage("退料方式不能为空");
+        RuleFor(x => x.Fpurchaseorgid).NotEmpty().WithMessage("采购组织不能为空");
+        RuleFor(x => x.Fstockorgid).NotEmpty().WithMessage("退料组织不能为空");
+        RuleFor(x => x.Fnote).MaximumLength(250);
+        RuleFor(x => x.Entries).NotEmpty().WithMessage("明细不能为空");
+        RuleForEach(x => x.Entries).ChildRules(entry =>
+        {
+            entry.RuleFor(e => e.Fmaterialid).NotEmpty().WithMessage("物料不能为空");
+            entry.RuleFor(e => e.Funitid).NotEmpty().WithMessage("单位不能为空");
+            entry.RuleFor(e => e.Fmrappqty).GreaterThan(0).WithMessage("申请退料数量必须大于0");
+            entry.RuleFor(e => e.Fprice).GreaterThanOrEqualTo(0);
+        });
+    }
+}
+
 // ===== 销售订单 =====
 
 public class CreateSalesOrderRequestValidator : AbstractValidator<CreateSalesOrderRequest>

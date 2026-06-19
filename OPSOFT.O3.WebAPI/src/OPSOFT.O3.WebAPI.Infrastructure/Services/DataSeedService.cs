@@ -623,6 +623,8 @@ public class DataSeedService
         AddButton(menus, "menu_return_req_list", returnReqId, "查看退料申请单", "returnreq:list", 1, now);
         AddButton(menus, "menu_return_req_add", returnReqId, "新增退料申请单", "returnreq:add", 2, now);
         AddButton(menus, "menu_return_req_edit", returnReqId, "编辑退料申请单", "returnreq:edit", 3, now);
+        AddButton(menus, "menu_return_req_approve", returnReqId, "审核退料申请单", "returnreq:approve", 4, now);
+        AddButton(menus, "menu_return_req_delete", returnReqId, "删除退料申请单", "returnreq:delete", 5, now);
 
         // 采购退料单 (M)
         var purchaseReturnId = "menu_purchase_return";
@@ -841,7 +843,8 @@ public class DataSeedService
                 Fbillformid = "PUR_PurchaseOrder",
                 Isdefault = number == "CGDD01_SYS",
                 Fcheckdate = DateTime.MinValue,
-                Fdisabledate = DateTime.MinValue,
+                // 1900 哨兵：满足开发库 SQLite 的 NOT NULL，且生产 SQLServer DATETIME(下限1753)安全；前端按 <=1900 视为空
+                Fdisabledate = new DateTime(1900, 1, 1),
                 FStatus = 40,
                 FCompanyId = "DEFAULT",
                 CYmd = now,
@@ -871,7 +874,7 @@ public class DataSeedService
                 Fbillformid = "PUR_ReceiveBill",
                 Isdefault = number == "SLTZ01_SYS",
                 Fcheckdate = DateTime.MinValue,
-                Fdisabledate = DateTime.MinValue,
+                Fdisabledate = new DateTime(1900, 1, 1), // 1900哨兵：满足开发库NOT NULL，且生产DATETIME(下限1753)安全
                 FStatus = 40,
                 FCompanyId = "DEFAULT",
                 CYmd = now,
@@ -901,7 +904,37 @@ public class DataSeedService
                 Fbillformid = "STK_InStock",
                 Isdefault = number == "RKD01_SYS",
                 Fcheckdate = DateTime.MinValue,
-                Fdisabledate = DateTime.MinValue,
+                Fdisabledate = new DateTime(1900, 1, 1), // 1900哨兵：满足开发库NOT NULL，且生产DATETIME(下限1753)安全
+                FStatus = 40,
+                FCompanyId = "DEFAULT",
+                CYmd = now,
+                CUser = "system",
+                MYmd = now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+
+        // 退料申请单单据类型（FBillFormid = PUR_MRAPP）。幂等种入。
+        var mrAppBills = new (string Uid, string Number, string Name)[]
+        {
+            ("mrapp_billtype_std_0001", "TLSQ01_SYS", "标准退料申请"),
+            ("mrapp_billtype_ww_0002",  "TLSQ02_SYS", "委外退料申请"),
+            ("mrapp_billtype_zy_0003",  "TLSQ03_SYS", "直运退料申请"),
+        };
+        foreach (var (uid, number, name) in mrAppBills)
+        {
+            var exists = await _db.Queryable<TBasBilltype>().Where(b => b.Uid == uid).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBasBilltype
+            {
+                Uid = uid,
+                FInterId = uid,
+                Fnumber = number,
+                Fname = name,
+                Fbillformid = "PUR_MRAPP",
+                Isdefault = number == "TLSQ01_SYS",
+                Fcheckdate = DateTime.MinValue,
+                Fdisabledate = new DateTime(1900, 1, 1), // 1900哨兵：满足开发库NOT NULL，且生产DATETIME(下限1753)安全
                 FStatus = 40,
                 FCompanyId = "DEFAULT",
                 CYmd = now,
@@ -927,6 +960,7 @@ public class DataSeedService
             ("PUR_PurchaseOrder", "采购订单"),
             ("PUR_ReceiveBill",   "收料通知单"),
             ("STK_InStock",       "采购入库单"),
+            ("PUR_MRAPP",         "退料申请单"),
         };
         foreach (var (number, name) in templates)
         {
@@ -978,6 +1012,7 @@ public class DataSeedService
             ("PUR_PurchaseOrder", "采购订单",   nameof(TPurPoOrder)),
             ("PUR_ReceiveBill",   "收料通知单", nameof(TPurReceive)),
             ("STK_InStock",       "采购入库单", nameof(TStkInstock)),
+            ("PUR_MRAPP",         "退料申请单", nameof(TPurMrApp)),
         };
         foreach (var (formKey, formName, entityName) in forms)
         {
@@ -1009,11 +1044,13 @@ public class DataSeedService
 
         // —— 单据编号规则 ——
         const string inFormKey = "STK_InStock";
+        const string mrFormKey = "PUR_MRAPP";
         var listRules = new (string Uid, string FormKey, string Name, string Prefix)[]
         {
             ("listcode_pur_order",   poFormKey, "采购订单编号规则",   "CGDD"),
             ("listcode_pur_receive", rnFormKey, "收料通知单编号规则", "SLTZ"),
             ("listcode_stk_instock", inFormKey, "采购入库单编号规则", "RKD"),
+            ("listcode_pur_mrapp",   mrFormKey, "退料申请单编号规则", "TLSQ"),
         };
         foreach (var (uid, formKey, name, prefix) in listRules)
         {

@@ -16,6 +16,7 @@ public static class DocumentTypeRegistry
         {
             ["TPurPoOrder"] = ("采购订单", BillCodeFormKeys.PurchaseOrder),
             ["TPurReceive"] = ("收料通知单", BillCodeFormKeys.ReceiveBill),
+            ["TPurMrApp"] = ("退料申请单", BillCodeFormKeys.MrApp),
             ["TSalOrder"] = ("销售订单", "SAL_SaleOrder"),
             ["OdkSrmDelivery"] = ("送货单", "SRM_Delivery"),
             ["OdkSrmInvoice"] = ("预制发票", "SRM_Invoice"),

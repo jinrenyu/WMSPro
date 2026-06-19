@@ -134,6 +134,8 @@ public static class DependencyInjection
         // Phase 3: 业务单据
         services.AddScoped<IDocumentService<TPurPoOrder, TPurPoOrderEntry, PurchaseOrderListDto, PurchaseOrderDetailDto, CreatePurchaseOrderRequest, UpdatePurchaseOrderRequest>, PurchaseOrderService>();
         services.AddScoped<IDocumentService<TPurReceive, TPurReceiveEntry, ReceiveNoticeListDto, ReceiveNoticeDetailDto, CreateReceiveNoticeRequest, UpdateReceiveNoticeRequest>, ReceiveNoticeService>();
+        // 退料申请单（一主一从 T_PUR_MRAPP / T_PUR_MRAPPENTRY）
+        services.AddScoped<IDocumentService<TPurMrApp, TPurMrAppEntry, MaterialReturnApplyListDto, MaterialReturnApplyDetailDto, CreateMaterialReturnApplyRequest, UpdateMaterialReturnApplyRequest>, MaterialReturnApplyService>();
         // 采购入库单（一主三从 ENTRY/ENTRY1/ENTRY2 + 扫码 + 源单类型）：暴露专有接口（含扫码/源单类型），其本身亦实现通用单据契约
         services.AddScoped<IInStockService, InStockService>();
         services.AddScoped<IDocumentService<TSalOrder, TSalOrderentry, SalesOrderListDto, SalesOrderDetailDto, CreateSalesOrderRequest, UpdateSalesOrderRequest>, SalesOrderService>();
