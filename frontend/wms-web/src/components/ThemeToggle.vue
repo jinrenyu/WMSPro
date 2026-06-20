@@ -40,5 +40,12 @@ onMounted(() => {
   border: 1px solid var(--border-color);
   background-color: var(--bg-card);
   color: var(--text-primary);
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+.theme-toggle:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background-color: var(--bg-card);
 }
 </style>

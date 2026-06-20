@@ -237,7 +237,9 @@ onBeforeUnmount(() => {
   width: 220px;
   min-width: 220px;
   border: 1px solid var(--el-border-color-light, #e4e7ed);
-  border-radius: 4px;
+  border-radius: var(--radius-base, 8px);
+  background-color: var(--bg-card, #fff);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -245,6 +247,7 @@ onBeforeUnmount(() => {
 .group-panel-header {
   padding: 12px 16px;
   font-weight: 600;
+  color: var(--text-primary);
   border-bottom: 1px solid var(--el-border-color-light, #e4e7ed);
   background-color: var(--el-fill-color-light, #f5f7fa);
   display: flex;
@@ -277,10 +280,11 @@ onBeforeUnmount(() => {
 .group-context-menu {
   position: fixed;
   z-index: 3000;
-  background: #fff;
-  border: 1px solid var(--el-border-color-light, #e4e7ed);
-  border-radius: 4px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background: var(--bg-card, #fff);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color, #e4e7ed);
+  border-radius: var(--radius-base, 8px);
+  box-shadow: var(--shadow-pop, 0 2px 12px rgba(0, 0, 0, 0.1));
   padding: 4px 0;
 }
 
@@ -289,6 +293,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
+  transition: background-color 0.15s;
 }
 
 .context-menu-item:hover {

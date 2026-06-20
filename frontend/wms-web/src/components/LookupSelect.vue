@@ -20,7 +20,7 @@
       :value="item.uid"
     />
     <template #empty>
-      <p style="text-align: center; color: #999; padding: 10px 0; margin: 0;">
+      <p style="text-align: center; color: var(--text-placeholder); padding: 10px 0; margin: 0;">
         {{ loading ? '加载中...' : emptyText }}
       </p>
     </template>

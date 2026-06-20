@@ -1,9 +1,10 @@
 import { createApp } from 'vue'
-import './style.css'
 import App from './App.vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
+// 全局主题置于 Element Plus 样式之后加载，确保设计令牌（--el-* 覆写）权威生效
+import './style.css'
 import { createPinia } from 'pinia'
 import router from './router'
 

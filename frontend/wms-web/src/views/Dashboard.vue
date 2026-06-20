@@ -3,28 +3,28 @@
     <!-- Dashboard Widgets Placeholder -->
     <div class="dashboard-grid">
       <div class="stat-card">
-        <div class="stat-icon"><Box /></div>
+        <div class="stat-icon is-primary"><Box /></div>
         <div class="stat-info">
           <div class="stat-label">总库存</div>
           <div class="stat-value">12,450</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon"><Sort /></div>
+        <div class="stat-icon is-success"><Sort /></div>
         <div class="stat-info">
           <div class="stat-label">今日入库</div>
           <div class="stat-value">156</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon"><SoldOut /></div>
+        <div class="stat-icon is-accent"><SoldOut /></div>
         <div class="stat-info">
           <div class="stat-label">待处理订单</div>
           <div class="stat-value">23</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon"><Warning /></div>
+        <div class="stat-icon is-danger"><Warning /></div>
         <div class="stat-info">
           <div class="stat-label">预警物料</div>
           <div class="stat-value warning">5</div>
@@ -48,10 +48,10 @@
 }
 
 .stat-card {
-  padding: 24px;
+  padding: 22px 24px;
   display: flex;
   align-items: center;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-card);
@@ -60,20 +60,38 @@
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: var(--bg-body);
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: var(--primary-soft);
   color: var(--primary-color);
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 28px;
-  margin-right: 20px;
+  font-size: 26px;
+  margin-right: 18px;
+  flex-shrink: 0;
+}
+
+.stat-icon.is-primary {
+  background: var(--el-color-primary-light-9);
+  color: var(--primary-color);
+}
+.stat-icon.is-success {
+  background: var(--el-color-success-light-9);
+  color: var(--success-color);
+}
+.stat-icon.is-accent {
+  background: var(--accent-soft);
+  color: var(--accent-color);
+}
+.stat-icon.is-danger {
+  background: var(--el-color-danger-light-9);
+  color: var(--danger-color);
 }
 
 .stat-info {
@@ -92,10 +110,11 @@
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-value.warning {
-  color: #ef4444;
+  color: var(--danger-color);
 }
 
 .chart-placeholder {

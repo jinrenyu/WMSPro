@@ -6,7 +6,7 @@
         <span>WMS Pro</span>
       </div>
       <el-menu
-        active-text-color="#06b6d4"
+        active-text-color="#ffffff"
         background-color="transparent"
         class="el-menu-vertical"
         :default-active="activeMenu"
@@ -156,47 +156,82 @@ const handleLogout = async () => {
   border-right: none;
   display: flex;
   flex-direction: column;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.18);
   z-index: 10;
+  overflow: hidden;
 }
 
 .logo {
   height: 64px;
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 22px;
   color: #ffffff;
-  font-size: 20px;
-  font-weight: 600;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .logo-icon {
   margin-right: 12px;
-  font-size: 24px;
+  font-size: 22px;
   color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(217, 119, 6, 0.14);
 }
 
 .el-menu-vertical {
   border-right: none;
   flex: 1;
-  padding-top: 10px;
+  padding-top: 8px;
+  overflow-y: auto;
+}
+
+:deep(.el-menu-item),
+:deep(.el-sub-menu__title) {
+  color: var(--sidebar-text);
+  height: 44px;
+  line-height: 44px;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 :deep(.el-menu-item) {
-  color: #94a3b8;
-  margin: 4px 12px;
-  border-radius: 6px;
-  height: 48px;
+  margin: 3px 12px;
+  border-radius: 7px;
+  height: 44px;
 }
 
 :deep(.el-menu-item.is-active) {
-  background-color: var(--primary-color);
+  background-color: rgba(59, 130, 246, 0.16);
   color: #ffffff;
+  font-weight: 600;
+  position: relative;
 }
 
-:deep(.el-menu-item:hover:not(.is-active)) {
-  background-color: rgba(255, 255, 255, 0.05);
+:deep(.el-menu-item.is-active)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent-color);
+}
+
+:deep(.el-menu-item.is-active .el-icon) {
+  color: #60a5fa;
+}
+
+:deep(.el-menu-item:hover:not(.is-active)),
+:deep(.el-sub-menu__title:hover) {
+  background-color: var(--bg-sidebar-hover);
   color: #ffffff;
 }
 
@@ -211,44 +246,48 @@ const handleLogout = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 32px;
+  padding: 0 28px;
   height: 64px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .page-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.2px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .org-switcher {
-  width: 160px;
+  width: 168px;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border-color);
   color: var(--text-primary);
   font-weight: 500;
 }
 
 .user-avatar {
-  background-color: var(--bg-body);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background: linear-gradient(135deg, var(--primary-color), #2563eb);
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
 }
 
 .main-content {
-  padding: 32px;
+  padding: 24px 28px;
   background-color: var(--bg-body);
 }
 </style>
