@@ -496,7 +496,8 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
                 Stamp(e1, headerUid, now, user, company);
                 // 明细未带仓库/仓位/库存状态时继承表头（先于 ENTRY2/汇总 ENTRY 派生，确保级联下沉、过账库存有值）
                 if (string.IsNullOrEmpty(e1.Fstockid)) e1.Fstockid = headerStockId;
-                if (string.IsNullOrEmpty(e1.Fstocklocid)) e1.Fstocklocid = headerLocId;
+                // 仓位仅在行仓库与表头仓库一致时才继承表头仓位，避免行改成别的仓库却串入属于表头仓库的仓位
+                if (string.IsNullOrEmpty(e1.Fstocklocid) && e1.Fstockid == headerStockId) e1.Fstocklocid = headerLocId;
                 if (string.IsNullOrEmpty(e1.Fstockstatusid)) e1.Fstockstatusid = headerStatusId;
                 e1.Fentryid = e1idx++;
                 e1.Fdetailid = e1.Uid;
@@ -622,7 +623,8 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
                 var me = BuildMaterialFromReq(r);
                 // 物料录入行未带仓库/仓位/库存状态时继承表头
                 if (string.IsNullOrEmpty(me.Fstockid)) me.Fstockid = headerStockId;
-                if (string.IsNullOrEmpty(me.Fstocklocid)) me.Fstocklocid = headerLocId;
+                // 仓位仅在行仓库与表头仓库一致时才继承表头仓位，避免行改成别的仓库却串入属于表头仓库的仓位
+                if (string.IsNullOrEmpty(me.Fstocklocid) && me.Fstockid == headerStockId) me.Fstocklocid = headerLocId;
                 if (string.IsNullOrEmpty(me.FSTOCKSTATUSID)) me.FSTOCKSTATUSID = headerStatusId;
                 Stamp(me, headerUid, now, user, company);
                 me.FENTRYID = mIdx++;
@@ -1346,9 +1348,12 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
         if (master.Fbarcodestatus == 10)
             return new ScanBarcodeResultDto { Found = false, Message = $"条码已废弃：{code}" };
 
-        // 仓库/仓位/库存状态：优先条码主档，其次表头上下文
-        string stockId = !string.IsNullOrEmpty(master.FSTOCKID) ? master.FSTOCKID : request.Fstockid;
-        string locId = !string.IsNullOrEmpty(master.FSTOCKLOCID) ? master.FSTOCKLOCID : request.Fstocklocid;
+        // 仓库/仓位：表头优先、其次回落条码主档；二者必须同源，避免「表头仓库 + 条码主档他库仓位」跨库错配
+        // 表头填了仓库则带入录入明细（仓位随表头，表头没填仓位则留空由用户手动填）；表头没填仓库才整体回落条码主档
+        bool useHeaderStock = !string.IsNullOrEmpty(request.Fstockid);
+        string stockId = useHeaderStock ? request.Fstockid : (master.FSTOCKID ?? string.Empty);
+        string locId = useHeaderStock ? request.Fstocklocid : (master.FSTOCKLOCID ?? string.Empty);
+        // 库存状态：独立维度，维持原逻辑（优先条码主档，其次表头）
         string statusId = !string.IsNullOrEmpty(master.FSTOCKSTATUSID) ? master.FSTOCKSTATUSID : request.Fstockstatusid;
 
         var result = new ScanBarcodeResultDto { Found = true };

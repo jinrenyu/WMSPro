@@ -46,6 +46,15 @@ public class WarehouseService : ApprovableDisableableCrudService<TBdStock, Wareh
         return w => w.FNumber.Contains(keyword) || w.FName.Contains(keyword);
     }
 
+    // 仓库 lookup 额外带出"启用仓位管理"，供单据明细判断仓位是否可编辑
+    protected override LookupDto MapToLookupDto(TBdStock entity) => new()
+    {
+        Uid = entity.Uid,
+        FNumber = entity.FNumber,
+        FName = entity.FName,
+        FIsOpenLocation = entity.FIsOpenLocation
+    };
+
     public override async Task<WarehouseDetailDto?> GetByIdAsync(string uid)
     {
         var detail = await base.GetByIdAsync(uid);

@@ -8,6 +8,12 @@ public class LookupDto
     public string Uid { get; set; } = string.Empty;
     public string FNumber { get; set; } = string.Empty;
     public string FName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 是否启用仓位管理（仅仓库 lookup 填充；其余模块恒为 false）。
+    /// 前端据此决定明细行的仓位字段是否可编辑。
+    /// </summary>
+    public bool FIsOpenLocation { get; set; }
 }
 
 /// <summary>

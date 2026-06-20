@@ -4,6 +4,8 @@ export interface LookupItem {
     uid: string
     fNumber: string
     fName: string
+    /** 是否启用仓位管理（仅仓库 lookup 返回；用于判断明细行仓位是否可编辑） */
+    fIsOpenLocation?: boolean
 }
 
 export interface LookupParams {

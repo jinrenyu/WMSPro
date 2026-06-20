@@ -136,7 +136,9 @@
             </el-col>
             <el-col :span="6">
               <el-form-item label="仓位">
-                <LookupSelect v-model="form.fstocklocid" module="stockplace" :parent-id="form.fstockid" placeholder="先选仓库" preload />
+                <LookupSelect v-model="form.fstocklocid" module="stockplace" :parent-id="form.fstockid"
+                              :placeholder="form.fisOpenLocation ? '请选择仓位' : '未启用仓位管理'"
+                              :disabled="!form.fstockid || !form.fisOpenLocation" preload />
               </el-form-item>
             </el-col>
             <el-col :span="6">
@@ -221,12 +223,25 @@
                 <template #default="{ row }"><el-checkbox :model-value="!!row.fisBatchManage" disabled /></template>
               </el-table-column>
               <el-table-column prop="flot" label="批次" width="120" />
+              <el-table-column label="仓库" width="160">
+                <template #default="{ row }">
+                  <LookupSelect :key="'bs'+row._key" v-model="row.fstockid" module="warehouse" placeholder="仓库" :disabled="isReadonly" preload
+                                @change="(it: any) => onBarcodeStockChange(row, it)" />
+                </template>
+              </el-table-column>
               <el-table-column prop="fstockNumber" label="仓库代码" width="110" />
               <el-table-column prop="fstockName" label="仓库名称" width="120" />
               <el-table-column label="启用仓位管理" width="100" align="center">
                 <template #default="{ row }"><el-checkbox :model-value="!!row.fisOpenLocation" disabled /></template>
               </el-table-column>
-              <el-table-column prop="fstocklocName" label="仓位" width="110" />
+              <el-table-column label="仓位" width="160">
+                <template #default="{ row }">
+                  <LookupSelect :key="'bl'+row._key" v-model="row.fstocklocid" module="stockplace" :parent-id="row.fstockid"
+                                :placeholder="row.fisOpenLocation ? '请选择仓位' : '未启用仓位管理'"
+                                :disabled="isReadonly || !row.fisOpenLocation" preload
+                                @change="(it: any) => onBarcodeStockLocChange(row, it)" />
+                </template>
+              </el-table-column>
               <el-table-column prop="fqty" label="数量" width="100" align="right" />
               <el-table-column prop="funitName" label="单位名称" width="90" />
               <el-table-column label="启用辅助单位" width="100" align="center">
@@ -256,7 +271,12 @@
               <el-table-column label="有效期至" width="120">
                 <template #default="{ row }">{{ fmtDate(row.fusefuldate) }}</template>
               </el-table-column>
-              <el-table-column prop="fstockstatusName" label="库存状态" width="110" />
+              <el-table-column label="库存状态" width="150">
+                <template #default="{ row }">
+                  <LookupSelect :key="'bss'+row._key" v-model="row.fstockstatusid" module="stockstatus" placeholder="库存状态" :disabled="isReadonly" preload
+                                @change="(it: any) => onBarcodeStockStatusChange(row, it)" />
+                </template>
+              </el-table-column>
               <el-table-column label="含税单价" width="110" align="right">
                 <template #default="{ row }">{{ fmtNum(row.ftaxprice) }}</template>
               </el-table-column>
@@ -310,7 +330,8 @@
               <el-table-column label="仓位" width="150">
                 <template #default="{ row }">
                   <LookupSelect :key="'l'+row._key" v-model="row.fstocklocid" module="stockplace" :parent-id="row.fstockid"
-                                placeholder="先选仓库" :disabled="isReadonly || form.ftypeid === 2" preload
+                                :placeholder="row.fisOpenLocation ? '请选择仓位' : '未启用仓位管理'"
+                                :disabled="isReadonly || form.ftypeid === 2 || !row.fisOpenLocation" preload
                                 @change="(it: any) => onStockLocChange(row, it)" />
                 </template>
               </el-table-column>
@@ -455,7 +476,7 @@ const defaultForm = {
   fpurchaserid: '', fstockerid: '', fempid: '',
   fsupplyid: '', fcurrencyid: '',
   fexchangetypeid: '固定汇率', fexchangerate: '1',
-  fstockid: '', fstocklocid: '', fstockstatusid: '',
+  fstockid: '', fstocklocid: '', fstockstatusid: '', fisOpenLocation: false,
   // 只读
   fstatusName: '',
   cuserName: '', cYmd: '',
@@ -576,12 +597,34 @@ const onUnitChange = (row: any, item: any) => { row.funitName = item?.fName || '
 const onStockChange = (row: any, item: any) => {
   row.fstockName = item?.fName || ''
   row.fstockNumber = item?.fNumber || ''
-  row.fstocklocid = ''
+  row.fisOpenLocation = !!item?.fIsOpenLocation   // 带出"启用仓位管理"，决定仓位是否可编辑
+  row.fstocklocid = ''                            // 换仓库后清空仓位（仓位按仓库级联）
   row.fstocklocName = ''
 }
 const onStockLocChange = (row: any, item: any) => { row.fstocklocName = item?.fName || '' }
 const onStockStatusChange = (row: any, item: any) => { row.fstockstatusName = item?.fName || '' }
-const onHeaderStockChange = () => { form.fstocklocid = '' }
+const onHeaderStockChange = (item: any) => {
+  form.fisOpenLocation = !!item?.fIsOpenLocation   // 表头仓库的"启用仓位管理"，供表头仓位框及源单下推回落表头的行判定
+  form.fstocklocid = ''                            // 换表头仓库后清空表头仓位
+}
+
+// 录入明细（条码行）手动编辑仓库/仓位：带出名称与"启用仓位管理"，并重算物料汇总（汇总维度含仓库/仓位）
+const onBarcodeStockChange = (row: any, item: any) => {
+  row.fstockName = item?.fName || ''
+  row.fstockNumber = item?.fNumber || ''
+  row.fisOpenLocation = !!item?.fIsOpenLocation
+  row.fstocklocid = ''
+  row.fstocklocName = ''
+  recomputeAggregate()
+}
+const onBarcodeStockLocChange = (row: any, item: any) => {
+  row.fstocklocName = item?.fName || ''
+  recomputeAggregate()
+}
+const onBarcodeStockStatusChange = (row: any, item: any) => {
+  row.fstockstatusName = item?.fName || ''
+  recomputeAggregate()
+}
 
 // ===== 录入明细（条码扫描） =====
 const onScan = async () => {
@@ -716,7 +759,9 @@ const onSrcOrderChange = async (order: any) => {
         flot: e.flot || '',
         // 仓库/仓位：收料通知单行自带则用其值；采购订单行无该字段，回落表头默认仓库/仓位
         fstockid: e.fstockid || form.fstockid || '',
-        fstockNumber: e.fstockNumber || '', fstockName: e.fstockName || '', fisOpenLocation: !!e.fisOpenLocation,
+        fstockNumber: e.fstockNumber || '', fstockName: e.fstockName || '',
+        // 行自带仓库用其"启用仓位管理"；回落表头仓库的行(如采购订单下推)取表头仓库的值，保存前即可正确启用/禁用仓位
+        fisOpenLocation: e.fstockid ? !!e.fisOpenLocation : !!form.fisOpenLocation,
         fstocklocid: e.fstockid ? (e.fstocklocid || '') : (form.fstocklocid || ''),
         fstocklocName: e.fstocklocName || '',
         fstockstatusid: e.fstockstatusid || form.fstockstatusid || '',
@@ -824,6 +869,31 @@ function buildPayload() {
   return base
 }
 
+// 明细行必填校验：数量(>0)、仓库、仓位(仓库启用仓位管理时)、库存状态。返回首个不合格行用于提示并定位
+function validateDetailLines(): { ok: boolean; message?: string; tab?: string; index?: number } {
+  if (form.ftypeid === 2) {
+    for (let i = 0; i < barcodeLines.value.length; i++) {
+      const r = barcodeLines.value[i]
+      const tag = r.fbarcode || r.fboxbarcode || `第${i + 1}行`
+      if (!(Number(r.fqty) > 0)) return { ok: false, message: `录入明细「${tag}」数量必须大于 0`, tab: 'barcode', index: i }
+      if (!r.fstockid) return { ok: false, message: `录入明细「${tag}」请选择仓库`, tab: 'barcode', index: i }
+      if (r.fisOpenLocation && !r.fstocklocid) return { ok: false, message: `录入明细「${tag}」仓库已启用仓位管理，请选择仓位`, tab: 'barcode', index: i }
+      if (!r.fstockstatusid) return { ok: false, message: `录入明细「${tag}」请选择库存状态`, tab: 'barcode', index: i }
+    }
+  } else {
+    for (let i = 0; i < materialLines.value.length; i++) {
+      const r = materialLines.value[i]
+      if (!r.fmaterialid) continue
+      const tag = r.fmaterialName || r.fmaterialNumber || `第${i + 1}行`
+      if (!(Number(r.frealqty) > 0)) return { ok: false, message: `物料明细「${tag}」实收数量必须大于 0`, tab: 'material', index: i }
+      if (!r.fstockid) return { ok: false, message: `物料明细「${tag}」请选择仓库`, tab: 'material', index: i }
+      if (r.fisOpenLocation && !r.fstocklocid) return { ok: false, message: `物料明细「${tag}」仓库已启用仓位管理，请选择仓位`, tab: 'material', index: i }
+      if (!r.fstockstatusid) return { ok: false, message: `物料明细「${tag}」请选择库存状态`, tab: 'material', index: i }
+    }
+  }
+  return { ok: true }
+}
+
 async function handleSave() {
   if (!formRef.value) return
   try { await formRef.value.validate() } catch { activeTab.value = 'basic'; return }
@@ -832,6 +902,17 @@ async function handleSave() {
   } else {
     materialLines.value.forEach(it => recalcMaterial(it))
     if (buildPayload().entries.length === 0) { ElMessage.warning('请至少添加一条物料明细'); detailTab.value = 'material'; return }
+  }
+  // 明细行必填校验（数量/仓库/仓位/库存状态）
+  const lineCheck = validateDetailLines()
+  if (!lineCheck.ok) {
+    ElMessage.warning(lineCheck.message!)
+    if (lineCheck.tab) detailTab.value = lineCheck.tab
+    if (lineCheck.index != null) {
+      if (lineCheck.tab === 'barcode') selectedBarcodeIndex.value = lineCheck.index
+      else selectedMaterialIndex.value = lineCheck.index
+    }
+    return
   }
   loading.value = true
   try {

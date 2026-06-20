@@ -48,13 +48,14 @@ body {
   color: var(--text-primary) !important;
 }
 
-.el-button--primary {
+/* 仅作用于可用态：禁用按钮(.is-disabled)回退 Element Plus 默认禁用外观(浅色置灰)，避免禁用的主按钮仍显示鲜艳主题色 */
+.el-button--primary:not(.is-disabled) {
   background-color: var(--primary-color) !important;
   border-color: var(--primary-color) !important;
   color: #ffffff !important;
 }
 
-.el-button--primary:hover {
+.el-button--primary:not(.is-disabled):hover {
   opacity: 0.9;
   transform: translateY(-1px);
 }
