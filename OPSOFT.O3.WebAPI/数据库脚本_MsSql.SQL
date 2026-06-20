@@ -29149,7 +29149,11 @@ CREATE TABLE T_PUR_RECEIVEENTRY(
    FDEMANDERID     VARCHAR(50) NOT NULL DEFAULT '' ,    -- 需求人
    FSFWJSD     BIT NOT NULL DEFAULT  0 ,    -- 随附文件送达
    FSHDSD     BIT NOT NULL DEFAULT  0 ,    -- 送货单送达
-   FINTERID	    VARCHAR(50)		NOT NULL DEFAULT '',	-- 表内码 
+   FKEEPERTYPEID     VARCHAR(50) NOT NULL DEFAULT '' ,    -- 保管者类型
+   FKEEPERID     VARCHAR(50) NOT NULL DEFAULT '' ,    -- 保管者
+   FOWNERTYPEID     VARCHAR(50) NOT NULL DEFAULT '' ,    -- 货主类型
+   FOWNERID     VARCHAR(50) NOT NULL DEFAULT '' ,    -- 货主
+   FINTERID	    VARCHAR(50)		NOT NULL DEFAULT '',	-- 表内码
    FENTRYID		INT             NOT NULL DEFAULT 0 ,	-- 行号 
    FDETAILID     VARCHAR(50)     NOT NULL DEFAULT '' ,   --表体内码 
    FSTATUS		    INT NOT NULL DEFAULT 0 ,	 -- 状态 
@@ -29296,8 +29300,16 @@ if(not exists(select name from SysColumns where name ='FDEMANDERID' and id= OBJE
      Alter Table T_PUR_RECEIVEENTRY add    FDEMANDERID     VARCHAR(50) NOT NULL DEFAULT ''     -- 需求人
 if(not exists(select name from SysColumns where name ='FSFWJSD' and id= OBJECT_ID('T_PUR_RECEIVEENTRY'))) 
      Alter Table T_PUR_RECEIVEENTRY add    FSFWJSD     BIT NOT NULL DEFAULT  0     -- 随附文件送达
-if(not exists(select name from SysColumns where name ='FSHDSD' and id= OBJECT_ID('T_PUR_RECEIVEENTRY'))) 
+if(not exists(select name from SysColumns where name ='FSHDSD' and id= OBJECT_ID('T_PUR_RECEIVEENTRY')))
      Alter Table T_PUR_RECEIVEENTRY add    FSHDSD     BIT NOT NULL DEFAULT  0     -- 送货单送达
+if(not exists(select name from SysColumns where name ='FKEEPERTYPEID' and id= OBJECT_ID('T_PUR_RECEIVEENTRY')))
+     Alter Table T_PUR_RECEIVEENTRY add    FKEEPERTYPEID     VARCHAR(50) NOT NULL DEFAULT ''     -- 保管者类型
+if(not exists(select name from SysColumns where name ='FKEEPERID' and id= OBJECT_ID('T_PUR_RECEIVEENTRY')))
+     Alter Table T_PUR_RECEIVEENTRY add    FKEEPERID     VARCHAR(50) NOT NULL DEFAULT ''     -- 保管者
+if(not exists(select name from SysColumns where name ='FOWNERTYPEID' and id= OBJECT_ID('T_PUR_RECEIVEENTRY')))
+     Alter Table T_PUR_RECEIVEENTRY add    FOWNERTYPEID     VARCHAR(50) NOT NULL DEFAULT ''     -- 货主类型
+if(not exists(select name from SysColumns where name ='FOWNERID' and id= OBJECT_ID('T_PUR_RECEIVEENTRY')))
+     Alter Table T_PUR_RECEIVEENTRY add    FOWNERID     VARCHAR(50) NOT NULL DEFAULT ''     -- 货主
 if(not exists(select name from SysColumns where name ='FCOMPANYID' and id= OBJECT_ID('T_PUR_RECEIVEENTRY'))) 
      Alter Table T_PUR_RECEIVEENTRY add    FCOMPANYID     VARCHAR(50) NOT NULL DEFAULT ''      -- 组织代码
 if(not exists(select name from SysColumns where name ='FINTERID' and id= OBJECT_ID('T_PUR_RECEIVEENTRY'))) 

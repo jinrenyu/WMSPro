@@ -111,6 +111,30 @@ public class TPurReceiveEntry : BaseEntity
     public string Fstockstatusid { get; set; } = string.Empty;
 
     /// <summary>
+    /// 保管者类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FKEEPERTYPEID", IsNullable = true)]
+    public string Fkeepertypeid { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 保管者
+    /// </summary>
+    [SugarColumn(ColumnName = "FKEEPERID", IsNullable = true)]
+    public string Fkeeperid { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 货主类型
+    /// </summary>
+    [SugarColumn(ColumnName = "FOWNERTYPEID", IsNullable = true)]
+    public string Fownertypeid { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 货主
+    /// </summary>
+    [SugarColumn(ColumnName = "FOWNERID", IsNullable = true)]
+    public string Fownerid { get; set; } = string.Empty;
+
+    /// <summary>
     /// 批次
     /// </summary>
     [SugarColumn(ColumnName = "FLOT")]

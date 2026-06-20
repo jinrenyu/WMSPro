@@ -33,6 +33,11 @@ export interface ReceiveNoticeEntry {
     fisOpenLocation?: boolean
     fstocklocid?: string
     fstocklocName?: string
+    // 保管者 / 货主（类型值即对应 lookup 模块：org/supplier/customer/department/employee）
+    fkeepertypeid?: string
+    fkeeperid?: string
+    fownertypeid?: string
+    fownerid?: string
     fprice?: number
     ftaxrate?: number
     ftaxprice?: number

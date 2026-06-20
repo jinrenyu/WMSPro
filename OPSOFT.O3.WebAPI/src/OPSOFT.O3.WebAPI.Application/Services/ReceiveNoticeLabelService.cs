@@ -209,7 +209,11 @@ public class ReceiveNoticeLabelService : IReceiveNoticeLabelService
         }
         else dto.Fbartype = 1;
 
-        dto.GeneratedCount = await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpurdetailid == entry.Uid && !s.FDeleted).CountAsync();
+        // 按"收料单内码+行号"稳定键统计：明细行内码(Uid)会因单据编辑重存(物理删+重插)而变，旧条码 Fpurdetailid 指向已删旧行；兼容仍指当前行的旧 detailid
+        var genHeadId = entry.FInterId; var genRowNo = entry.FENTRYID ?? 0; var genEntUid = entry.Uid;
+        dto.GeneratedCount = genRowNo > 0
+            ? await _db.Queryable<TBdBarcoders1>().Where(s => !s.FDeleted && (s.Fpurdetailid == genEntUid || (s.Fpurid == genHeadId && s.Fpurentryid == genRowNo))).CountAsync()
+            : await _db.Queryable<TBdBarcoders1>().Where(s => !s.FDeleted && s.Fpurdetailid == genEntUid).CountAsync();
         return dto;
     }
 
@@ -217,7 +221,15 @@ public class ReceiveNoticeLabelService : IReceiveNoticeLabelService
 
     public async Task<List<BarcodeLineDto>> GetBarcodesAsync(string receiveEntryUid)
     {
-        var links = await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpurdetailid == receiveEntryUid && !s.FDeleted).ToListAsync();
+        // 明细行内码(Uid)在收料通知单被编辑重存时会重建(物理删+重插)，旧条码的 Fpurdetailid 指向已删除的旧行内码。
+        // 故按"收料单内码 + 行号"稳定键匹配(并兼容仍指向当前行的旧 Fpurdetailid)，避免编辑后条码丢失显示。
+        var entry = await _db.Queryable<TPurReceiveEntry>().Where(e => e.Uid == receiveEntryUid && !e.FDeleted)
+            .Select(e => new { e.FInterId, e.FENTRYID }).FirstAsync();
+        var headId = entry?.FInterId ?? string.Empty;
+        var rowNo = entry?.FENTRYID ?? 0;
+        var links = (rowNo > 0 && !string.IsNullOrEmpty(headId))
+            ? await _db.Queryable<TBdBarcoders1>().Where(s => !s.FDeleted && (s.Fpurdetailid == receiveEntryUid || (s.Fpurid == headId && s.Fpurentryid == rowNo))).ToListAsync()
+            : await _db.Queryable<TBdBarcoders1>().Where(s => !s.FDeleted && s.Fpurdetailid == receiveEntryUid).ToListAsync();
         if (links.Count == 0) return new();
         var codes = links.Select(l => l.Fbarcode).Distinct().ToList();
         var masters = await _db.Queryable<TBdBarcoders>().Where(m => codes.Contains(m.Fbarcode) && !m.FDeleted).ToListAsync();
@@ -309,6 +321,9 @@ public class ReceiveNoticeLabelService : IReceiveNoticeLabelService
                     FSECUNITID = request.EnableAuxQty ? request.Fsecunitid : string.Empty,
                     FSECUNITQTY = request.EnableAuxQty ? request.Fsecqty : 0,
                     FSUPPLYID = header.Fsupplyid,
+                    // 货主/保管者：从收料通知单明细带到条码主档（采购订单标签生成的条码无此来源，保持空值）
+                    FKEEPERTYPEID = entry.Fkeepertypeid, FKEEPERID = entry.Fkeeperid,
+                    FOWNERTYPEID = entry.Fownertypeid, FOWNERID = entry.Fownerid,
                     FKFDATE = request.Fkfdate, FUSEFULDATE = request.Fusefuldate,
                     Fmfgdate = DateTime.MinValue, FDATE = null, FINSPECTDATE = hasInspect ? now : null,
                     FCURRID = batchId,

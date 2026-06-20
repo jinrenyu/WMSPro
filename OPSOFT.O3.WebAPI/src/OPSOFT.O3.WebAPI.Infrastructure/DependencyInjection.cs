@@ -148,6 +148,9 @@ public static class DependencyInjection
         services.AddScoped<IPurchaseOrderLabelService, PurchaseOrderLabelService>();
         services.AddScoped<IReceiveNoticeLabelService, ReceiveNoticeLabelService>();
 
+        // 即时库存（只读列表查询，真实表 T_STK_INVENTORY）
+        services.AddScoped<IInventoryService, InventoryService>();
+
         // 编码规则：业务表单目录（数据驱动）+ 取号引擎（单据编号/条码编号统一取号）+ 配置维护（系统管理→编码规则）
         services.AddScoped<IBillCodeFormCatalog, BillCodeFormCatalog>();
         services.AddScoped<IBillCodeService, BillCodeService>();

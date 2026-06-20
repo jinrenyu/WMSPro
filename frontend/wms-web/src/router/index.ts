@@ -285,6 +285,13 @@ const routes = [
                 name: 'LabelTemplateEdit',
                 component: () => import('../views/purchase/LabelTemplateEdit.vue'),
                 meta: { title: '标签模板设计 - 编辑' }
+            },
+            // ── 库存管理 ──
+            {
+                path: 'purchase/inventory',
+                name: 'StockInventoryList',
+                component: () => import('../views/purchase/StockInventoryList.vue'),
+                meta: { title: '即时库存' }
             }
         ]
     }

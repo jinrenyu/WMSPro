@@ -63,6 +63,11 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             // ③ 即时库存累加（按物料汇总明细，维度=物料+仓库+仓位+库存组织+辅助属性+库存状态+批次+生产日期+有效期）
             var entries = await Db.Queryable<TStkInstockentry>().Where(e => e.FInterId == uid && !e.FDeleted).ToListAsync();
             foreach (var e in entries) await ApplyInventoryAsync(e, header, +1);
+            // ④ 回写源单累计入库数量：按录入明细 ENTRY1 逐条归集（每条带各自源单/订单行，避免汇总 ENTRY 多源合并误记）；
+            //    无 ENTRY1(物料直录)时回落物料汇总 ENTRY。事务内。
+            var srcLines = await Db.Queryable<TStkInstockentry1>().Where(x => x.FInterId == uid && !x.FDeleted).ToListAsync();
+            if (srcLines.Count > 0) await UpdateSourceCumulativeFromLinesAsync(srcLines, +1);
+            else await UpdateSourceCumulativeAsync(entries, +1);
 
             Db.AsTenant().CommitTran();
             if (OperationLog != null) await OperationLog.LogAsync(PrgKey, OperationType.Approve, uid, header.Fbillno, "审核入库过账", true);
@@ -100,6 +105,10 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             await ReverseBarcodesOnRejectAsync(uid);
             var entries = await Db.Queryable<TStkInstockentry>().Where(e => e.FInterId == uid && !e.FDeleted).ToListAsync();
             foreach (var e in entries) await ApplyInventoryAsync(e, header, -1);
+            // ④ 回写源单累计入库数量（反审核冲回，与审核对称）
+            var srcLines = await Db.Queryable<TStkInstockentry1>().Where(x => x.FInterId == uid && !x.FDeleted).ToListAsync();
+            if (srcLines.Count > 0) await UpdateSourceCumulativeFromLinesAsync(srcLines, -1);
+            else await UpdateSourceCumulativeAsync(entries, -1);
 
             Db.AsTenant().CommitTran();
             if (OperationLog != null) await OperationLog.LogAsync(PrgKey, OperationType.Reject, uid, header.Fbillno, reason ?? "反审核冲回", true);
@@ -113,6 +122,66 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
     }
 
     // ===== 入库过账：条码主档翻转 + 即时库存累加/冲回 =====
+
+    /// <summary>回写源单累计入库数量：收料通知单(FINSTOCKQTY/BASE)与采购订单(FINSTOCKQTY/BASE)按源单溯源字段命中并增减。
+    /// sign=+1 入库审核累加 / -1 反审核冲回。源单/订单按"单号+行号"稳定键定位（明细行内码会因单据编辑重建而变，见 ID 关联约定）。</summary>
+    private async Task UpdateSourceCumulativeAsync(List<TStkInstockentry> entries, int sign)
+    {
+        foreach (var e in entries)
+        {
+            if (string.IsNullOrEmpty(e.Fmaterialid) || e.Frealqty == 0) continue;   // 按主数量判零（与库存过账口径一致）
+            decimal rawBase = e.FBASEUNITQTY ?? e.Frealqty;
+            decimal qty = e.Frealqty * sign;
+            decimal baseQty = (rawBase == 0 ? e.Frealqty : rawBase) * sign;          // base 为 0/空 均回落主数量，避免主/基累计分叉
+            // 收料通知单：累计入库数量增减
+            if (e.Fsrcformid == BillCodeFormKeys.ReceiveBill && !string.IsNullOrEmpty(e.Fsrcbillno) && e.Fsrcentryid > 0)
+                await BumpReceiveInstockAsync(e.Fsrcbillno, e.Fsrcentryid, qty, baseQty);
+            // 采购订单：累计入库数量增减（直接以采购订单 或 经收料通知单回填的采购订单，均带 FORDER* 溯源）
+            if (!string.IsNullOrEmpty(e.FORDERBILLNO) && (e.FORDERENTRYID ?? 0) > 0)
+                await BumpPoCumulativeAsync(e.FORDERBILLNO, e.FORDERENTRYID ?? 0, qty, baseQty, 0m, 0m);
+        }
+    }
+
+    /// <summary>按录入明细 ENTRY1 逐条归集累计入库（每条带各自源单/订单行，正确归属；扫码路径用，避免汇总 ENTRY 多源合并误记）。</summary>
+    private async Task UpdateSourceCumulativeFromLinesAsync(List<TStkInstockentry1> lines, int sign)
+    {
+        foreach (var e in lines)
+        {
+            if (string.IsNullOrEmpty(e.Fmaterialid) || e.Fqty == 0) continue;
+            decimal qty = e.Fqty * sign;
+            decimal baseQty = (e.Fbaseunitqty == 0 ? e.Fqty : e.Fbaseunitqty) * sign;
+            if (e.Fsrcformid == BillCodeFormKeys.ReceiveBill && !string.IsNullOrEmpty(e.Fsrcbillno) && e.Fsrcentryid > 0)
+                await BumpReceiveInstockAsync(e.Fsrcbillno, e.Fsrcentryid, qty, baseQty);
+            if (!string.IsNullOrEmpty(e.Forderbillno) && e.Forderentryid > 0)
+                await BumpPoCumulativeAsync(e.Forderbillno, e.Forderentryid, qty, baseQty, 0m, 0m);
+        }
+    }
+
+    /// <summary>收料通知单明细累计入库数量增减（按单号+行号定位源单行）。</summary>
+    private async Task BumpReceiveInstockAsync(string billNo, int rowNo, decimal qtyDelta, decimal baseDelta)
+    {
+        var hid = await Db.Queryable<TPurReceive>().Where(h => h.Fbillno == billNo && !h.FDeleted).Select(h => h.FInterId).FirstAsync();
+        if (string.IsNullOrEmpty(hid)) return;
+        await Db.Updateable<TPurReceiveEntry>()
+            .SetColumns(x => x.Finstockqty == x.Finstockqty + qtyDelta)
+            .SetColumns(x => x.Finstockbaseqty == x.Finstockbaseqty + baseDelta)
+            .Where(x => x.FInterId == hid && x.FENTRYID == rowNo && !x.FDeleted)
+            .ExecuteCommandAsync();
+    }
+
+    /// <summary>采购订单明细累计入库/累计退料数量增减（按单号+行号定位源单行）。入库仅 instock 增量、mrb 传 0。</summary>
+    private async Task BumpPoCumulativeAsync(string billNo, int rowNo, decimal instockDelta, decimal instockBaseDelta, decimal mrbDelta, decimal mrbBaseDelta)
+    {
+        var hid = await Db.Queryable<TPurPoOrder>().Where(h => h.Fbillno == billNo && !h.FDeleted).Select(h => h.FInterId).FirstAsync();
+        if (string.IsNullOrEmpty(hid)) return;
+        await Db.Updateable<TPurPoOrderEntry>()
+            .SetColumns(x => x.Finstockqty == x.Finstockqty + instockDelta)
+            .SetColumns(x => x.Finstockbaseqty == x.Finstockbaseqty + instockBaseDelta)
+            .SetColumns(x => x.Fmrbqty == x.Fmrbqty + mrbDelta)
+            .SetColumns(x => x.Fmrbbaseqty == x.Fmrbbaseqty + mrbBaseDelta)
+            .Where(x => x.FInterId == hid && x.FENTRYID == rowNo && !x.FDeleted)
+            .ExecuteCommandAsync();
+    }
 
     /// <summary>审核时条码主档原子翻转（仅对存在于条码主档的物理单品条码；箱码容器/手工码跳过；并发抢占即抛错）</summary>
     private async Task PostBarcodesOnApproveAsync(string uid)
@@ -173,7 +242,11 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
         decimal secQty = (e.FSECUNITQTY ?? 0) * sign;
         decimal dec = -qty;                                   // 冲回时为正
         var org = header.FCompanyId ?? string.Empty;          // 库存组织=收料组织
-        var status = e.FSTOCKSTATUSID ?? string.Empty;
+        // 仓库/仓位/库存状态是单据表头级属性，物料汇总明细行不一定带值 → 优先取明细、回退取表头
+        // （修复即时库存 FSTOCKID/FSTOCKLOCID/FSTOCKSTATUSID 写空：过账明细这三列为空，值实际在表头）
+        var stockId = !string.IsNullOrEmpty(e.Fstockid) ? e.Fstockid : (header.Fstockid ?? string.Empty);
+        var locId = !string.IsNullOrEmpty(e.Fstocklocid) ? e.Fstocklocid : (header.Fstocklocid ?? string.Empty);
+        var status = !string.IsNullOrEmpty(e.FSTOCKSTATUSID) ? e.FSTOCKSTATUSID : (header.Fstockstatusid ?? string.Empty);
         var lot = e.Flot ?? string.Empty;
         var aux = e.Fauxpropid ?? string.Empty;
         var kf = e.Fkfdate ?? new DateTime(1900, 1, 1);       // 生产/采购日期纳入维度(FEFO)
@@ -189,7 +262,7 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             .SetColumns(x => x.FUPDATETIME == now)
             .SetColumns(x => x.MUser == user)
             .SetColumns(x => x.MYmd == now)
-            .Where(x => x.Fmaterialid == e.Fmaterialid && x.Fstockid == e.Fstockid && x.Fstocklocid == e.Fstocklocid
+            .Where(x => x.Fmaterialid == e.Fmaterialid && x.Fstockid == stockId && x.Fstocklocid == locId
                 && x.Fstockorgid == org && x.Fauxpropid == aux && x.Fstockstatusid == status && x.FLOT == lot
                 && x.Fkfdate == kf && x.Fusefuldate == uf && !x.FDeleted);
         if (sign < 0) upd = upd.Where(x => x.Fqty >= dec && x.Fbal >= dec);   // 冲回不足则不命中
@@ -205,8 +278,9 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
                 await Db.Insertable(new TStkInventory
                 {
                     Uid = id, FInterId = id,
-                    Fmaterialid = e.Fmaterialid, Fstockid = e.Fstockid, Fstocklocid = e.Fstocklocid,
+                    Fmaterialid = e.Fmaterialid, Fstockid = stockId, Fstocklocid = locId,
                     Fstockorgid = org, Fauxpropid = aux, Fstockstatusid = status, FLOT = lot,
+                    Fkeeperid = e.FKEEPERID, Fownerid = e.FOWNERID, Fkeepertypeid = e.FKEEPERTYPEID, Fownertypeid = e.FOWNERTYPEID,
                     Fbaseunitid = e.Fbaseunitid, Fbaseunitqty = baseQty,
                     Fstockunitid = e.Funitid, Fqty = qty, Fbal = qty,
                     Fkfdate = kf, Fusefuldate = uf,
@@ -228,7 +302,7 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
                     .SetColumns(x => x.FUPDATETIME == now)
                     .SetColumns(x => x.MUser == user)
                     .SetColumns(x => x.MYmd == now)
-                    .Where(x => x.Fmaterialid == e.Fmaterialid && x.Fstockid == e.Fstockid && x.Fstocklocid == e.Fstocklocid
+                    .Where(x => x.Fmaterialid == e.Fmaterialid && x.Fstockid == stockId && x.Fstocklocid == locId
                         && x.Fstockorgid == org && x.Fauxpropid == aux && x.Fstockstatusid == status && x.FLOT == lot
                         && x.Fkfdate == kf && x.Fusefuldate == uf && !x.FDeleted)
                     .ExecuteCommandAsync();
@@ -296,7 +370,7 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             await PrepareHeaderForCreateAsync(header, request);
             await Db.Insertable(header).ExecuteCommandAsync();
 
-            await PersistEntriesAsync(header.Uid, request.Ftypeid, request.Entries, request.BarcodeEntries);
+            await PersistEntriesAsync(header, request.Ftypeid, request.Entries, request.BarcodeEntries);
 
             Db.AsTenant().CommitTran();
 
@@ -333,7 +407,7 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             await Db.Deleteable<TStkInstockentry1>().Where(e => e.FInterId == uid).ExecuteCommandAsync();
             await Db.Deleteable<TStkInstockentry2>().Where(e => e.FInterId == uid).ExecuteCommandAsync();
 
-            await PersistEntriesAsync(uid, request.Ftypeid, request.Entries, request.BarcodeEntries);
+            await PersistEntriesAsync(header, request.Ftypeid, request.Entries, request.BarcodeEntries);
 
             Db.AsTenant().CommitTran();
 
@@ -392,12 +466,18 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
     }
 
     /// <summary>持久化三套明细（事务内调用）。录入类型=条码 时按 ENTRY1 聚合出 ENTRY 并回填 FBODYID。</summary>
-    private async Task PersistEntriesAsync(string headerUid, int ftypeid,
+    private async Task PersistEntriesAsync(TStkInstock header, int ftypeid,
         List<CreateInStockMaterialEntryRequest>? materialReqs, List<CreateInStockBarcodeEntryRequest>? barcodeReqs)
     {
+        var headerUid = header.Uid;
         var now = DateTime.Now;
         var user = CurrentUser.UserId ?? string.Empty;
         var company = CurrentUser.CompanyId ?? string.Empty;
+        // 仓库/仓位/库存状态录在单据表头，须下沉到三张明细（ENTRY/ENTRY1/ENTRY2）——
+        // 库存按物料汇总 ENTRY 过账，明细这三列空则库存也写空。明细自带值时优先保留，仅空缺时继承表头。
+        var headerStockId = header.Fstockid ?? string.Empty;
+        var headerLocId = header.Fstocklocid ?? string.Empty;
+        var headerStatusId = header.Fstockstatusid ?? string.Empty;
 
         if (ftypeid == 2)
         {
@@ -414,6 +494,10 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
                     throw new InvalidOperationException($"条码 {dedupKey} 在本单重复录入，请勿重复扫描");
                 var e1 = BuildEntry1(r);
                 Stamp(e1, headerUid, now, user, company);
+                // 明细未带仓库/仓位/库存状态时继承表头（先于 ENTRY2/汇总 ENTRY 派生，确保级联下沉、过账库存有值）
+                if (string.IsNullOrEmpty(e1.Fstockid)) e1.Fstockid = headerStockId;
+                if (string.IsNullOrEmpty(e1.Fstocklocid)) e1.Fstocklocid = headerLocId;
+                if (string.IsNullOrEmpty(e1.Fstockstatusid)) e1.Fstockstatusid = headerStatusId;
                 e1.Fentryid = e1idx++;
                 e1.Fdetailid = e1.Uid;
                 entry1List.Add(e1);
@@ -486,6 +570,27 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             foreach (var e2 in entry2List)
                 if (srcDict.TryGetValue(e2.Fbarcode, out var l)) ApplySourceToEntry2Entity(e2, l);
 
+            // 货主/保管者：从条码主档 T_BD_BARCODERS 按条码回填到 ENTRY1（明细未带值时），再经物料聚合带到汇总 ENTRY 与即时库存
+            var koCodes = entry1List.SelectMany(e => new[] { e.Fbarcode, e.Fboxbarcode })
+                .Where(s => !string.IsNullOrEmpty(s)).Distinct().ToList();
+            if (koCodes.Count > 0)
+            {
+                var koDict = (await Db.Queryable<TBdBarcoders>()
+                        .Where(m => koCodes.Contains(m.Fbarcode) && !m.FDeleted)
+                        .Select(m => new { m.Fbarcode, m.FKEEPERID, m.FOWNERID, m.FKEEPERTYPEID, m.FOWNERTYPEID }).ToListAsync())
+                    .GroupBy(r => r.Fbarcode).ToDictionary(g => g.Key, g => g.First());
+                foreach (var e1 in entry1List)
+                {
+                    var ko = (!string.IsNullOrEmpty(e1.Fbarcode) && koDict.TryGetValue(e1.Fbarcode, out var k1)) ? k1
+                           : (!string.IsNullOrEmpty(e1.Fboxbarcode) && koDict.TryGetValue(e1.Fboxbarcode, out var k2)) ? k2 : null;
+                    if (ko == null) continue;
+                    if (string.IsNullOrEmpty(e1.Fkeeperid)) e1.Fkeeperid = ko.FKEEPERID;
+                    if (string.IsNullOrEmpty(e1.Fownerid)) e1.Fownerid = ko.FOWNERID;
+                    if (string.IsNullOrEmpty(e1.Fkeepertypeid)) e1.Fkeepertypeid = ko.FKEEPERTYPEID;
+                    if (string.IsNullOrEmpty(e1.Fownertypeid)) e1.Fownertypeid = ko.FOWNERTYPEID;
+                }
+            }
+
             // 2) 按物料维度聚合出物料汇总 ENTRY，实收=该组 Σ条码数量，并回填录入明细的父阶表体内码
             var materialList = new List<TStkInstockentry>();
             int mIdx = 1;
@@ -515,6 +620,10 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             {
                 if (string.IsNullOrEmpty(r.Fmaterialid)) continue;
                 var me = BuildMaterialFromReq(r);
+                // 物料录入行未带仓库/仓位/库存状态时继承表头
+                if (string.IsNullOrEmpty(me.Fstockid)) me.Fstockid = headerStockId;
+                if (string.IsNullOrEmpty(me.Fstocklocid)) me.Fstocklocid = headerLocId;
+                if (string.IsNullOrEmpty(me.FSTOCKSTATUSID)) me.FSTOCKSTATUSID = headerStatusId;
                 Stamp(me, headerUid, now, user, company);
                 me.FENTRYID = mIdx++;
                 me.FDETAILID = me.Uid;
@@ -547,8 +656,8 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
         Fmaterialid = r.Fmaterialid,
         Fauxpropid = r.Fauxpropid,
         Flot = r.Flot,
-        Fkfdate = r.Fkfdate ?? DateTime.MinValue,
-        Fusefuldate = r.Fusefuldate ?? DateTime.MinValue,
+        Fkfdate = r.Fkfdate ?? new DateTime(1900, 1, 1),
+        Fusefuldate = r.Fusefuldate ?? new DateTime(1900, 1, 1),
         Fqty = r.Fqty,
         Fstockid = r.Fstockid,
         Fstocklocid = r.Fstocklocid,
@@ -582,8 +691,8 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
         Fmaterialid = m.Fmaterialid,
         Fauxpropid = string.IsNullOrEmpty(m.FAUXPROPID) ? ctx.Fauxpropid : m.FAUXPROPID,
         Flot = m.Flot,
-        Fkfdate = m.FKFDATE ?? DateTime.MinValue,
-        Fusefuldate = m.FUSEFULDATE ?? DateTime.MinValue,
+        Fkfdate = m.FKFDATE ?? new DateTime(1900, 1, 1),
+        Fusefuldate = m.FUSEFULDATE ?? new DateTime(1900, 1, 1),
         Fqty = m.FQTY ?? (m.Fbartype == 1 ? 1m : 0m),
         Fstockid = ctx.Fstockid,
         Fstocklocid = ctx.Fstocklocid,
@@ -605,8 +714,8 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
         Fmaterialid = e.Fmaterialid,
         Fauxpropid = e.Fauxpropid,
         Flot = e.Flot,
-        Fkfdate = e.Fkfdate ?? DateTime.MinValue,
-        Fusefuldate = e.Fusefuldate ?? DateTime.MinValue,
+        Fkfdate = e.Fkfdate ?? new DateTime(1900, 1, 1),
+        Fusefuldate = e.Fusefuldate ?? new DateTime(1900, 1, 1),
         Fqty = e.Fqty,
         Fstockid = e.Fstockid,
         Fstocklocid = e.Fstocklocid,
@@ -654,8 +763,8 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             Fstocklocid = r.Fstocklocid,
             Fauxpropid = r.Fauxpropid,
             Flot = r.Flot,
-            Fkfdate = r.Fkfdate ?? DateTime.MinValue,
-            Fusefuldate = r.Fusefuldate ?? DateTime.MinValue,
+            Fkfdate = r.Fkfdate ?? new DateTime(1900, 1, 1),
+            Fusefuldate = r.Fusefuldate ?? new DateTime(1900, 1, 1),
             // 基本单位/数量：未接入换算率，1:1 回落（与收料通知单一致）
             Fbaseunitid = string.IsNullOrEmpty(r.Fbaseunitid) ? r.Funitid : r.Fbaseunitid,
             Funitid = r.Funitid,
@@ -705,10 +814,14 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
             Fprice = price,
             Fstockid = first.Fstockid,
             Fstocklocid = first.Fstocklocid,
+            FKEEPERID = first.Fkeeperid,
+            FOWNERID = first.Fownerid,
+            FKEEPERTYPEID = first.Fkeepertypeid,
+            FOWNERTYPEID = first.Fownertypeid,
             Fauxpropid = first.Fauxpropid,
             Flot = first.Flot,
-            Fkfdate = first.Fkfdate ?? DateTime.MinValue,
-            Fusefuldate = first.Fusefuldate ?? DateTime.MinValue,
+            Fkfdate = first.Fkfdate ?? new DateTime(1900, 1, 1),
+            Fusefuldate = first.Fusefuldate ?? new DateTime(1900, 1, 1),
             Fsupplyid = first.Fsupplyid,
             Fbaseunitid = first.Fbaseunitid,
             Funitid = first.Funitid,

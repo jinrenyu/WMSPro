@@ -63,4 +63,18 @@ public class OrgService : IOrgService
             .ThenBy(x => x.OrgNumber)
             .ToList();
     }
+
+    public async Task<List<LookupDto>> GetLookupAsync(LookupRequest request)
+    {
+        // 组织数据量小，取全量后内存过滤/截断，避免捕获布尔进入表达式翻译
+        var orgs = await _orgRepo.GetListAsync(o => !o.FDeleted);
+        var kw = request.Keyword?.Trim();
+        IEnumerable<SysOrgStructure> q = orgs;
+        if (!string.IsNullOrEmpty(kw))
+            q = q.Where(o => (o.Fnumber ?? string.Empty).Contains(kw) || (o.Fname ?? string.Empty).Contains(kw));
+        return q.OrderBy(o => o.Fnumber)
+            .Take(request.MaxCount)
+            .Select(o => new LookupDto { Uid = o.Uid, FNumber = o.Fnumber, FName = o.Fname })
+            .ToList();
+    }
 }

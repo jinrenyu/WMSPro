@@ -688,6 +688,25 @@ public class DataSeedService
         AddButton(menus, "menu_label_template_edit", labelTemplateId, "编辑标签模板", "labeltemplate:edit", 3, now);
         AddButton(menus, "menu_label_template_delete", labelTemplateId, "删除标签模板", "labeltemplate:delete", 4, now);
 
+        // ── 二级分组：库存管理 (D) ──
+        var stockMgmtId = "menu_stock_mgmt";
+        menus.Add(new SysMenu
+        {
+            Uid = stockMgmtId, FInterId = stockMgmtId, ParentId = purchaseId, MenuName = "库存管理",
+            MenuType = "D", RoutePath = "", Icon = "Coin", PermCode = "", SortOrder = 4,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // 即时库存 (M) — 只读列表查询页（无详情页）
+        var inventoryId = "menu_stock_inventory";
+        menus.Add(new SysMenu
+        {
+            Uid = inventoryId, FInterId = inventoryId, ParentId = stockMgmtId, MenuName = "即时库存",
+            MenuType = "M", RoutePath = "/purchase/inventory", Icon = "List", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_stock_inventory_list", inventoryId, "查看即时库存", "inventory:list", 1, now);
+
         // 过滤出数据库中不存在的菜单，补入
         var existingUids = await _db.Queryable<SysMenu>()
             .Select(m => m.Uid)

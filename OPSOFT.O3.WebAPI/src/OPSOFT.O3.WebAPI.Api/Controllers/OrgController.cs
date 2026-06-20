@@ -21,4 +21,9 @@ public class OrgController : ControllerBase
     [HttpGet("my")]
     public async Task<ActionResult<ApiResponse<List<MyOrgDto>>>> My()
         => Ok(ApiResponse<List<MyOrgDto>>.Ok(await _orgService.GetMyOrgsAsync()));
+
+    /// <summary>组织下拉（货主/保管者等选择场景，与基础资料 lookup 同形：{uid,fNumber,fName}）</summary>
+    [HttpGet("lookup")]
+    public async Task<ActionResult<ApiResponse<List<LookupDto>>>> Lookup([FromQuery] LookupRequest request)
+        => Ok(ApiResponse<List<LookupDto>>.Ok(await _orgService.GetLookupAsync(request)));
 }

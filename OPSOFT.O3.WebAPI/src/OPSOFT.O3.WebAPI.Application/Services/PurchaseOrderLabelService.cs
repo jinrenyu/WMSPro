@@ -200,9 +200,13 @@ public class PurchaseOrderLabelService : IPurchaseOrderLabelService
         }
         else dto.Fbartype = 1;
 
-        // 仅统计采购订单标签自身生成的条码：Fpurdetailid 为空。
-        // 收料通知单标签生成时会把源 PO 信息回填到 Fpodetailid 用于溯源，须用 Fpurdetailid 为空排除，避免收料条码串入采购订单标签明细。
-        dto.GeneratedCount = await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpodetailid == entry.Uid && !s.FDeleted && (s.Fpurdetailid == null || s.Fpurdetailid == "")).CountAsync();
+        // 按"采购订单内码(FINTERID)+行号"稳定键统计：明细行内码(Uid)会因单据编辑重存(物理删+重插)而变，旧条码 Fpodetailid 指向已删旧行；兼容仍指当前行的旧 Fpodetailid。
+        // 仅统计采购订单标签自身生成的条码：Fpurdetailid 为空（收料通知单标签会把源 PO 回填到 Fpodetailid 溯源，须排除避免串入）。
+        var poHeadId = entry.FInterId; var poRowNo = entry.FENTRYID ?? 0; var poEntUid = entry.Uid;
+        dto.GeneratedCount = poRowNo > 0
+            ? await _db.Queryable<TBdBarcoders1>().Where(s => !s.FDeleted && (s.Fpurdetailid == null || s.Fpurdetailid == "")
+                && (s.Fpodetailid == poEntUid || (s.Fpoid == poHeadId && s.Fpoentreyid == poRowNo))).CountAsync()
+            : await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpodetailid == poEntUid && !s.FDeleted && (s.Fpurdetailid == null || s.Fpurdetailid == "")).CountAsync();
         return dto;
     }
 
@@ -210,8 +214,16 @@ public class PurchaseOrderLabelService : IPurchaseOrderLabelService
 
     public async Task<List<BarcodeLineDto>> GetBarcodesAsync(string poEntryUid)
     {
-        // 仅取采购订单标签自身生成的条码（Fpurdetailid 为空）；排除收料通知单标签回填了源 PO 的条码，避免串入。
-        var links = await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpodetailid == poEntryUid && !s.FDeleted && (s.Fpurdetailid == null || s.Fpurdetailid == "")).ToListAsync();
+        // 明细行内码(Uid)在采购订单被编辑重存时会重建(物理删+重插)，旧条码 Fpodetailid 指向已删旧行。
+        // 故按"采购订单内码(FINTERID)+行号"稳定键匹配(兼容仍指当前行的旧 Fpodetailid)；仅取采购订单标签自身生成的条码(Fpurdetailid 为空)，排除收料通知单标签回填源 PO 的条码避免串入。
+        var entry = await _db.Queryable<TPurPoOrderEntry>().Where(e => e.Uid == poEntryUid && !e.FDeleted)
+            .Select(e => new { e.FInterId, e.FENTRYID }).FirstAsync();
+        var headId = entry?.FInterId ?? string.Empty;
+        var rowNo = entry?.FENTRYID ?? 0;
+        var links = (rowNo > 0 && !string.IsNullOrEmpty(headId))
+            ? await _db.Queryable<TBdBarcoders1>().Where(s => !s.FDeleted && (s.Fpurdetailid == null || s.Fpurdetailid == "")
+                && (s.Fpodetailid == poEntryUid || (s.Fpoid == headId && s.Fpoentreyid == rowNo))).ToListAsync()
+            : await _db.Queryable<TBdBarcoders1>().Where(s => s.Fpodetailid == poEntryUid && !s.FDeleted && (s.Fpurdetailid == null || s.Fpurdetailid == "")).ToListAsync();
         if (links.Count == 0) return new();
         var codes = links.Select(l => l.Fbarcode).Distinct().ToList();
         var masters = await _db.Queryable<TBdBarcoders>().Where(m => codes.Contains(m.Fbarcode) && !m.FDeleted).ToListAsync();

@@ -259,6 +259,36 @@
                             @change="(it: any) => onStockLocChange(row, it)" />
             </template>
           </el-table-column>
+          <el-table-column label="货主类型" width="120">
+            <template #default="{ row }">
+              <el-select v-model="row.fownertypeid" placeholder="货主类型" :disabled="isReadonly" clearable
+                         style="width:100%" @change="() => onOwnerTypeChange(row)">
+                <el-option v-for="o in keeperOwnerTypeOptions" :key="o.value" :label="o.label" :value="o.value" />
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="货主" width="160">
+            <template #default="{ row }">
+              <LookupSelect :key="'own'+row._key+row.fownertypeid" v-model="row.fownerid"
+                            :module="typeToModule(row.fownertypeid)" placeholder="先选货主类型"
+                            :disabled="isReadonly || !row.fownertypeid" preload />
+            </template>
+          </el-table-column>
+          <el-table-column label="保管者类型" width="120">
+            <template #default="{ row }">
+              <el-select v-model="row.fkeepertypeid" placeholder="保管者类型" :disabled="isReadonly" clearable
+                         style="width:100%" @change="() => onKeeperTypeChange(row)">
+                <el-option v-for="o in keeperOwnerTypeOptions" :key="o.value" :label="o.label" :value="o.value" />
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="保管者" width="160">
+            <template #default="{ row }">
+              <LookupSelect :key="'kp'+row._key+row.fkeepertypeid" v-model="row.fkeeperid"
+                            :module="typeToModule(row.fkeepertypeid)" placeholder="先选保管者类型"
+                            :disabled="isReadonly || !row.fkeepertypeid" preload />
+            </template>
+          </el-table-column>
           <el-table-column label="含税单价" width="110" align="right">
             <template #default="{ row }">{{ fmtNum(row.ftaxprice) }}</template>
           </el-table-column>
@@ -432,6 +462,7 @@ const newLine = () => ({
   funitid: '', funitNumber: '', funitName: '', fbaseunitqty: 0,
   fstockid: '', fstockNumber: '', fstockName: '', fisOpenLocation: false,
   fstocklocid: '', fstocklocName: '',
+  fkeepertypeid: '', fkeeperid: '', fownertypeid: '', fownerid: '',
   fprice: 0, ftaxrate: 0, ftaxprice: 0, fdiscountrate: 0, ftaxamount: 0, famount: 0, fallamount: 0,
   fpredeliverydate: null as any, fkfdate: null as any, fexpiredate: null as any,
   forderbillno: '', forderentryid: 0, forderinterid: '', forderdetailid: '',
@@ -490,6 +521,16 @@ const onStockChange = (row: any, item: any) => {
   row.fstocklocName = ''
 }
 const onStockLocChange = (row: any, item: any) => { row.fstocklocName = item?.fName || '' }
+// 货主/保管者类型：业务组织(BD_OwnerOrg)/供应商(BD_Supplier)/客户(BD_Customer)；货主与保管者同一套类型
+// 类型决定取值来源表：BD_OwnerOrg→SYS_ORGSTRUCTURE(org)、BD_Supplier→T_BD_SUPPLIER(supplier)、BD_Customer→T_BD_CUSTOMER(customer)
+const keeperOwnerTypeOptions = [
+  { label: '业务组织', value: 'BD_OwnerOrg' },
+  { label: '供应商', value: 'BD_Supplier' },
+  { label: '客户', value: 'BD_Customer' },
+]
+const typeToModule = (t?: string) => (t === 'BD_Supplier' ? 'supplier' : t === 'BD_Customer' ? 'customer' : 'org')
+const onOwnerTypeChange = (row: any) => { row.fownerid = '' }
+const onKeeperTypeChange = (row: any) => { row.fkeeperid = '' }
 // 切换源单类型后清空已选源单编号，避免残留不匹配的旧值
 const onSrcFormChange = () => { form.fsrcbillno = '' }
 
@@ -603,6 +644,10 @@ function buildPayload() {
       fbaseunitqty: it.fbaseunitqty || 0,
       fstockid: it.fstockid || '',
       fstocklocid: it.fstocklocid || '',
+      fkeepertypeid: it.fkeepertypeid || '',
+      fkeeperid: it.fkeeperid || '',
+      fownertypeid: it.fownertypeid || '',
+      fownerid: it.fownerid || '',
       fprice: it.fprice || 0,
       ftaxrate: it.ftaxrate || 0,
       ftaxprice: it.ftaxprice || 0,

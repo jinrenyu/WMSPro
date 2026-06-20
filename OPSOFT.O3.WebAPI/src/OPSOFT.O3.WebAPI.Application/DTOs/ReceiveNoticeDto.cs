@@ -109,6 +109,11 @@ public class ReceiveNoticeEntryDto
     public bool FisOpenLocation { get; set; }
     public string Fstocklocid { get; set; } = string.Empty;
     public string FstocklocName { get; set; } = string.Empty;
+    // 保管者 / 货主（类型值即对应基础资料 lookup 模块：org/supplier/customer/department/employee）
+    public string Fkeepertypeid { get; set; } = string.Empty;
+    public string Fkeeperid { get; set; } = string.Empty;
+    public string Fownertypeid { get; set; } = string.Empty;
+    public string Fownerid { get; set; } = string.Empty;
     // 价格
     public decimal Fprice { get; set; }
     public decimal Ftaxrate { get; set; }
@@ -206,6 +211,11 @@ public class CreateReceiveNoticeEntryRequest
     public decimal Fbaseunitqty { get; set; }
     public string Fstockid { get; set; } = string.Empty;
     public string Fstocklocid { get; set; } = string.Empty;
+    // 保管者 / 货主（类型值即对应基础资料 lookup 模块）
+    public string Fkeepertypeid { get; set; } = string.Empty;
+    public string Fkeeperid { get; set; } = string.Empty;
+    public string Fownertypeid { get; set; } = string.Empty;
+    public string Fownerid { get; set; } = string.Empty;
     public decimal Fprice { get; set; }
     public decimal Ftaxrate { get; set; }
     public decimal Ftaxprice { get; set; }
