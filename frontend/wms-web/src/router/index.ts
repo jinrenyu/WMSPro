@@ -64,6 +64,18 @@ const routes = [
                 meta: { title: '编码规则配置' }
             },
             {
+                path: 'system/selbills',
+                name: 'SelBillList',
+                component: () => import('../views/system/SelBillList.vue'),
+                meta: { title: '出入库流程配置' }
+            },
+            {
+                path: 'system/selbills/edit',
+                name: 'SelBillEdit',
+                component: () => import('../views/system/SelBillEdit.vue'),
+                meta: { title: '出入库流程配置-维护' }
+            },
+            {
                 path: 'master/materials',
                 name: 'MaterialList',
                 component: () => import('../views/master/MaterialList.vue'),

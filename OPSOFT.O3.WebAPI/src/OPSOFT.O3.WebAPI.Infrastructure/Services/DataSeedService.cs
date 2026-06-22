@@ -450,6 +450,21 @@ public class DataSeedService
         AddButton(menus, "menu_billcoderule_list", billCodeRuleMenuId, "查看编码规则", "billcoderule:list", 1, now);
         AddButton(menus, "menu_billcoderule_edit", billCodeRuleMenuId, "编辑编码规则", "billcoderule:edit", 2, now);
 
+        // 出入库流程配置 (M) - 系统管理下（源单类型/下推目标映射，T_BOS_SELBILL）
+        var selBillMenuId = "menu_selbill";
+        menus.Add(new SysMenu
+        {
+            Uid = selBillMenuId, FInterId = selBillMenuId, ParentId = sysManageId, MenuName = "出入库流程配置",
+            MenuType = "M", RoutePath = "/system/selbills", Icon = "Connection", PermCode = "", SortOrder = 6,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_selbill_list", selBillMenuId, "查看出入库流程", "selbill:list", 1, now);
+        AddButton(menus, "menu_selbill_add", selBillMenuId, "新增出入库流程", "selbill:add", 2, now);
+        AddButton(menus, "menu_selbill_edit", selBillMenuId, "编辑出入库流程", "selbill:edit", 3, now);
+        AddButton(menus, "menu_selbill_approve", selBillMenuId, "审核出入库流程", "selbill:approve", 4, now);
+        AddButton(menus, "menu_selbill_delete", selBillMenuId, "删除出入库流程", "selbill:delete", 5, now);
+        AddButton(menus, "menu_selbill_disable", selBillMenuId, "禁用出入库流程", "selbill:disable", 6, now);
+
         // 单位管理 (M)
         var unitMenuId = "menu_unit";
         menus.Add(new SysMenu
@@ -1052,6 +1067,28 @@ public class DataSeedService
                 Fcheckdate = new DateTime(1900, 1, 1), Fdisabledate = new DateTime(1900, 1, 1),
                 FStatus = 40, FCompanyId = "DEFAULT",
                 CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+            }).ExecuteCommandAsync();
+        }
+
+        // 示例「单据类型映射」明细（T_BOS_SELBILLENTRY）：为默认入库流程(selbill_instock_po)配置
+        // 源单单据类型(采购订单) -> 目标单据类型(采购入库单) 的映射，使配置页开箱即演示主从效果。
+        // 源/目标存 T_BAS_BILLTYPE.Uid（与前端 billtype lookup 选中值一致）。幂等：按 Uid 判重。
+        var selEntries = new (string Uid, string Header, string SourceBtUid, string DestBtUid, bool IsDefault, int Idx)[]
+        {
+            // CGDD01_SYS 标准采购订单 -> RKD01_SYS 标准采购入库（默认）
+            ("selentry_instock_po_1", "selbill_instock_po", "83d822ca3e374b4ab01e5dd46a0062bd", "stk_billtype_std_0001", true, 1),
+            // CGDD02_SYS 标准委外订单 -> RKD02_SYS 委外采购入库
+            ("selentry_instock_po_2", "selbill_instock_po", "6d01d059713d42a28bb976c90a121142", "stk_billtype_ww_0002", false, 2),
+        };
+        foreach (var (eUid, headerUid, srcBt, destBt, isDef, idx) in selEntries)
+        {
+            var exists = await _db.Queryable<TBosSelbillentry>().Where(e => e.Uid == eUid).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBosSelbillentry
+            {
+                Uid = eUid, FInterId = headerUid, Fdetailid = eUid, Fentryid = idx,
+                Fsourceid = srcBt, Fdestid = destBt, Fdefault = isDef,
+                FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
             }).ExecuteCommandAsync();
         }
     }

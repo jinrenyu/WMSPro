@@ -140,6 +140,8 @@ public static class DependencyInjection
         services.AddScoped<IInStockService, InStockService>();
         // 采购退料单 / 外购退料（一主三从 + 扫码 + 出库过账，镜像入库单反向）
         services.AddScoped<IPurchaseReturnService, PurchaseReturnService>();
+        // 出入库流程配置（一主一从 T_BOS_SELBILL / T_BOS_SELBILLENTRY，配置源单类型/下推目标，含禁用/反禁用）
+        services.AddScoped<ISelBillService, SelBillService>();
         services.AddScoped<IDocumentService<TSalOrder, TSalOrderentry, SalesOrderListDto, SalesOrderDetailDto, CreateSalesOrderRequest, UpdateSalesOrderRequest>, SalesOrderService>();
         services.AddScoped<IDocumentService<OdkSrmDelivery, OdkSrmDeliveryEntry, DeliveryListDto, DeliveryDetailDto, CreateDeliveryRequest, UpdateDeliveryRequest>, DeliveryService>();
         services.AddScoped<IDocumentService<OdkSrmInvoice, OdkSrmInvoiceEntry, InvoiceListDto, InvoiceDetailDto, CreateInvoiceRequest, UpdateInvoiceRequest>, InvoiceService>();
