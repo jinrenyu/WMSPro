@@ -69,6 +69,9 @@
                 <ReceiveNoticeLookup v-else-if="form.fsrcformid === 'PUR_ReceiveBill'"
                                      v-model="form.fsrcbillno" :display-text="form.fsrcbillno"
                                      :disabled="isReadonly" placeholder="选择收料通知单" @change="onSrcOrderChange" />
+                <MaterialReturnApplyLookup v-else-if="form.fsrcformid === 'PUR_MRAPP'"
+                                     v-model="form.fsrcbillno" :display-text="form.fsrcbillno"
+                                     :disabled="isReadonly" placeholder="选择退料申请单" @change="onSrcOrderChange" />
                 <el-input v-else v-model="form.fsrcbillno" :disabled="!form.fsrcformid" placeholder="无源单" />
               </el-form-item>
             </el-col>
@@ -426,12 +429,14 @@ import {
 } from '../../api/purchaseReturn'
 import { getPurchaseOrder } from '../../api/purchaseOrder'
 import { getReceiveNotice } from '../../api/receiveNotice'
+import { getMaterialReturnApply } from '../../api/materialReturnApply'
 import { formatDate } from '../../utils/format'
 import { useOrgStore } from '../../stores/org'
 import LookupSelect from '../../components/LookupSelect.vue'
 import MaterialLookup from '../../components/MaterialLookup.vue'
 import PurchaseOrderLookup from '../../components/PurchaseOrderLookup.vue'
 import ReceiveNoticeLookup from '../../components/ReceiveNoticeLookup.vue'
+import MaterialReturnApplyLookup from '../../components/MaterialReturnApplyLookup.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -717,8 +722,10 @@ const onSrcOrderChange = async (order: any) => {
   }
   loading.value = true
   try {
-    const isPO = form.fsrcformid === 'PUR_PurchaseOrder'
-    const res: any = isPO ? await getPurchaseOrder(order.uid) : await getReceiveNotice(order.uid)
+    const srcForm = form.fsrcformid
+    const res: any = srcForm === 'PUR_MRAPP' ? await getMaterialReturnApply(order.uid)
+      : srcForm === 'PUR_ReceiveBill' ? await getReceiveNotice(order.uid)
+      : await getPurchaseOrder(order.uid)
     const src = res.data
     if (!src) return
     // 下推按物料录入
@@ -734,7 +741,12 @@ const onSrcOrderChange = async (order: any) => {
 
     const srcEntries = src.entries || []
     materialLines.value = srcEntries.map((e: any) => {
-      const qty = e.fqty != null ? e.fqty : (e.factreceiveqty || 0)
+      // 数量：采购订单=fqty、收料通知单=factreceiveqty、退料申请单=申请退料数量fmrappqty。
+      // 注意退料申请单的 fmrappqty/fmrqty 后端是非空 decimal，恒返回数字(0)不会为 null，
+      // 故不能用 !=null 判空（fmrqty 常为0），须用 || 优先取申请退料数量 fmrappqty。
+      const qty = e.fqty != null ? e.fqty
+        : (e.factreceiveqty != null ? e.factreceiveqty
+        : (e.fmrappqty || e.fmrqty || 0))
       const line: any = {
         ...newMaterialLine(),
         fmaterialid: e.fmaterialid || '', fmaterialNumber: e.fmaterialNumber || '', fmaterialName: e.fmaterialName || '', fSpecification: e.fSpecification || '',
@@ -913,7 +925,16 @@ onMounted(async () => {
     if (!form.frequireorgid) form.frequireorgid = orgStore.currentOrgId
     if (!form.fpurchaseorgid) form.fpurchaseorgid = orgStore.currentOrgId
     if (!form.fcompanyid) form.fcompanyid = orgStore.currentOrgId
-    if (!form.fsrcformid && sourceTypes.value.length) form.fsrcformid = sourceTypes.value[0].value
+    // 下推进入：源单页带 query（srcform=源单模板, srcuid=源单Uid, srcbillno=源单号），复用引入逻辑自动带入明细
+    const pushSrcForm = route.query.srcform as string
+    const pushSrcUid = route.query.srcuid as string
+    if (pushSrcForm && pushSrcUid) {
+      form.fsrcformid = pushSrcForm
+      form.fsrcbillno = (route.query.srcbillno as string) || ''
+      await onSrcOrderChange({ uid: pushSrcUid })
+    } else if (!form.fsrcformid && sourceTypes.value.length) {
+      form.fsrcformid = sourceTypes.value[0].value
+    }
   }
 })
 </script>

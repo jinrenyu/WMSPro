@@ -167,6 +167,16 @@ public class CreateSelBillRequest
     public List<CreateSelBillEntryRequest> Entries { get; set; } = new();
 }
 
+/// <summary>
+/// 下推目标项：某源单类型（FNUMBER）按出入库流程配置可下推到的目标单据类型。
+/// Value=目标单据模板编号(SYS_BILLTEMPLATE.FNUMBER)，Label=目标单据名称。
+/// </summary>
+public class PushDownTargetDto
+{
+    public string Value { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+}
+
 public class UpdateSelBillRequest
 {
     public string Fname { get; set; } = string.Empty;

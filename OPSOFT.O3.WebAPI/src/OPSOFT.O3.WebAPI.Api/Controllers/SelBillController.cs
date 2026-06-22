@@ -89,4 +89,14 @@ public class SelBillController : ControllerBase
         var result = await _service.EnableAsync(id);
         return Ok(ApiResponse<bool>.Ok(result, "反禁用成功"));
     }
+
+    /// <summary>
+    /// 按源单类型查可下推的目标单据类型（供采购订单/收料通知单/退料申请单等源单维护页「下推」按钮使用）。
+    /// </summary>
+    [HttpGet("push-targets")]
+    public async Task<ActionResult<ApiResponse<List<PushDownTargetDto>>>> GetPushTargets([FromQuery] string sourceType)
+    {
+        var result = await _service.GetPushDownTargetsAsync(sourceType);
+        return Ok(ApiResponse<List<PushDownTargetDto>>.Ok(result));
+    }
 }

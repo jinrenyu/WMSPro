@@ -118,3 +118,14 @@ export const disableSelBill = (id: string) => {
 export const enableSelBill = (id: string) => {
     return request({ url: `/selbill/${id}/enable`, method: 'post' })
 }
+
+// 下推目标项：某源单类型可下推到的目标单据类型
+export interface PushDownTarget {
+    value: string   // 目标单据模板编号（SYS_BILLTEMPLATE.FNUMBER）
+    label: string   // 目标单据名称
+}
+
+// GET /api/selbill/push-targets?sourceType=xxx - 按源单类型查可下推目标
+export const getPushTargets = (sourceType: string) => {
+    return request({ url: '/selbill/push-targets', method: 'get', params: { sourceType } })
+}

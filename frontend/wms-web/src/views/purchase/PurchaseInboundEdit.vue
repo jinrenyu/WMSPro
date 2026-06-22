@@ -998,7 +998,16 @@ onMounted(async () => {
     if (!form.fdemandorgid) form.fdemandorgid = orgStore.currentOrgId
     if (!form.fpurchaseorgid) form.fpurchaseorgid = orgStore.currentOrgId
     if (!form.fcompanyid) form.fcompanyid = orgStore.currentOrgId
-    if (!form.fsrcformid && sourceTypes.value.length) form.fsrcformid = sourceTypes.value[0].value
+    // 下推进入：源单页带 query（srcform=源单模板, srcuid=源单Uid, srcbillno=源单号），复用引入逻辑自动带入明细
+    const pushSrcForm = route.query.srcform as string
+    const pushSrcUid = route.query.srcuid as string
+    if (pushSrcForm && pushSrcUid) {
+      form.fsrcformid = pushSrcForm
+      form.fsrcbillno = (route.query.srcbillno as string) || ''
+      await onSrcOrderChange({ uid: pushSrcUid })
+    } else if (!form.fsrcformid && sourceTypes.value.length) {
+      form.fsrcformid = sourceTypes.value[0].value
+    }
   }
 })
 </script>

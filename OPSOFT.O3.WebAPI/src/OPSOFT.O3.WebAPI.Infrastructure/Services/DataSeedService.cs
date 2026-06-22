@@ -589,6 +589,7 @@ public class DataSeedService
         AddButton(menus, "menu_purchase_order_edit", purchaseOrderId, "编辑采购订单", "purchaseorder:edit", 3, now);
         AddButton(menus, "menu_purchase_order_approve", purchaseOrderId, "审核采购订单", "purchaseorder:approve", 4, now);
         AddButton(menus, "menu_purchase_order_delete", purchaseOrderId, "删除采购订单", "purchaseorder:delete", 5, now);
+        AddButton(menus, "menu_purchase_order_push", purchaseOrderId, "下推采购订单", "purchaseorder:push", 6, now);
 
         // 收料通知单 (M)
         var receiveNoticeId = "menu_receive_notice";
@@ -603,6 +604,7 @@ public class DataSeedService
         AddButton(menus, "menu_receive_notice_edit", receiveNoticeId, "编辑收料通知单", "receivenotice:edit", 3, now);
         AddButton(menus, "menu_receive_notice_approve", receiveNoticeId, "审核收料通知单", "receivenotice:approve", 4, now);
         AddButton(menus, "menu_receive_notice_delete", receiveNoticeId, "删除收料通知单", "receivenotice:delete", 5, now);
+        AddButton(menus, "menu_receive_notice_push", receiveNoticeId, "下推收料通知单", "receivenotice:push", 6, now);
 
         // 采购入库单 (M)
         var purchaseInId = "menu_purchase_in";
@@ -640,6 +642,7 @@ public class DataSeedService
         AddButton(menus, "menu_return_req_edit", returnReqId, "编辑退料申请单", "returnreq:edit", 3, now);
         AddButton(menus, "menu_return_req_approve", returnReqId, "审核退料申请单", "returnreq:approve", 4, now);
         AddButton(menus, "menu_return_req_delete", returnReqId, "删除退料申请单", "returnreq:delete", 5, now);
+        AddButton(menus, "menu_return_req_push", returnReqId, "下推退料申请单", "returnreq:push", 6, now);
 
         // 采购退料单 (M)
         var purchaseReturnId = "menu_purchase_return";
@@ -1053,6 +1056,8 @@ public class DataSeedService
             ("selbill_mrb_none",        "PUR_MRB",     "",                  "无源单",     false),
             ("selbill_mrb_po",          "PUR_MRB",     "PUR_PurchaseOrder", "采购订单",   true),
             ("selbill_mrb_receive",     "PUR_MRB",     "PUR_ReceiveBill",   "收料通知单", false),
+            // 退料申请单 -> 采购退料单（支持退料申请单维护页「下推」生成采购退料单）
+            ("selbill_mrb_mrapp",       "PUR_MRB",     "PUR_MRAPP",         "退料申请单", false),
         };
         foreach (var (uid, destType, srcType, name, isDef) in sels)
         {

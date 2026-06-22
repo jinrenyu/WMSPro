@@ -12,12 +12,18 @@
       <el-button v-if="isEdit && form.fStatus === 40" type="warning" @click="handleUnapprove" v-permission="'purchaseorder:approve'">
         <el-icon><RefreshLeft /></el-icon> 反审核
       </el-button>
+      <el-button v-if="isEdit && form.fStatus === 40" type="primary" plain @click="handlePushDown" v-permission="'purchaseorder:push'">
+        <el-icon><Bottom /></el-icon> 下推
+      </el-button>
       <div class="toolbar-spacer" />
       <el-tag v-if="isEdit" :type="form.fStatus === 40 ? 'success' : 'warning'" size="large">
         {{ form.fStatus === 40 ? '已审核' : '未审核' }}
       </el-tag>
       <el-button class="back-btn" @click="handleBack"><el-icon><Back /></el-icon> 退出</el-button>
     </div>
+
+    <!-- 下推目标选择 -->
+    <PushDownDialog ref="pushDialog" />
 
     <el-form ref="formRef" :model="form" :rules="rules" label-width="84px"
              :disabled="isReadonly" class="edit-form" v-loading="loading">
@@ -246,7 +252,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { Check, Back, Plus, CircleCheck, RefreshLeft } from '@element-plus/icons-vue'
+import { Check, Back, Plus, CircleCheck, RefreshLeft, Bottom } from '@element-plus/icons-vue'
 import {
   getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder,
   approvePurchaseOrder, unapprovePurchaseOrder, getMaterialAuxEnabled, type PurchaseOrderEntry
@@ -255,6 +261,7 @@ import { formatDate } from '../../utils/format'
 import { useOrgStore } from '../../stores/org'
 import LookupSelect from '../../components/LookupSelect.vue'
 import MaterialLookup from '../../components/MaterialLookup.vue'
+import PushDownDialog from '../../components/PushDownDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -487,6 +494,10 @@ async function runStatus(fn: (id: string) => Promise<any>, msg: string) {
 const handleApprove = () => runStatus(approvePurchaseOrder, '审核成功')
 const handleUnapprove = () => runStatus(unapprovePurchaseOrder, '反审核成功')
 const handleBack = () => router.push({ name: 'PurchaseOrderList' })
+
+// 下推：已审核采购订单 -> 抓出入库流程配置可下推目标，用户选择后跳目标维护页并带入明细
+const pushDialog = ref<any>(null)
+const handlePushDown = () => pushDialog.value?.open('PUR_PurchaseOrder', uid.value, form.fbillno, '采购订单')
 
 onMounted(async () => {
   if (!orgStore.loaded) await orgStore.loadOrgs()

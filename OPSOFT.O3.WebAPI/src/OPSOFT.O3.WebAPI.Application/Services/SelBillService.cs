@@ -158,6 +158,39 @@ public class SelBillService : DocumentService<TBosSelbill, TBosSelbillentry,
         return result;
     }
 
+    // ===== 下推：按源单类型查可下推目标（出入库流程配置反向查询）=====
+
+    /// <summary>
+    /// 反向于 InStockService/PurchaseReturnService 的 GetSourceBillTypesAsync：
+    /// 那两处按 Fdesttrantype==目标 取 Fsourcetrantype（目标单视角看可选源单）；
+    /// 这里按 Fsourcetrantype==源单 取 Fdesttrantype（源单视角看可下推目标）。
+    /// 仅取启用(Fisuse)、未禁用、未删除的流程；排除空目标；按 Fdefault 优先排序。
+    /// </summary>
+    public async Task<List<PushDownTargetDto>> GetPushDownTargetsAsync(string sourceTranType)
+    {
+        if (string.IsNullOrWhiteSpace(sourceTranType)) return new();
+
+        var rows = await Db.Queryable<TBosSelbill>()
+            .Where(s => s.Fsourcetrantype == sourceTranType && s.Fisuse && !s.FDisabled && !s.FDeleted)
+            .OrderBy(s => s.Fdefault, OrderByType.Desc)
+            // 次级排序键：同一源单映射到多个目标且 Fdefault 均为 true 时（如采购订单同时可下推入库单/退料单），
+            // 单凭 Fdefault 排序非唯一，平级行在 SqlServer/PG 下顺序未定义；按 Fdesttrantype 兜底保证返回顺序确定，
+            // 使前端 PushDownDialog 默认选中项稳定。
+            .OrderBy(s => s.Fdesttrantype)
+            .Select(s => s.Fdesttrantype)
+            .ToListAsync();
+
+        var dests = rows.Where(d => !string.IsNullOrEmpty(d)).Distinct().ToList();
+        if (dests.Count == 0) return new();
+
+        var tmplDict = await LoadBillTemplateDictAsync(dests);
+        return dests.Select(d => new PushDownTargetDto
+        {
+            Value = d,
+            Label = tmplDict.GetValueOrDefault(d, d)
+        }).ToList();
+    }
+
     // 已审核/已关闭单据禁止修改/删除（前端只读外的后端兜底，须先反审核）
     public override async Task<bool> UpdateAsync(string uid, UpdateSelBillRequest request)
     {

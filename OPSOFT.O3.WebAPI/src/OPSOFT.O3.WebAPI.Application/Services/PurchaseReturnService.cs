@@ -1549,7 +1549,8 @@ public class PurchaseReturnService : DocumentService<TPurMrb, TPurMrbEntry,
     public async Task<List<SourceBillTypeDto>> GetSourceBillTypesAsync()
     {
         var rows = await Db.Queryable<TBosSelbill>()
-            .Where(s => s.Fdesttrantype == "PUR_MRB" && s.Fisuse && !s.FDeleted)
+            // !FDisabled：被禁用的流程配置不再作为源单类型下拉项（与 SelBillService.GetPushDownTargetsAsync、ISelBillService 接口注释统一口径）
+            .Where(s => s.Fdesttrantype == "PUR_MRB" && s.Fisuse && !s.FDisabled && !s.FDeleted)
             .OrderBy(s => s.Fdefault, OrderByType.Desc)
             .Select(s => s.Fsourcetrantype).ToListAsync();
         var types = rows.Distinct().ToList();
