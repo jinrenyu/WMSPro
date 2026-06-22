@@ -944,7 +944,8 @@ public class InStockService : DocumentService<TStkInstock, TStkInstockentry,
                 CuserName = h != null ? userDict.GetValueOrDefault(h.CUser, string.Empty) : string.Empty,
                 CYmd = h?.CYmd,
                 FcheckerName = h != null ? userDict.GetValueOrDefault(h.Fcheckerid, string.Empty) : string.Empty,
-                Fcheckdate = h?.Fcheckdate
+                Fcheckdate = h?.Fcheckdate,
+                Fwwintype = e.Fwwintype
             };
         }).ToList();
 

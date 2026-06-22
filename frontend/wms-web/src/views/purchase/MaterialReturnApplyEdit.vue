@@ -487,6 +487,10 @@ const onMaterialChange = async (row: any, item: any) => {
   row.fisKfPeriod = !!item?.fIsKfPeriod
   row.fKfPeriod = item?.fKfPeriod || 0
   row.fKfUnit = item?.fKfUnit || 0
+  // 物料带出：库存单位（对应明细“库存单位”列 fstockunitid，参照 onStockUnitChange 填 name）
+  if (item?.fStoreUnitId) { row.fstockunitid = item.fStoreUnitId; row.fstockunitName = item.fStoreUnitName || '' }
+  // 物料带出：基本单位（无 UI 列，仅赋值参与保存）
+  if (item?.fBaseUnitId) { row.fbaseunitid = item.fBaseUnitId }
   // 切换物料后重置辅助属性，并按物料是否启用辅助属性决定该格可选/只读
   row.fauxpropid = ''
   row.fauxpropName = ''
@@ -584,6 +588,9 @@ async function handleSave() {
   // 提交前对每行重算金额，避免漏触发 @change 导致脏值（后端也会以服务端公式为准重算）
   lineItems.value.forEach(it => recalc(it))
   if (buildPayload().entries.length === 0) { ElMessage.warning('请至少添加一条明细'); return }
+  // 批号必录：物料启用了批次管理则批次不能为空
+  const noBatch = lineItems.value.find(it => it.fmaterialid && it.fisBatchManage && !String(it.flot || '').trim())
+  if (noBatch) { ElMessage.warning(`物料「${noBatch.fmaterialName || noBatch.fmaterialNumber}」启用了批号管理，批次必填`); return }
   loading.value = true
   try {
     if (isEdit.value) {

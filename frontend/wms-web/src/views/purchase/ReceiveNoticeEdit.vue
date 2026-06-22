@@ -323,7 +323,7 @@
           </el-table-column>
           <el-table-column label="采购日期" width="140">
             <template #default="{ row }">
-              <el-date-picker v-model="row.fkfdate" type="date" value-format="YYYY-MM-DD" placeholder="日期" :disabled="isReadonly" style="width:100%" />
+              <el-date-picker v-model="row.fkfdate" type="date" value-format="YYYY-MM-DD" placeholder="日期" :disabled="isReadonly" style="width:100%" @change="() => recalcUseful(row)" />
             </template>
           </el-table-column>
           <el-table-column label="有效期至" width="140">
@@ -459,7 +459,7 @@ const newLine = () => ({
   fauxpropid: '', fauxpropName: '', fisAuxEnabled: false,
   fcheckincoming: false, flot: '', fsupplylot: '',
   factreceiveqty: 0, finstockqty: 0, fgodqty: 0, fscrapqty: 0,
-  funitid: '', funitNumber: '', funitName: '', fbaseunitqty: 0,
+  funitid: '', funitNumber: '', funitName: '', fbaseunitid: '', fbaseunitqty: 0,
   fstockid: '', fstockNumber: '', fstockName: '', fisOpenLocation: false,
   fstocklocid: '', fstocklocName: '',
   fkeepertypeid: '', fkeeperid: '', fownertypeid: '', fownerid: '',
@@ -491,6 +491,17 @@ const recalc = (row: any) => {
   row.ftaxprice = +(price * (1 + rate / 100)).toFixed(6)        // 含税单价 = 单价×(1+税率%)
 }
 
+// 保质期至联动：有效期至 = 保质日期 + 保质期限（fKfUnit: 0=天 1=月 2=年）；未启用保质期或缺基准日期/期限则不动
+const recalcUseful = (row: any) => {
+  if (!row.fisKfPeriod || !row.fkfdate || !row.fKfPeriod) return
+  const d = new Date(row.fkfdate)
+  if (isNaN(d.getTime())) return
+  if (row.fKfUnit === 2) d.setFullYear(d.getFullYear() + row.fKfPeriod)
+  else if (row.fKfUnit === 1) d.setMonth(d.getMonth() + row.fKfPeriod)
+  else d.setDate(d.getDate() + row.fKfPeriod)
+  row.fexpiredate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 const onMaterialChange = async (row: any, item: any) => {
   row.fmaterialName = item?.fName || ''
   row.fmaterialNumber = item?.fNumber || ''
@@ -500,6 +511,14 @@ const onMaterialChange = async (row: any, item: any) => {
   row.fisKfPeriod = !!item?.fIsKfPeriod
   row.fKfPeriod = item?.fKfPeriod || 0
   row.fKfUnit = item?.fKfUnit || 0
+  // 物料带出：采购单位（物料维护的「采购单位」，对应明细采购单位列，带出后仍可手改）
+  if (item?.fPurchaseUnitId) {
+    row.funitid = item.fPurchaseUnitId
+    row.funitName = item.fPurchaseUnitName || ''
+    row.funitNumber = item.fPurchaseUnitNumber || ''
+  }
+  // 物料带出：基本单位（无UI列，仅供后端基本单位换算用）
+  if (item?.fBaseUnitId) row.fbaseunitid = item.fBaseUnitId
   // 切换物料后重置辅助属性，并按物料是否启用辅助属性决定该格可选/只读
   row.fauxpropid = ''
   row.fauxpropName = ''
@@ -641,6 +660,7 @@ function buildPayload() {
       fgodqty: it.fgodqty || 0,
       fscrapqty: it.fscrapqty || 0,
       funitid: it.funitid || '',
+      fbaseunitid: it.fbaseunitid || '',
       fbaseunitqty: it.fbaseunitqty || 0,
       fstockid: it.fstockid || '',
       fstocklocid: it.fstocklocid || '',
@@ -673,6 +693,12 @@ async function handleSave() {
   // 提交前对每行重算金额，避免漏触发 @change 导致脏值（后端也会以服务端公式为准重算）
   lineItems.value.forEach(it => recalc(it))
   if (buildPayload().entries.length === 0) { ElMessage.warning('请至少添加一条明细'); return }
+  // 批号必录：启用批次管理的物料行必须填写批次
+  const noBatch = lineItems.value.find(it => it.fmaterialid && it.fisBatchManage && !String(it.flot || '').trim())
+  if (noBatch) {
+    ElMessage.warning(`物料「${noBatch.fmaterialName || noBatch.fmaterialNumber}」启用了批号管理，批次必填`)
+    return
+  }
   loading.value = true
   try {
     if (isEdit.value) {

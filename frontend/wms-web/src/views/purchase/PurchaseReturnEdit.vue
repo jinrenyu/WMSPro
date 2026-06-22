@@ -386,7 +386,7 @@
               </el-table-column>
               <el-table-column label="保质日期" width="140">
                 <template #default="{ row }">
-                  <el-date-picker v-model="row.fkfdate" type="date" value-format="YYYY-MM-DD" placeholder="日期" :disabled="isReadonly || form.ftypeid === 2" style="width:100%" />
+                  <el-date-picker v-model="row.fkfdate" type="date" value-format="YYYY-MM-DD" placeholder="日期" :disabled="isReadonly || form.ftypeid === 2" style="width:100%" @change="() => recalcUseful(row)" />
                 </template>
               </el-table-column>
               <el-table-column prop="fKfPeriod" label="保质期限" width="90" align="right" />
@@ -566,6 +566,16 @@ const recalcMaterial = (row: any) => {
   row.ftaxprice = +(price * (1 + rate / 100)).toFixed(6)        // 含税单价 = 单价×(1+税率%)
 }
 
+// 保质期至联动：有效期至 = 保质日期 + 保质期限×单位（0=天/1=月/2=年）
+const recalcUseful = (row: any) => {
+  if (!row.fisKfPeriod || !row.fkfdate || !row.fKfPeriod) return
+  const d = new Date(row.fkfdate); if (isNaN(d.getTime())) return
+  if (row.fKfUnit === 2) d.setFullYear(d.getFullYear() + row.fKfPeriod)
+  else if (row.fKfUnit === 1) d.setMonth(d.getMonth() + row.fKfPeriod)
+  else d.setDate(d.getDate() + row.fKfPeriod)
+  row.fusefuldate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 const onMaterialChange = async (row: any, item: any) => {
   row.fmaterialName = item?.fName || ''
   row.fmaterialNumber = item?.fNumber || ''
@@ -574,6 +584,10 @@ const onMaterialChange = async (row: any, item: any) => {
   row.fisKfPeriod = !!item?.fIsKfPeriod
   row.fKfPeriod = item?.fKfPeriod || 0
   row.fKfUnit = item?.fKfUnit || 0
+  // 带出物料维护的单位（用 if 守卫，避免清空已有值）
+  if (item?.fPurchaseUnitId) { row.funitid = item.fPurchaseUnitId; row.funitName = item.fPurchaseUnitName || ''; row.funitNumber = item.fPurchaseUnitNumber || '' }
+  if (item?.fBaseUnitId) { row.fbaseunitid = item.fBaseUnitId }
+  recalcUseful(row)
   row.fauxpropid = ''
   row.fauxpropName = ''
   row.fisAuxEnabled = false
@@ -848,6 +862,13 @@ async function handleSave() {
   } else {
     materialLines.value.forEach(it => recalcMaterial(it))
     if (buildPayload().entries.length === 0) { ElMessage.warning('请至少添加一条物料明细'); detailTab.value = 'material'; return }
+    // 批号必录：启用批号管理的物料行必须填批次
+    const noBatch = materialLines.value.find(it => it.fmaterialid && it.fisBatchManage && !String(it.flot || '').trim())
+    if (noBatch) {
+      ElMessage.warning(`物料「${noBatch.fmaterialName || noBatch.fmaterialNumber}」启用了批号管理，批次必填`)
+      detailTab.value = 'material'
+      return
+    }
   }
   loading.value = true
   try {

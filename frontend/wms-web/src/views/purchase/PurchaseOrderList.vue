@@ -108,7 +108,7 @@ import {
   getPurchaseOrders, deletePurchaseOrder,
   approvePurchaseOrder, unapprovePurchaseOrder
 } from '../../api/purchaseOrder'
-import { formatDate } from '../../utils/format'
+import { formatDateOnly } from '../../utils/format'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
@@ -176,7 +176,8 @@ const fmtDate = (d?: string) => {
   if (!d) return ''
   const date = new Date(d)
   if (isNaN(date.getTime()) || date.getFullYear() <= 1900) return ''
-  return formatDate(d)
+  // 订单日期为纯业务日期（无时分秒），只显示到天
+  return formatDateOnly(d)
 }
 
 const handleSelectionChange = (rows: any[]) => { selectedRows.value = rows }

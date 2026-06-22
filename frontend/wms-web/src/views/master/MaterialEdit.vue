@@ -170,7 +170,7 @@
           <div class="section-title">包装与单位信息</div>
           <el-row :gutter="20">
             <el-col :span="8">
-              <el-form-item label="条码类型">
+              <el-form-item label="条码类别">
                 <el-select v-model="form.fBarType" style="width: 100%" clearable>
                   <el-option v-for="o in barTypeOptions" :key="o.value" :label="o.label" :value="o.value" />
                 </el-select>
@@ -563,10 +563,11 @@ const companyDisplayName = computed(() => {
 
 const erpClsOptions = ['外购', '自制', '委外', '虚拟件', '资产', '费用']
 const abcOptions = ['A', 'B', 'C']
+// 条码类别：1=单品条码;2=最小包装量条码;3=批次条码（与物料条码类型维护页 fbartype 取值统一）
 const barTypeOptions = [
-  { label: '不启用', value: 0 },
   { label: '单品条码', value: 1 },
-  { label: '批次条码', value: 2 },
+  { label: '最小包装量条码', value: 2 },
+  { label: '批次条码', value: 3 },
 ]
 
 const rules: FormRules = {
@@ -822,6 +823,12 @@ async function handleSave() {
     await formRef.value.validate()
   } catch {
     activeTab.value = 'info'
+    return
+  }
+  // 启用辅助单位时必须录入换算明细；新增态尚无法维护辅助单位（需先保存生成物料），故仅在编辑态强制校验
+  if (form.fIsSecUnit && isEdit.value && secUnits.value.length === 0) {
+    activeTab.value = 'secunit'
+    ElMessage.warning('已启用辅助单位，请在「辅助单位」页签至少录入一条换算数据')
     return
   }
   const payload = buildPayload()

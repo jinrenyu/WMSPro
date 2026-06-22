@@ -76,6 +76,9 @@
               <template v-if="col.slotName === 'date'">
                 {{ fmtDate(scope.row[col.prop!]) }}
               </template>
+              <template v-else-if="col.slotName === 'dateOnly'">
+                {{ fmtDateOnly(scope.row[col.prop!]) }}
+              </template>
               <template v-else-if="col.slotName === 'bool'">
                 <el-checkbox :model-value="!!scope.row[col.prop!]" disabled />
               </template>
@@ -117,7 +120,7 @@ import {
   getMaterialReturnApplies, deleteMaterialReturnApply,
   approveMaterialReturnApply, unapproveMaterialReturnApply
 } from '../../api/materialReturnApply'
-import { formatDate } from '../../utils/format'
+import { formatDate, formatDateOnly } from '../../utils/format'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
@@ -134,7 +137,7 @@ const tableRef = ref()
 
 // 列表按明细行展开（一条明细一行），参照设计列表
 const columns: ColumnDef[] = [
-  { key: 'fdate', label: '单据日期', prop: 'fdate', width: 110, slotName: 'date' },
+  { key: 'fdate', label: '单据日期', prop: 'fdate', width: 110, slotName: 'dateOnly' },
   { key: 'fbillno', label: '单据编号', prop: 'fbillno', width: 170 },
   { key: 'fentryid', label: '行号', prop: 'fentryid', width: 60, align: 'center' },
   { key: 'fbusinesstype', label: '业务类型', prop: 'fbusinesstype', width: 100, slotName: 'bizType' },
@@ -201,6 +204,13 @@ const fmtDate = (d?: string) => {
   const date = new Date(d)
   if (isNaN(date.getTime()) || date.getFullYear() <= 1900) return ''
   return formatDate(d)
+}
+// 单据日期为纯业务日期（无时分秒）只显示到天；制单/审核日期等系统时间戳仍用 fmtDate 显示时分秒
+const fmtDateOnly = (d?: string) => {
+  if (!d) return ''
+  const date = new Date(d)
+  if (isNaN(date.getTime()) || date.getFullYear() <= 1900) return ''
+  return formatDateOnly(d)
 }
 const bizTypeMap: Record<string, string> = {
   CG: '标准采购', WW: '标准委外', ZCCG: '资产采购', ZYCG: '直运采购', FYCG: '费用采购', VMICG: 'VMI采购', CSCG: '测试采购'

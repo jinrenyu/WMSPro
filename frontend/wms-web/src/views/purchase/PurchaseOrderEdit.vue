@@ -371,6 +371,12 @@ const onMaterialChange = async (row: any, item: any) => {
   row.fisKfPeriod = !!item?.fIsKfPeriod
   row.fKfPeriod = item?.fKfPeriod || 0
   row.fKfUnit = item?.fKfUnit || 0
+  // 物料带出：采购单位（物料维护的「采购单位」，带出后仍可手改）
+  if (item?.fPurchaseUnitId) {
+    row.funitid = item.fPurchaseUnitId
+    row.funitName = item.fPurchaseUnitName || ''
+    row.funitNumber = item.fPurchaseUnitNumber || ''
+  }
   // 切换物料后重置辅助属性，并按物料是否启用辅助属性决定该格可选/只读
   row.fauxpropid = ''
   row.fauxpropName = ''
@@ -447,6 +453,9 @@ async function handleSave() {
   if (!formRef.value) return
   try { await formRef.value.validate() } catch { activeTab.value = 'basic'; return }
   if (buildPayload().entries.length === 0) { ElMessage.warning('请至少添加一条明细'); return }
+  // 启用批号管理的物料，批次必录
+  const noBatch = lineItems.value.find(it => it.fmaterialid && it.fisBatchManage && !String(it.flot || '').trim())
+  if (noBatch) { ElMessage.warning(`物料「${noBatch.fmaterialName || noBatch.fmaterialNumber}」启用了批号管理，批次必填`); activeTab.value = 'basic'; return }
   loading.value = true
   try {
     if (isEdit.value) {

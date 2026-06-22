@@ -66,7 +66,7 @@
       </el-row>
       <el-row :gutter="16">
         <el-col :span="8">
-          <el-form-item label="启用辅助数量"><el-checkbox v-model="form.enableAuxQty" /></el-form-item>
+          <el-form-item label="启用辅助数量"><el-checkbox v-model="form.enableAuxQty" @change="recalcAuxQty" /></el-form-item>
         </el-col>
         <el-col :span="8" v-if="form.enableAuxQty"><el-form-item label="辅助单位"><LookupSelect v-model="form.fsecunitid" module="unit" placeholder="辅助单位" /></el-form-item></el-col>
         <el-col :span="8" v-if="form.enableAuxQty"><el-form-item label="辅助单位数量"><el-input-number v-model="form.fsecqty" :min="0" :precision="6" :controls="false" style="width:100%" /></el-form-item></el-col>
@@ -135,6 +135,7 @@ import {
   type PurchaseOrderLabelHead, type BarcodeLine
 } from '../../api/purchaseOrderLabel'
 import { getPrintTemplatesBySource } from '../../api/labelTemplate'
+import { getMaterialSecUnits } from '../../api/material'
 import { loadHiprint } from '../../utils/hiprintLoader'
 
 const route = useRoute()
@@ -196,7 +197,7 @@ const barcodeCount = computed(() => {
   if (!pkg || pkg <= 0) return 0
   return Math.ceil(p / pkg)
 })
-const recalcCount = () => { /* barcodeCount 为计算属性，无需手动 */ }
+const recalcCount = () => { recalcAuxQty() }  // barcodeCount 为计算属性；打印数量变化时同步辅助数量
 
 // 有效期至 = 采购日期 + 保质期（启用保质期时）
 const recalcUseful = () => {
@@ -207,6 +208,26 @@ const recalcUseful = () => {
   else if (form.fkfunit === 1) d.setMonth(d.getMonth() + form.fkfperiod)
   else d.setDate(d.getDate() + form.fkfperiod)
   form.fusefuldate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+// 物料第一条辅助单位换算（用于辅助数量自动换算）
+const firstSecConv = ref<any>(null)
+async function loadSecConv() {
+  firstSecConv.value = null
+  const mid = head.value?.fmaterialid
+  if (!mid) return
+  try {
+    const res: any = await getMaterialSecUnits(mid)
+    firstSecConv.value = (res.data || [])[0] || null
+  } catch { firstSecConv.value = null }
+}
+// 启用辅助数量时：取物料第一条换算，自动带辅助单位并按打印数量算辅助数量（辅助数量=数量×辅助单位数量/基本单位数量）
+const recalcAuxQty = () => {
+  if (!form.enableAuxQty) return
+  const c = firstSecConv.value
+  if (!c || !Number(c.fConvertNumerator) || !Number(c.fConvertDenominator)) return
+  if (!form.fsecunitid) form.fsecunitid = c.fSecUnitId || ''
+  form.fsecqty = +(Number(form.printQty || 0) * Number(c.fConvertNumerator) / Number(c.fConvertDenominator)).toFixed(6)
 }
 
 const selectedBarcodes = computed(() => selectedRows.value.map(r => r.fbarcode))
@@ -233,6 +254,7 @@ async function loadHead() {
     form.printQty = h.fqty || 0
     form.packageQty = (h.fincreaseqty && h.fincreaseqty > 0) ? h.fincreaseqty : (h.fqty || 0)
     await loadBarcodes()
+    await loadSecConv()
   } catch (e) {
     console.error('加载条码生成页失败:', e)
     ElMessage.error('加载失败')
@@ -259,6 +281,7 @@ async function loadTemplates() {
 
 async function handleGenerate() {
   if (!form.printQty || form.printQty <= 0) { ElMessage.warning('请填写本次打印数量'); return }
+  if (head.value?.fisBatchManage && !String(form.flot || '').trim()) { ElMessage.warning('该物料启用了批号管理，批次（订单批次）必填'); return }
   if (form.fbartype !== 1 && (!form.packageQty || form.packageQty <= 0)) { ElMessage.warning('请填写包装数量'); return }
   if (barcodeCount.value <= 0) { ElMessage.warning('条码数量必须大于 0'); return }
   generating.value = true

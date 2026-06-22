@@ -75,6 +75,9 @@
               <template v-if="col.slotName === 'date'">
                 {{ fmtDate(scope.row[col.prop!]) }}
               </template>
+              <template v-else-if="col.slotName === 'dateOnly'">
+                {{ fmtDateOnly(scope.row[col.prop!]) }}
+              </template>
               <template v-else-if="col.slotName === 'status'">
                 <el-tag :type="scope.row.fStatus === 40 ? 'success' : scope.row.fStatus === 70 ? 'info' : 'warning'" size="small">
                   {{ scope.row.fStatus === 40 ? '已审核' : scope.row.fStatus === 70 ? '已关闭' : '未审核' }}
@@ -107,7 +110,7 @@ import {
   getPurchaseReturns, deletePurchaseReturn,
   approvePurchaseReturn, unapprovePurchaseReturn
 } from '../../api/purchaseReturn'
-import { formatDate } from '../../utils/format'
+import { formatDate, formatDateOnly } from '../../utils/format'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
@@ -117,7 +120,7 @@ const tableRef = ref()
 
 // 列表按物料汇总明细行展开（一条明细一行），参照设计列表
 const columns: ColumnDef[] = [
-  { key: 'fdate', label: '退料日期', prop: 'fdate', width: 110, slotName: 'date' },
+  { key: 'fdate', label: '退料日期', prop: 'fdate', width: 110, slotName: 'dateOnly' },
   { key: 'fbillno', label: '单据编号', prop: 'fbillno', width: 170 },
   { key: 'fsupplyName', label: '供应商名称', prop: 'fsupplyName', minWidth: 150, defaultVisible: false },
   { key: 'fmrdeptName', label: '部门名称', prop: 'fmrdeptName', width: 120 },
@@ -131,7 +134,7 @@ const columns: ColumnDef[] = [
   { key: 'frmrealqty', label: '实退数量', prop: 'frmrealqty', width: 100, align: 'right' },
   { key: 'fcoefficient', label: '换算率', prop: 'fcoefficient', width: 90, align: 'right', defaultVisible: false },
   { key: 'funitName', label: '单位名称', prop: 'funitName', width: 90, defaultVisible: false },
-  { key: 'fkfdate', label: '生产/采购日期', prop: 'fkfdate', width: 120, slotName: 'date', defaultVisible: false },
+  { key: 'fkfdate', label: '生产/采购日期', prop: 'fkfdate', width: 120, slotName: 'dateOnly', defaultVisible: false },
   { key: 'ferpno', label: 'ERP单据编号', prop: 'ferpno', width: 140, defaultVisible: false },
   { key: 'fbilltypeName', label: '单据类型', prop: 'fbilltypeName', width: 120, defaultVisible: false },
   { key: 'cuserName', label: '制单人', prop: 'cuserName', width: 100, defaultVisible: false },
@@ -176,6 +179,13 @@ const fmtDate = (d?: string) => {
   const date = new Date(d)
   if (isNaN(date.getTime()) || date.getFullYear() <= 1900) return ''
   return formatDate(d)
+}
+// 纯业务日期（退料日期/生产采购日期，无时分秒）只显示到天；制单/审核日期等系统时间戳仍用 fmtDate 显示时分秒
+const fmtDateOnly = (d?: string) => {
+  if (!d) return ''
+  const date = new Date(d)
+  if (isNaN(date.getTime()) || date.getFullYear() <= 1900) return ''
+  return formatDateOnly(d)
 }
 
 const handleSelectionChange = (rows: any[]) => { selectedRows.value = rows }

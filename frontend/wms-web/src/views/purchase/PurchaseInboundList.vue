@@ -75,6 +75,12 @@
               <template v-if="col.slotName === 'date'">
                 {{ fmtDate(scope.row[col.prop!]) }}
               </template>
+              <template v-else-if="col.slotName === 'dateOnly'">
+                {{ fmtDateOnly(scope.row[col.prop!]) }}
+              </template>
+              <template v-else-if="col.slotName === 'wwintype'">
+                {{ wwInTypeLabel(scope.row[col.prop!]) }}
+              </template>
               <template v-else-if="col.slotName === 'status'">
                 <el-tag :type="scope.row.fStatus === 40 ? 'success' : scope.row.fStatus === 70 ? 'info' : 'warning'" size="small">
                   {{ scope.row.fStatus === 40 ? '已审核' : scope.row.fStatus === 70 ? '已关闭' : '未审核' }}
@@ -107,7 +113,7 @@ import {
   getInStocks, deleteInStock,
   approveInStock, unapproveInStock
 } from '../../api/purchaseInbound'
-import { formatDate } from '../../utils/format'
+import { formatDate, formatDateOnly } from '../../utils/format'
 import ColumnSetting from '../../components/ColumnSetting.vue'
 import DynamicFilter, { type DynamicFilterInfo } from '../../components/DynamicFilter.vue'
 import { useColumnConfig, type ColumnDef } from '../../composables/useColumnConfig'
@@ -117,7 +123,7 @@ const tableRef = ref()
 
 // 列表按物料汇总明细行展开（一条明细一行），参照设计列表
 const columns: ColumnDef[] = [
-  { key: 'fdate', label: '入库日期', prop: 'fdate', width: 110, slotName: 'date' },
+  { key: 'fdate', label: '入库日期', prop: 'fdate', width: 110, slotName: 'dateOnly' },
   { key: 'fbillno', label: '单据编号', prop: 'fbillno', width: 170 },
   { key: 'fsupplyName', label: '供应商名称', prop: 'fsupplyName', minWidth: 150 },
   { key: 'fentryid', label: '行号', prop: 'fentryid', width: 60, align: 'center' },
@@ -125,13 +131,14 @@ const columns: ColumnDef[] = [
   { key: 'forderbillno', label: '订单编号', prop: 'forderbillno', width: 150, defaultVisible: false },
   { key: 'fempName', label: '业务员', prop: 'fempName', width: 100, defaultVisible: false },
   { key: 'ftypeName', label: '录入类型', prop: 'ftypeName', width: 90, align: 'center' },
+  { key: 'fwwintype', label: '入库类型', prop: 'fwwintype', width: 110, slotName: 'wwintype' },
   { key: 'fmaterialNumber', label: '物料代码', prop: 'fmaterialNumber', width: 140 },
   { key: 'fmaterialName', label: '物料名称', prop: 'fmaterialName', minWidth: 150 },
   { key: 'fSpecification', label: '规格型号', prop: 'fSpecification', minWidth: 120, defaultVisible: false },
   { key: 'flot', label: '批次', prop: 'flot', width: 110 },
   { key: 'frealqty', label: '实收数量', prop: 'frealqty', width: 100, align: 'right' },
   { key: 'funitName', label: '单位名称', prop: 'funitName', width: 90 },
-  { key: 'fkfdate', label: '生产/采购日期', prop: 'fkfdate', width: 120, slotName: 'date', defaultVisible: false },
+  { key: 'fkfdate', label: '生产/采购日期', prop: 'fkfdate', width: 120, slotName: 'dateOnly', defaultVisible: false },
   { key: 'ferpno', label: 'ERP单据编号', prop: 'ferpno', width: 140, defaultVisible: false },
   { key: 'fbilltypeName', label: '单据类型', prop: 'fbilltypeName', width: 120, defaultVisible: false },
   { key: 'fcompanyName', label: '组织', prop: 'fcompanyName', width: 120, defaultVisible: false },
@@ -177,6 +184,18 @@ const fmtDate = (d?: string) => {
   if (isNaN(date.getTime()) || date.getFullYear() <= 1900) return ''
   return formatDate(d)
 }
+// 纯业务日期（入库日期/生产采购日期，无时分秒）只显示到天；制单/审核日期等系统时间戳仍用 fmtDate 显示时分秒
+const fmtDateOnly = (d?: string) => {
+  if (!d) return ''
+  const date = new Date(d)
+  if (isNaN(date.getTime()) || date.getFullYear() <= 1900) return ''
+  return formatDateOnly(d)
+}
+// 入库类型码值→中文（与采购入库维护页一致）
+const wwInTypeMap: Record<string, string> = {
+  QLI: '合格入库', PSI: '工费入库', MSI: '料废入库', CRI: '让步接收入库', RFI: '不合格入库'
+}
+const wwInTypeLabel = (v?: string) => (v ? (wwInTypeMap[v] || v) : '')
 
 const handleSelectionChange = (rows: any[]) => { selectedRows.value = rows }
 

@@ -19,6 +19,8 @@ public class InStockListDto
     /// <summary>录入类型 1=物料 2=条码</summary>
     public int Ftypeid { get; set; }
     public string FtypeName { get; set; } = string.Empty;
+    /// <summary>入库类型 QLI=合格/PSI=工费/MSI=料废/CRI=让步接收/RFI=不合格</summary>
+    public string Fwwintype { get; set; } = string.Empty;
     /// <summary>行号</summary>
     public int? Fentryid { get; set; }
     public int FStatus { get; set; }

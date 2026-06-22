@@ -250,7 +250,13 @@
               <el-table-column prop="fsecunitNumber" label="辅助单位代码" width="110" />
               <el-table-column prop="fsecunitName" label="辅助单位名称" width="110" />
               <el-table-column prop="fsecunitqty" label="辅助单位数量" width="110" align="right" />
-              <el-table-column prop="fwwintype" label="入库类型" width="110" />
+              <el-table-column label="入库类型" width="130">
+                <template #default="{ row }">
+                  <el-select v-model="row.fwwintype" :disabled="isReadonly" size="small" clearable placeholder="入库类型" style="width:100%">
+                    <el-option v-for="o in wwInTypeOptions" :key="o.value" :label="o.label" :value="o.value" />
+                  </el-select>
+                </template>
+              </el-table-column>
               <el-table-column label="源单类型" width="120">
                 <template #default="{ row }">{{ srcFormLabel(row.fsrcformid) }}</template>
               </el-table-column>
@@ -394,7 +400,7 @@
               </el-table-column>
               <el-table-column label="保质日期" width="140">
                 <template #default="{ row }">
-                  <el-date-picker v-model="row.fkfdate" type="date" value-format="YYYY-MM-DD" placeholder="日期" :disabled="isReadonly || form.ftypeid === 2" style="width:100%" />
+                  <el-date-picker v-model="row.fkfdate" type="date" value-format="YYYY-MM-DD" placeholder="日期" :disabled="isReadonly || form.ftypeid === 2" style="width:100%" @change="() => recalcUseful(row)" />
                 </template>
               </el-table-column>
               <el-table-column prop="fKfPeriod" label="保质期限" width="90" align="right" />
@@ -406,7 +412,13 @@
                   <el-date-picker v-model="row.fusefuldate" type="date" value-format="YYYY-MM-DD" placeholder="日期" :disabled="isReadonly || form.ftypeid === 2" style="width:100%" />
                 </template>
               </el-table-column>
-              <el-table-column prop="fwwintype" label="入库类型" width="110" />
+              <el-table-column label="入库类型" width="130">
+                <template #default="{ row }">
+                  <el-select v-model="row.fwwintype" :disabled="isReadonly || form.ftypeid === 2" size="small" clearable placeholder="入库类型" style="width:100%">
+                    <el-option v-for="o in wwInTypeOptions" :key="o.value" :label="o.label" :value="o.value" />
+                  </el-select>
+                </template>
+              </el-table-column>
               <el-table-column label="源单类型" width="120">
                 <template #default="{ row }">{{ srcFormLabel(row.fsrcformid) }}</template>
               </el-table-column>
@@ -453,6 +465,14 @@ const activeTab = ref('basic')
 const detailTab = ref('material')
 const scanCode = ref('')
 
+// 入库类型下拉选项（存码值，显示中文）
+const wwInTypeOptions = [
+  { value: 'QLI', label: '合格入库' },
+  { value: 'PSI', label: '工费入库' },
+  { value: 'MSI', label: '料废入库' },
+  { value: 'CRI', label: '让步接收入库' },
+  { value: 'RFI', label: '不合格入库' },
+]
 const materialLines = ref<any[]>([])
 const barcodeLines = ref<any[]>([])
 const selectedMaterialIndex = ref(-1)
@@ -574,6 +594,17 @@ const recalcMaterial = (row: any) => {
   row.ftaxprice = +(price * (1 + rate / 100)).toFixed(6)        // 含税单价 = 单价×(1+税率%)
 }
 
+// 保质期至联动：保质日期 + 保质期限(按单位天/月/年) -> 有效期至。fKfUnit: 0=天,1=月,2=年
+const recalcUseful = (row: any) => {
+  if (!row.fisKfPeriod || !row.fkfdate || !row.fKfPeriod) return
+  const d = new Date(row.fkfdate)
+  if (isNaN(d.getTime())) return
+  if (row.fKfUnit === 2) d.setFullYear(d.getFullYear() + Number(row.fKfPeriod))
+  else if (row.fKfUnit === 1) d.setMonth(d.getMonth() + Number(row.fKfPeriod))
+  else d.setDate(d.getDate() + Number(row.fKfPeriod))
+  row.fusefuldate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 const onMaterialChange = async (row: any, item: any) => {
   row.fmaterialName = item?.fName || ''
   row.fmaterialNumber = item?.fNumber || ''
@@ -582,9 +613,18 @@ const onMaterialChange = async (row: any, item: any) => {
   row.fisKfPeriod = !!item?.fIsKfPeriod
   row.fKfPeriod = item?.fKfPeriod || 0
   row.fKfUnit = item?.fKfUnit || 0
+  // 带出单位：业务单位(单据"单位"列)取采购单位；基本单位取基本单位。均用 if 守卫，避免覆盖已选/清空
+  if (item?.fPurchaseUnitId) {
+    row.funitid = item.fPurchaseUnitId
+    row.funitName = item.fPurchaseUnitName || ''
+    row.funitNumber = item.fPurchaseUnitNumber || ''
+  }
+  if (item?.fBaseUnitId) row.fbaseunitid = item.fBaseUnitId
   row.fauxpropid = ''
   row.fauxpropName = ''
   row.fisAuxEnabled = false
+  // 物料带出保质期限/单位后，若该行已有保质日期则联动算出有效期至
+  recalcUseful(row)
   if (item?.uid) {
     try {
       const res: any = await getMaterialAuxEnabled(item.uid)
@@ -885,6 +925,7 @@ function validateDetailLines(): { ok: boolean; message?: string; tab?: string; i
       const r = materialLines.value[i]
       if (!r.fmaterialid) continue
       const tag = r.fmaterialName || r.fmaterialNumber || `第${i + 1}行`
+      if (r.fisBatchManage && !String(r.flot || '').trim()) return { ok: false, message: `物料「${tag}」启用了批号管理，批次必填`, tab: 'material', index: i }
       if (!(Number(r.frealqty) > 0)) return { ok: false, message: `物料明细「${tag}」实收数量必须大于 0`, tab: 'material', index: i }
       if (!r.fstockid) return { ok: false, message: `物料明细「${tag}」请选择仓库`, tab: 'material', index: i }
       if (r.fisOpenLocation && !r.fstocklocid) return { ok: false, message: `物料明细「${tag}」仓库已启用仓位管理，请选择仓位`, tab: 'material', index: i }
