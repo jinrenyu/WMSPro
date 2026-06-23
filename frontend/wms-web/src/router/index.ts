@@ -304,6 +304,77 @@ const routes = [
                 name: 'StockInventoryList',
                 component: () => import('../views/purchase/StockInventoryList.vue'),
                 meta: { title: '即时库存' }
+            },
+            // ── 生产管理（占位空页，后续逐张单据替换为真实页面）──
+            // 生产业务
+            {
+                path: 'production/orders',
+                name: 'ProductionOrderList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '生产订单' }
+            },
+            {
+                path: 'production/material-lists',
+                name: 'ProductionMaterialListList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '生产用料清单' }
+            },
+            // 生产领料
+            {
+                path: 'production/picks',
+                name: 'ProductionPickList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '生产领料单' }
+            },
+            {
+                path: 'production/returns',
+                name: 'ProductionReturnList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '生产退料单' }
+            },
+            {
+                path: 'production/supplements',
+                name: 'ProductionSupplementList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '生产补料单' }
+            },
+            // 生产入库
+            {
+                path: 'production/inbounds',
+                name: 'ProductionInboundList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '生产入库单' }
+            },
+            {
+                path: 'production/stock-returns',
+                name: 'ProductionStockReturnList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '生产退库单' }
+            },
+            // 简单生产
+            {
+                path: 'production/simple-picks',
+                name: 'SimpleProductionPickList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '简单生产领料单' }
+            },
+            {
+                path: 'production/simple-returns',
+                name: 'SimpleProductionReturnList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '简单生产退料单' }
+            },
+            {
+                path: 'production/simple-inbounds',
+                name: 'SimpleProductionInboundList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '简单生产入库单' }
+            },
+            {
+                path: 'production/simple-stock-returns',
+                name: 'SimpleProductionStockReturnList',
+                component: () => import('../views/production/PlaceholderPage.vue'),
+                meta: { title: '简单生产退库单' }
             }
         ]
     }

@@ -728,6 +728,186 @@ public class DataSeedService
         });
         AddButton(menus, "menu_stock_inventory_list", inventoryId, "查看即时库存", "inventory:list", 1, now);
 
+        // ═══════════════════════════════════════════════════════════════
+        // 生产管理 (D) - 一级菜单，落在采购管理(2)与系统管理(99)之间
+        // 占位脚手架：菜单树 + 占位页，后续逐张单据替换为真实页面
+        // ═══════════════════════════════════════════════════════════════
+        var productionId = "menu_production";
+        menus.Add(new SysMenu
+        {
+            Uid = productionId, FInterId = productionId, ParentId = "", MenuName = "生产管理",
+            MenuType = "D", RoutePath = "", Icon = "SetUp", PermCode = "", SortOrder = 3,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // ── 二级分组：生产业务 (D) ──
+        var prodBizId = "menu_production_biz";
+        menus.Add(new SysMenu
+        {
+            Uid = prodBizId, FInterId = prodBizId, ParentId = productionId, MenuName = "生产业务",
+            MenuType = "D", RoutePath = "", Icon = "Tickets", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // 生产订单 (M)
+        var prodOrderId = "menu_production_order";
+        menus.Add(new SysMenu
+        {
+            Uid = prodOrderId, FInterId = prodOrderId, ParentId = prodBizId, MenuName = "生产订单",
+            MenuType = "M", RoutePath = "/production/orders", Icon = "Document", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_order_list", prodOrderId, "查看生产订单", "productionorder:list", 1, now);
+        AddButton(menus, "menu_production_order_add", prodOrderId, "新增生产订单", "productionorder:add", 2, now);
+        AddButton(menus, "menu_production_order_edit", prodOrderId, "编辑生产订单", "productionorder:edit", 3, now);
+
+        // 生产用料清单 (M)
+        var prodMtrlListId = "menu_production_mtrllist";
+        menus.Add(new SysMenu
+        {
+            Uid = prodMtrlListId, FInterId = prodMtrlListId, ParentId = prodBizId, MenuName = "生产用料清单",
+            MenuType = "M", RoutePath = "/production/material-lists", Icon = "Memo", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_mtrllist_list", prodMtrlListId, "查看生产用料清单", "prodmateriallist:list", 1, now);
+        AddButton(menus, "menu_production_mtrllist_add", prodMtrlListId, "新增生产用料清单", "prodmateriallist:add", 2, now);
+        AddButton(menus, "menu_production_mtrllist_edit", prodMtrlListId, "编辑生产用料清单", "prodmateriallist:edit", 3, now);
+
+        // ── 二级分组：生产领料 (D) ──
+        var prodIssueGroupId = "menu_production_issue";
+        menus.Add(new SysMenu
+        {
+            Uid = prodIssueGroupId, FInterId = prodIssueGroupId, ParentId = productionId, MenuName = "生产领料",
+            MenuType = "D", RoutePath = "", Icon = "Sell", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // 生产领料单 (M)
+        var prodPickId = "menu_production_pick";
+        menus.Add(new SysMenu
+        {
+            Uid = prodPickId, FInterId = prodPickId, ParentId = prodIssueGroupId, MenuName = "生产领料单",
+            MenuType = "M", RoutePath = "/production/picks", Icon = "Sell", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_pick_list", prodPickId, "查看生产领料单", "productionpick:list", 1, now);
+        AddButton(menus, "menu_production_pick_add", prodPickId, "新增生产领料单", "productionpick:add", 2, now);
+        AddButton(menus, "menu_production_pick_edit", prodPickId, "编辑生产领料单", "productionpick:edit", 3, now);
+
+        // 生产退料单 (M)
+        var prodReturnId = "menu_production_return";
+        menus.Add(new SysMenu
+        {
+            Uid = prodReturnId, FInterId = prodReturnId, ParentId = prodIssueGroupId, MenuName = "生产退料单",
+            MenuType = "M", RoutePath = "/production/returns", Icon = "Back", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_return_list", prodReturnId, "查看生产退料单", "productionreturn:list", 1, now);
+        AddButton(menus, "menu_production_return_add", prodReturnId, "新增生产退料单", "productionreturn:add", 2, now);
+        AddButton(menus, "menu_production_return_edit", prodReturnId, "编辑生产退料单", "productionreturn:edit", 3, now);
+
+        // 生产补料单 (M)
+        var prodSupplementId = "menu_production_supplement";
+        menus.Add(new SysMenu
+        {
+            Uid = prodSupplementId, FInterId = prodSupplementId, ParentId = prodIssueGroupId, MenuName = "生产补料单",
+            MenuType = "M", RoutePath = "/production/supplements", Icon = "CirclePlus", PermCode = "", SortOrder = 3,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_supplement_list", prodSupplementId, "查看生产补料单", "productionsupplement:list", 1, now);
+        AddButton(menus, "menu_production_supplement_add", prodSupplementId, "新增生产补料单", "productionsupplement:add", 2, now);
+        AddButton(menus, "menu_production_supplement_edit", prodSupplementId, "编辑生产补料单", "productionsupplement:edit", 3, now);
+
+        // ── 二级分组：生产入库 (D) ──
+        var prodInGroupId = "menu_production_in_group";
+        menus.Add(new SysMenu
+        {
+            Uid = prodInGroupId, FInterId = prodInGroupId, ParentId = productionId, MenuName = "生产入库",
+            MenuType = "D", RoutePath = "", Icon = "Box", PermCode = "", SortOrder = 3,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // 生产入库单 (M)
+        var prodInId = "menu_production_in";
+        menus.Add(new SysMenu
+        {
+            Uid = prodInId, FInterId = prodInId, ParentId = prodInGroupId, MenuName = "生产入库单",
+            MenuType = "M", RoutePath = "/production/inbounds", Icon = "Box", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_in_list", prodInId, "查看生产入库单", "productionin:list", 1, now);
+        AddButton(menus, "menu_production_in_add", prodInId, "新增生产入库单", "productionin:add", 2, now);
+        AddButton(menus, "menu_production_in_edit", prodInId, "编辑生产入库单", "productionin:edit", 3, now);
+
+        // 生产退库单 (M)
+        var prodStockReturnId = "menu_production_stockreturn";
+        menus.Add(new SysMenu
+        {
+            Uid = prodStockReturnId, FInterId = prodStockReturnId, ParentId = prodInGroupId, MenuName = "生产退库单",
+            MenuType = "M", RoutePath = "/production/stock-returns", Icon = "TakeawayBox", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_stockreturn_list", prodStockReturnId, "查看生产退库单", "productionstockreturn:list", 1, now);
+        AddButton(menus, "menu_production_stockreturn_add", prodStockReturnId, "新增生产退库单", "productionstockreturn:add", 2, now);
+        AddButton(menus, "menu_production_stockreturn_edit", prodStockReturnId, "编辑生产退库单", "productionstockreturn:edit", 3, now);
+
+        // ── 二级分组：简单生产 (D) ──
+        var simpleProdGroupId = "menu_production_simple";
+        menus.Add(new SysMenu
+        {
+            Uid = simpleProdGroupId, FInterId = simpleProdGroupId, ParentId = productionId, MenuName = "简单生产",
+            MenuType = "D", RoutePath = "", Icon = "Operation", PermCode = "", SortOrder = 4,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // 简单生产领料单 (M)
+        var simplePickId = "menu_production_simple_pick";
+        menus.Add(new SysMenu
+        {
+            Uid = simplePickId, FInterId = simplePickId, ParentId = simpleProdGroupId, MenuName = "简单生产领料单",
+            MenuType = "M", RoutePath = "/production/simple-picks", Icon = "Sell", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_simple_pick_list", simplePickId, "查看简单生产领料单", "simpleprodpick:list", 1, now);
+        AddButton(menus, "menu_production_simple_pick_add", simplePickId, "新增简单生产领料单", "simpleprodpick:add", 2, now);
+        AddButton(menus, "menu_production_simple_pick_edit", simplePickId, "编辑简单生产领料单", "simpleprodpick:edit", 3, now);
+
+        // 简单生产退料单 (M)
+        var simpleReturnId = "menu_production_simple_return";
+        menus.Add(new SysMenu
+        {
+            Uid = simpleReturnId, FInterId = simpleReturnId, ParentId = simpleProdGroupId, MenuName = "简单生产退料单",
+            MenuType = "M", RoutePath = "/production/simple-returns", Icon = "Back", PermCode = "", SortOrder = 2,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_simple_return_list", simpleReturnId, "查看简单生产退料单", "simpleprodreturn:list", 1, now);
+        AddButton(menus, "menu_production_simple_return_add", simpleReturnId, "新增简单生产退料单", "simpleprodreturn:add", 2, now);
+        AddButton(menus, "menu_production_simple_return_edit", simpleReturnId, "编辑简单生产退料单", "simpleprodreturn:edit", 3, now);
+
+        // 简单生产入库单 (M)
+        var simpleInId = "menu_production_simple_in";
+        menus.Add(new SysMenu
+        {
+            Uid = simpleInId, FInterId = simpleInId, ParentId = simpleProdGroupId, MenuName = "简单生产入库单",
+            MenuType = "M", RoutePath = "/production/simple-inbounds", Icon = "Box", PermCode = "", SortOrder = 3,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_simple_in_list", simpleInId, "查看简单生产入库单", "simpleprodin:list", 1, now);
+        AddButton(menus, "menu_production_simple_in_add", simpleInId, "新增简单生产入库单", "simpleprodin:add", 2, now);
+        AddButton(menus, "menu_production_simple_in_edit", simpleInId, "编辑简单生产入库单", "simpleprodin:edit", 3, now);
+
+        // 简单生产退库单 (M)
+        var simpleStockReturnId = "menu_production_simple_stockreturn";
+        menus.Add(new SysMenu
+        {
+            Uid = simpleStockReturnId, FInterId = simpleStockReturnId, ParentId = simpleProdGroupId, MenuName = "简单生产退库单",
+            MenuType = "M", RoutePath = "/production/simple-stock-returns", Icon = "TakeawayBox", PermCode = "", SortOrder = 4,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_production_simple_stockreturn_list", simpleStockReturnId, "查看简单生产退库单", "simpleprodstockreturn:list", 1, now);
+        AddButton(menus, "menu_production_simple_stockreturn_add", simpleStockReturnId, "新增简单生产退库单", "simpleprodstockreturn:add", 2, now);
+        AddButton(menus, "menu_production_simple_stockreturn_edit", simpleStockReturnId, "编辑简单生产退库单", "simpleprodstockreturn:edit", 3, now);
+
         // 过滤出数据库中不存在的菜单，补入
         var existingUids = await _db.Queryable<SysMenu>()
             .Select(m => m.Uid)
