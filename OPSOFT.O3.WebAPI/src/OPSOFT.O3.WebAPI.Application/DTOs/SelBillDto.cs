@@ -177,6 +177,22 @@ public class PushDownTargetDto
     public string Label { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// 下查（正向追溯）结果项：由某源单生成的某一类下游单据（已审核且未禁用）。
+/// 用于源单维护页「下查」→ 选目标单据类型 → 列出该类型下游单据 → 选中后跳目标维护页查看/修改。
+/// </summary>
+public class DownstreamDocDto
+{
+    /// <summary>下游单据 Uid（导航到目标维护页时作 query.uid 加载既有单据）。</summary>
+    public string Uid { get; set; } = string.Empty;
+    /// <summary>下游单据编号。</summary>
+    public string Fbillno { get; set; } = string.Empty;
+    /// <summary>下游单据业务日期。</summary>
+    public DateTime? Fdate { get; set; }
+    /// <summary>状态（恒为 40 已审核，前端展示用）。</summary>
+    public int FStatus { get; set; }
+}
+
 public class UpdateSelBillRequest
 {
     public string Fname { get; set; } = string.Empty;

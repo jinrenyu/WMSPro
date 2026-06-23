@@ -99,4 +99,27 @@ public class SelBillController : ControllerBase
         var result = await _service.GetPushDownTargetsAsync(sourceType);
         return Ok(ApiResponse<List<PushDownTargetDto>>.Ok(result));
     }
+
+    /// <summary>
+    /// 下查取可追溯的目标单据类型（供源单维护页「下查」按钮）。
+    /// 与 push-targets 不同：不看流程启用/禁用，仅排除已删除——下查反映历史既成事实。
+    /// </summary>
+    [HttpGet("trace-targets")]
+    public async Task<ActionResult<ApiResponse<List<PushDownTargetDto>>>> GetTraceTargets([FromQuery] string sourceType)
+    {
+        var result = await _service.GetTraceTargetsAsync(sourceType);
+        return Ok(ApiResponse<List<PushDownTargetDto>>.Ok(result));
+    }
+
+    /// <summary>
+    /// 下查（正向追溯）：列出由指定源单生成的、指定类型的下游单据（仅已审核且未禁用）。
+    /// 供源单维护页「下查」按钮：选目标单据类型后列出可跳转的下游单据。
+    /// </summary>
+    [HttpGet("downstream")]
+    public async Task<ActionResult<ApiResponse<List<DownstreamDocDto>>>> GetDownstream(
+        [FromQuery] string sourceType, [FromQuery] string sourceBillNo, [FromQuery] string targetType)
+    {
+        var result = await _service.GetDownstreamDocsAsync(sourceType, sourceBillNo, targetType);
+        return Ok(ApiResponse<List<DownstreamDocDto>>.Ok(result));
+    }
 }

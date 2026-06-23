@@ -158,24 +158,42 @@ public class SelBillService : DocumentService<TBosSelbill, TBosSelbillentry,
         return result;
     }
 
-    // ===== 下推：按源单类型查可下推目标（出入库流程配置反向查询）=====
+    // ===== 下推/下查：按源单类型查出入库流程配置里的目标单据类型（反向查询）=====
+
+    /// <summary>
+    /// 下推取可选目标：仅启用(Fisuse)、未禁用、未删除的流程（不能往已停用流程下推）。
+    /// </summary>
+    public Task<List<PushDownTargetDto>> GetPushDownTargetsAsync(string sourceTranType)
+        => QueryConfiguredTargetsAsync(sourceTranType, onlyEnabled: true);
+
+    /// <summary>
+    /// 下查取可追溯目标类型：只排除已删除(!FDeleted)，【不看启用/禁用】。
+    /// 下查是对历史既成事实的正向追溯——某流程曾启用并生成过下游单据后即便被停用(Fisuse=false)或禁用(FDisabled)，
+    /// 那些已生成的下游单据仍真实存在、仍应能被追溯到，故目标类型列表不应受当前启用态影响（与下推语义相反）。
+    /// </summary>
+    public Task<List<PushDownTargetDto>> GetTraceTargetsAsync(string sourceTranType)
+        => QueryConfiguredTargetsAsync(sourceTranType, onlyEnabled: false);
 
     /// <summary>
     /// 反向于 InStockService/PurchaseReturnService 的 GetSourceBillTypesAsync：
     /// 那两处按 Fdesttrantype==目标 取 Fsourcetrantype（目标单视角看可选源单）；
-    /// 这里按 Fsourcetrantype==源单 取 Fdesttrantype（源单视角看可下推目标）。
-    /// 仅取启用(Fisuse)、未禁用、未删除的流程；排除空目标；按 Fdefault 优先排序。
+    /// 这里按 Fsourcetrantype==源单 取 Fdesttrantype（源单视角看目标）。排除空目标；按 Fdefault 优先排序。
+    /// onlyEnabled 控制是否叠加 Fisuse &amp;&amp; !FDisabled（下推=true，下查=false，见两个公开入口的说明）。
     /// </summary>
-    public async Task<List<PushDownTargetDto>> GetPushDownTargetsAsync(string sourceTranType)
+    private async Task<List<PushDownTargetDto>> QueryConfiguredTargetsAsync(string sourceTranType, bool onlyEnabled)
     {
         if (string.IsNullOrWhiteSpace(sourceTranType)) return new();
 
-        var rows = await Db.Queryable<TBosSelbill>()
-            .Where(s => s.Fsourcetrantype == sourceTranType && s.Fisuse && !s.FDisabled && !s.FDeleted)
+        var query = Db.Queryable<TBosSelbill>()
+            .Where(s => s.Fsourcetrantype == sourceTranType && !s.FDeleted);
+        if (onlyEnabled)
+            query = query.Where(s => s.Fisuse && !s.FDisabled);
+
+        var rows = await query
             .OrderBy(s => s.Fdefault, OrderByType.Desc)
             // 次级排序键：同一源单映射到多个目标且 Fdefault 均为 true 时（如采购订单同时可下推入库单/退料单），
             // 单凭 Fdefault 排序非唯一，平级行在 SqlServer/PG 下顺序未定义；按 Fdesttrantype 兜底保证返回顺序确定，
-            // 使前端 PushDownDialog 默认选中项稳定。
+            // 使前端 PushDownDialog/DrillDownDialog 默认选中项稳定。
             .OrderBy(s => s.Fdesttrantype)
             .Select(s => s.Fdesttrantype)
             .ToListAsync();
@@ -189,6 +207,55 @@ public class SelBillService : DocumentService<TBosSelbill, TBosSelbillentry,
             Value = d,
             Label = tmplDict.GetValueOrDefault(d, d)
         }).ToList();
+    }
+
+    // ===== 下查：按源单列出已生成的下游单据（正向追溯）=====
+
+    /// <summary>
+    /// 下查（正向追溯）：列出由指定源单生成的、指定类型的下游单据。
+    /// 关联条件 = 目标单据「表头」源单字段命中(Fsrcformid/Fsrcbillno，下推/引入路径单一源单冗余记录)
+    ///   OR 目标单据「条码录入明细 ENTRY1」逐条码源单字段命中。
+    /// 为何要叠加明细：扫码(ftypeid==2)混合多个源单时，表头只回填首个带源单条码、甚至为空，仅凭表头会漏查；
+    ///   ENTRY1 由条码主档逐条码权威解析源单(收料通知单/采购订单)，能逐行反映真实来源。
+    /// 明细侧外键 FInterId==表头 Uid（保存时强制 header.FInterId=header.Uid、明细 FInterId=headerUid）；
+    ///   EXISTS 仅作存在性判断，每张下游单据仍只出一行，无需 Distinct。
+    /// 仅返回已审核(FStatus==40)且未禁用、未删除的下游单据（满足「下查只抓审核了且未禁用的单据」，状态判定只看表头）。
+    /// 目标类型集中在此 switch：与 PushDownDialog/DrillDownDialog 的 DOC_TARGET_ROUTE 一一对应，新增目标单据在此补分支即可。
+    /// </summary>
+    public async Task<List<DownstreamDocDto>> GetDownstreamDocsAsync(string sourceType, string sourceBillNo, string targetType)
+    {
+        if (string.IsNullOrWhiteSpace(sourceType) || string.IsNullOrWhiteSpace(sourceBillNo) || string.IsNullOrWhiteSpace(targetType))
+            return new();
+
+        switch (targetType)
+        {
+            case "STK_InStock": // 采购入库单
+                return await Db.Queryable<TStkInstock>()
+                    .Where(h => h.FStatus == 40 && !h.FDisabled && !h.FDeleted
+                             && ((h.Fsrcformid == sourceType && h.Fsrcbillno == sourceBillNo)
+                                 || SqlFunc.Subqueryable<TStkInstockentry1>()
+                                     .Where(e => e.FInterId == h.Uid && !e.FDeleted
+                                              && e.Fsrcformid == sourceType && e.Fsrcbillno == sourceBillNo)
+                                     .Any()))
+                    .OrderBy(h => h.Fbillno, OrderByType.Desc)
+                    .Select(h => new DownstreamDocDto { Uid = h.Uid, Fbillno = h.Fbillno, Fdate = h.Fdate, FStatus = h.FStatus })
+                    .ToListAsync();
+
+            case "PUR_MRB": // 采购退料单
+                return await Db.Queryable<TPurMrb>()
+                    .Where(h => h.FStatus == 40 && !h.FDisabled && !h.FDeleted
+                             && ((h.Fsrcformid == sourceType && h.Fsrcbillno == sourceBillNo)
+                                 || SqlFunc.Subqueryable<TPurMrbEntry1>()
+                                     .Where(e => e.FInterId == h.Uid && !e.FDeleted
+                                              && e.Fsrcformid == sourceType && e.Fsrcbillno == sourceBillNo)
+                                     .Any()))
+                    .OrderBy(h => h.Fbillno, OrderByType.Desc)
+                    .Select(h => new DownstreamDocDto { Uid = h.Uid, Fbillno = h.Fbillno, Fdate = h.Fdate, FStatus = h.FStatus })
+                    .ToListAsync();
+
+            default:
+                return new();
+        }
     }
 
     // 已审核/已关闭单据禁止修改/删除（前端只读外的后端兜底，须先反审核）

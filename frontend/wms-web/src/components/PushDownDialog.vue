@@ -28,14 +28,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getPushTargets, type PushDownTarget } from '../api/selBill'
+import { getPushTargets, DOC_TARGET_ROUTE as TARGET_ROUTE, type PushDownTarget } from '../api/selBill'
 
-// 目标单据模板编号 -> 目标维护页路由名（这些目标页 onMounted 会识别下推 query 自动带入源单明细）
-const TARGET_ROUTE: Record<string, string> = {
-  STK_InStock: 'PurchaseInboundEdit',   // 采购入库单
-  PUR_MRB: 'PurchaseReturnEdit',        // 采购退料单
-}
-
+// TARGET_ROUTE：目标单据模板编号 -> 目标维护页路由名（共享自 api/selBill.ts）。
+// 这些目标页 onMounted 会识别下推 query（srcform/srcuid/srcbillno）自动带入源单明细。
 const router = useRouter()
 
 const visible = ref(false)

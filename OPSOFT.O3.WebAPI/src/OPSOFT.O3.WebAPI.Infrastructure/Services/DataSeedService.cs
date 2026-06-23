@@ -590,6 +590,7 @@ public class DataSeedService
         AddButton(menus, "menu_purchase_order_approve", purchaseOrderId, "审核采购订单", "purchaseorder:approve", 4, now);
         AddButton(menus, "menu_purchase_order_delete", purchaseOrderId, "删除采购订单", "purchaseorder:delete", 5, now);
         AddButton(menus, "menu_purchase_order_push", purchaseOrderId, "下推采购订单", "purchaseorder:push", 6, now);
+        AddButton(menus, "menu_purchase_order_trace", purchaseOrderId, "下查采购订单", "purchaseorder:trace", 7, now);
 
         // 收料通知单 (M)
         var receiveNoticeId = "menu_receive_notice";
@@ -605,6 +606,7 @@ public class DataSeedService
         AddButton(menus, "menu_receive_notice_approve", receiveNoticeId, "审核收料通知单", "receivenotice:approve", 4, now);
         AddButton(menus, "menu_receive_notice_delete", receiveNoticeId, "删除收料通知单", "receivenotice:delete", 5, now);
         AddButton(menus, "menu_receive_notice_push", receiveNoticeId, "下推收料通知单", "receivenotice:push", 6, now);
+        AddButton(menus, "menu_receive_notice_trace", receiveNoticeId, "下查收料通知单", "receivenotice:trace", 7, now);
 
         // 采购入库单 (M)
         var purchaseInId = "menu_purchase_in";
@@ -643,6 +645,7 @@ public class DataSeedService
         AddButton(menus, "menu_return_req_approve", returnReqId, "审核退料申请单", "returnreq:approve", 4, now);
         AddButton(menus, "menu_return_req_delete", returnReqId, "删除退料申请单", "returnreq:delete", 5, now);
         AddButton(menus, "menu_return_req_push", returnReqId, "下推退料申请单", "returnreq:push", 6, now);
+        AddButton(menus, "menu_return_req_trace", returnReqId, "下查退料申请单", "returnreq:trace", 7, now);
 
         // 采购退料单 (M)
         var purchaseReturnId = "menu_purchase_return";

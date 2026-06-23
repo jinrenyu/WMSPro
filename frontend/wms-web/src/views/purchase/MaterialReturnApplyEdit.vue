@@ -15,6 +15,9 @@
       <el-button v-if="isEdit && form.fStatus === 40" type="primary" plain @click="handlePushDown" v-permission="'returnreq:push'">
         <el-icon><Bottom /></el-icon> 下推
       </el-button>
+      <el-button v-if="isEdit && form.fStatus === 40" plain @click="handleDrillDown" v-permission="'returnreq:trace'">
+        <el-icon><Search /></el-icon> 下查
+      </el-button>
       <div class="toolbar-spacer" />
       <el-tag v-if="isEdit" :type="form.fStatus === 40 ? 'success' : form.fStatus === 70 ? 'info' : 'warning'" size="large">
         {{ form.fStatus === 40 ? '已审核' : form.fStatus === 70 ? '已关闭' : '未审核' }}
@@ -24,6 +27,8 @@
 
     <!-- 下推目标选择 -->
     <PushDownDialog ref="pushDialog" />
+    <!-- 下查下游单据 -->
+    <DrillDownDialog ref="drillDialog" />
 
     <el-form ref="formRef" :model="form" :rules="rules" label-width="84px"
              :disabled="isReadonly" class="edit-form" v-loading="loading">
@@ -328,7 +333,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { Check, Back, Plus, CircleCheck, RefreshLeft, Bottom } from '@element-plus/icons-vue'
+import { Check, Back, Plus, CircleCheck, RefreshLeft, Bottom, Search } from '@element-plus/icons-vue'
 import {
   getMaterialReturnApply, createMaterialReturnApply, updateMaterialReturnApply,
   approveMaterialReturnApply, unapproveMaterialReturnApply, getMaterialAuxEnabled,
@@ -339,6 +344,7 @@ import { useOrgStore } from '../../stores/org'
 import LookupSelect from '../../components/LookupSelect.vue'
 import MaterialLookup from '../../components/MaterialLookup.vue'
 import PushDownDialog from '../../components/PushDownDialog.vue'
+import DrillDownDialog from '../../components/DrillDownDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -633,6 +639,8 @@ const handleBack = () => router.push({ name: 'MaterialReturnApplyList' })
 // 下推：已审核退料申请单 -> 抓出入库流程配置可下推目标（采购退料单），用户选择后跳目标维护页并带入明细
 const pushDialog = ref<any>(null)
 const handlePushDown = () => pushDialog.value?.open('PUR_MRAPP', uid.value, form.fbillno, '退料申请单')
+const drillDialog = ref<any>(null)
+const handleDrillDown = () => drillDialog.value?.open('PUR_MRAPP', form.fbillno, '退料申请单')
 
 onMounted(async () => {
   if (!orgStore.loaded) await orgStore.loadOrgs()

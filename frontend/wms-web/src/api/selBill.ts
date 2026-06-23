@@ -125,7 +125,33 @@ export interface PushDownTarget {
     label: string   // 目标单据名称
 }
 
-// GET /api/selbill/push-targets?sourceType=xxx - 按源单类型查可下推目标
+// GET /api/selbill/push-targets?sourceType=xxx - 按源单类型查可下推目标（仅启用流程）
 export const getPushTargets = (sourceType: string) => {
     return request({ url: '/selbill/push-targets', method: 'get', params: { sourceType } })
+}
+
+// GET /api/selbill/trace-targets?sourceType=xxx - 下查取可追溯目标类型（不看启用/禁用，反映历史既成事实）
+export const getTraceTargets = (sourceType: string) => {
+    return request({ url: '/selbill/trace-targets', method: 'get', params: { sourceType } })
+}
+
+// 目标单据模板编号 -> 目标维护页路由名。
+// 下推(PushDownDialog)/下查(DrillDownDialog) 共用此映射，后端 SelBillService.GetDownstreamDocsAsync 的 switch 须与之保持一致。
+// 新增第三种目标单据时三处同步补一项即可。
+export const DOC_TARGET_ROUTE: Record<string, string> = {
+    STK_InStock: 'PurchaseInboundEdit',   // 采购入库单
+    PUR_MRB: 'PurchaseReturnEdit',        // 采购退料单
+}
+
+// 下查结果项：由某源单生成的某一类下游单据（已审核且未禁用）
+export interface DownstreamDoc {
+    uid: string
+    fbillno: string
+    fdate?: string | null
+    fStatus: number
+}
+
+// GET /api/selbill/downstream - 下查（正向追溯）：列出某源单生成的指定类型下游单据
+export const getDownstreamDocs = (sourceType: string, sourceBillNo: string, targetType: string) => {
+    return request({ url: '/selbill/downstream', method: 'get', params: { sourceType, sourceBillNo, targetType } })
 }
