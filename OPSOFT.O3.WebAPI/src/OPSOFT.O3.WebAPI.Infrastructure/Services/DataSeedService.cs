@@ -1195,6 +1195,36 @@ public class DataSeedService
                 MUser = "system"
             }).ExecuteCommandAsync();
         }
+
+        // 生产订单 / 生产任务单单据类型（FBillFormid = PRD_MO）。幂等种入。
+        var prdMoBills = new (string Uid, string Number, string Name)[]
+        {
+            ("prdmo_billtype_std_0001",    "SCDD01_SYS", "标准生产订单"),
+            ("prdmo_billtype_rework_0002", "SCDD02_SYS", "返工生产订单"),
+            ("prdmo_billtype_ww_0003",     "SCDD03_SYS", "委外生产订单"),
+        };
+        foreach (var (uid, number, name) in prdMoBills)
+        {
+            var exists = await _db.Queryable<TBasBilltype>().Where(b => b.Uid == uid).AnyAsync();
+            if (exists) continue;
+            await _db.Insertable(new TBasBilltype
+            {
+                Uid = uid,
+                FInterId = uid,
+                Fnumber = number,
+                Fname = name,
+                Fbillformid = "PRD_MO",
+                Isdefault = number == "SCDD01_SYS",
+                Fcheckdate = DateTime.MinValue,
+                Fdisabledate = new DateTime(1900, 1, 1), // 1900哨兵：满足开发库NOT NULL，且生产DATETIME(下限1753)安全
+                FStatus = 40,
+                FCompanyId = "DEFAULT",
+                CYmd = now,
+                CUser = "system",
+                MYmd = now,
+                MUser = "system"
+            }).ExecuteCommandAsync();
+        }
     }
 
     /// <summary>
@@ -1296,6 +1326,7 @@ public class DataSeedService
             ("STK_InStock",       "采购入库单", nameof(TStkInstock)),
             ("PUR_MRAPP",         "退料申请单", nameof(TPurMrApp)),
             ("PUR_MRB",           "采购退料单", nameof(TPurMrb)),
+            ("PRD_MO",            "生产订单",   nameof(TPrdMo)),
         };
         foreach (var (formKey, formName, entityName) in forms)
         {
@@ -1336,6 +1367,7 @@ public class DataSeedService
             ("listcode_stk_instock", inFormKey, "采购入库单编号规则", "RKD"),
             ("listcode_pur_mrapp",   mrFormKey, "退料申请单编号规则", "TLSQ"),
             ("listcode_pur_mrb",     mrbFormKey, "采购退料单编号规则", "TLD"),
+            ("listcode_prd_mo",      "PRD_MO",  "生产订单编号规则",   "SCDD"),
         };
         foreach (var (uid, formKey, name, prefix) in listRules)
         {

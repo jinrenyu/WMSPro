@@ -310,8 +310,14 @@ const routes = [
             {
                 path: 'production/orders',
                 name: 'ProductionOrderList',
-                component: () => import('../views/production/PlaceholderPage.vue'),
+                component: () => import('../views/production/ProductionOrderList.vue'),
                 meta: { title: '生产订单' }
+            },
+            {
+                path: 'production/orders/edit',
+                name: 'ProductionOrderEdit',
+                component: () => import('../views/production/ProductionOrderEdit.vue'),
+                meta: { title: '生产订单-维护' }
             },
             {
                 path: 'production/material-lists',
