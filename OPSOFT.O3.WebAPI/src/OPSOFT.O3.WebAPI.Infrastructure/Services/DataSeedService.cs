@@ -760,6 +760,18 @@ public class DataSeedService
         AddButton(menus, "menu_production_order_list", prodOrderId, "查看生产订单", "productionorder:list", 1, now);
         AddButton(menus, "menu_production_order_add", prodOrderId, "新增生产订单", "productionorder:add", 2, now);
         AddButton(menus, "menu_production_order_edit", prodOrderId, "编辑生产订单", "productionorder:edit", 3, now);
+        AddButton(menus, "menu_production_order_approve", prodOrderId, "审核/反审核生产订单", "productionorder:approve", 4, now);
+        AddButton(menus, "menu_production_order_delete", prodOrderId, "删除生产订单", "productionorder:delete", 5, now);
+        // 任务订单明细 — 行级生产高级动作（功能后续实现，先登记按钮权限）
+        AddButton(menus, "menu_production_order_defaultprocess", prodOrderId, "带入默认工艺", "productionorder:default-process", 6, now);
+        AddButton(menus, "menu_production_order_release", prodOrderId, "下达", "productionorder:release", 7, now);
+        AddButton(menus, "menu_production_order_unrelease", prodOrderId, "反下达", "productionorder:unrelease", 8, now);
+        AddButton(menus, "menu_production_order_routecard", prodOrderId, "生成工序流转卡", "productionorder:gen-routecard", 9, now);
+        AddButton(menus, "menu_production_order_change", prodOrderId, "变更", "productionorder:change", 10, now);
+        AddButton(menus, "menu_production_order_close", prodOrderId, "结案", "productionorder:close", 11, now);
+        AddButton(menus, "menu_production_order_unclose", prodOrderId, "反结案", "productionorder:unclose", 12, now);
+        AddButton(menus, "menu_production_order_suspend", prodOrderId, "挂起", "productionorder:suspend", 13, now);
+        AddButton(menus, "menu_production_order_unsuspend", prodOrderId, "反挂起", "productionorder:unsuspend", 14, now);
 
         // 生产用料清单 (M)
         var prodMtrlListId = "menu_production_mtrllist";
@@ -772,6 +784,8 @@ public class DataSeedService
         AddButton(menus, "menu_production_mtrllist_list", prodMtrlListId, "查看生产用料清单", "prodmateriallist:list", 1, now);
         AddButton(menus, "menu_production_mtrllist_add", prodMtrlListId, "新增生产用料清单", "prodmateriallist:add", 2, now);
         AddButton(menus, "menu_production_mtrllist_edit", prodMtrlListId, "编辑生产用料清单", "prodmateriallist:edit", 3, now);
+        AddButton(menus, "menu_production_mtrllist_approve", prodMtrlListId, "审核生产用料清单", "prodmateriallist:approve", 4, now);
+        AddButton(menus, "menu_production_mtrllist_delete", prodMtrlListId, "删除生产用料清单", "prodmateriallist:delete", 5, now);
 
         // ── 二级分组：生产领料 (D) ──
         var prodIssueGroupId = "menu_production_issue";
@@ -1327,6 +1341,7 @@ public class DataSeedService
             ("PUR_MRAPP",         "退料申请单", nameof(TPurMrApp)),
             ("PUR_MRB",           "采购退料单", nameof(TPurMrb)),
             ("PRD_MO",            "生产订单",   nameof(TPrdMo)),
+            ("PRD_PPBOM",         "生产用料清单", nameof(TPrdPpbom)),
         };
         foreach (var (formKey, formName, entityName) in forms)
         {
@@ -1368,6 +1383,7 @@ public class DataSeedService
             ("listcode_pur_mrapp",   mrFormKey, "退料申请单编号规则", "TLSQ"),
             ("listcode_pur_mrb",     mrbFormKey, "采购退料单编号规则", "TLD"),
             ("listcode_prd_mo",      "PRD_MO",  "生产订单编号规则",   "SCDD"),
+            ("listcode_prd_ppbom",   "PRD_PPBOM", "生产用料清单编号规则", "SCYL"),
         };
         foreach (var (uid, formKey, name, prefix) in listRules)
         {

@@ -105,6 +105,16 @@
           <el-button type="primary" size="small" :disabled="isReadonly" @click="addLine"><el-icon><Plus /></el-icon> 行新增</el-button>
           <el-button size="small" :disabled="isReadonly" @click="insertLine">行插入</el-button>
           <el-button size="small" type="danger" :disabled="isReadonly || selectedLineIndex < 0" @click="deleteLine">行删除</el-button>
+          <el-button size="small" :disabled="isReadonly || selectedLineIndex < 0" @click="notImpl('带入默认工艺')" v-permission="'productionorder:default-process'">带入默认工艺</el-button>
+          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('下达')" v-permission="'productionorder:release'">下达</el-button>
+          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('反下达')" v-permission="'productionorder:unrelease'">反下达</el-button>
+          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('生成工序流转卡')" v-permission="'productionorder:gen-routecard'">生成工序流转卡</el-button>
+          <el-divider direction="vertical" />
+          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('变更')" v-permission="'productionorder:change'">变更</el-button>
+          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('结案')" v-permission="'productionorder:close'">结案</el-button>
+          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('反结案')" v-permission="'productionorder:unclose'">反结案</el-button>
+          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('挂起')" v-permission="'productionorder:suspend'">挂起</el-button>
+          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('反挂起')" v-permission="'productionorder:unsuspend'">反挂起</el-button>
         </div>
 
         <el-table :data="lineItems" border size="small" row-key="_key" highlight-current-row
@@ -126,7 +136,7 @@
           <el-table-column label="产品代码" min-width="200">
             <template #default="{ row }">
               <LookupSelect :key="'pr'+row._key" v-model="row.fprorouteid" module="proroute"
-                            placeholder="选择产品（工艺）" :disabled="isReadonly"
+                            placeholder="选择产品（工艺）" :disabled="isReadonly" preload
                             @change="(it: any) => onProductChange(row, it)" />
             </template>
           </el-table-column>
@@ -178,7 +188,7 @@
           <el-table-column prop="fprorouteName" label="产品工艺名称" width="130" />
           <el-table-column label="条码规则" width="170">
             <template #default="{ row }">
-              <LookupSelect :key="'bc'+row._key" v-model="row.fbarcoderuleid" module="barcode" placeholder="选择条码规则" :disabled="isReadonly"
+              <LookupSelect :key="'bc'+row._key" v-model="row.fbarcoderuleid" module="barcode" placeholder="选择条码规则" :disabled="isReadonly" preload
                             @change="(it: any) => onBarcodeChange(row, it)" />
             </template>
           </el-table-column>
@@ -200,7 +210,7 @@
           </el-table-column>
           <el-table-column label="BOM单" width="170">
             <template #default="{ row }">
-              <LookupSelect :key="'bom'+row._key" v-model="row.fbomid" module="bom" placeholder="选择BOM单" :disabled="isReadonly"
+              <LookupSelect :key="'bom'+row._key" v-model="row.fbomid" module="bom" placeholder="选择BOM单" :disabled="isReadonly" preload
                             @change="(it: any) => onBomChange(row, it)" />
             </template>
           </el-table-column>
@@ -343,6 +353,9 @@ const deleteLine = () => {
   lineItems.value.splice(selectedLineIndex.value, 1)
   selectedLineIndex.value = lineItems.value.length > 0 ? Math.min(selectedLineIndex.value, lineItems.value.length - 1) : -1
 }
+
+// 明细高级动作占位（带入默认工艺/下达/反下达/生成工序流转卡/变更/结案/反结案/挂起/反挂起）——功能后续实现
+const notImpl = (name: string) => ElMessage.info(`「${name}」功能开发中，敬请期待`)
 
 // 产品代码（工艺流程）选中：带出产品物料 + 工艺信息；按物料是否启用辅助属性决定该格可选/只读
 const onProductChange = async (row: any, item: any) => {

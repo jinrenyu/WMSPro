@@ -68,10 +68,13 @@ public class ProductionOrderService : DocumentService<TPrdMo, TPrdMoentry,
         if (header == null || header.FDeleted) throw new KeyNotFoundException("单据不存在");
         if (header.FStatus != 40) throw new InvalidOperationException("只有已审核的单据才能反审核");
 
+        // 哨兵存入局部变量：SqlSugar 解析 SetColumns 表达式树时拒绝 private 字段，
+        // 局部变量经闭包捕获（字段为 public）可被正常求值为参数化常量。
+        var sentinel = DateSentinel;
         var result = await Db.Updateable<TPrdMo>()
             .SetColumns(h => h.FStatus == 10)
             .SetColumns(h => h.Fcheckerid == string.Empty)
-            .SetColumns(h => h.Fcheckdate == DateSentinel)
+            .SetColumns(h => h.Fcheckdate == sentinel)
             .SetColumns(h => h.MYmd == DateTime.Now)
             .SetColumns(h => h.MUser == (CurrentUser.UserId ?? string.Empty))
             .Where(h => h.Uid == uid)

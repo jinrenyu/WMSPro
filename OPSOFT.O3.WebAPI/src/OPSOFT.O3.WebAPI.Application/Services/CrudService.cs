@@ -39,18 +39,7 @@ public abstract class CrudService<TEntity, TListDto, TDetailDto, TCreateDto, TUp
         if (!string.IsNullOrEmpty(request.GroupId))
         {
             Expression<Func<TEntity, bool>> groupFilter = e => e.FGroupId == request.GroupId;
-            if (predicate == null)
-            {
-                predicate = groupFilter;
-            }
-            else
-            {
-                var param = Expression.Parameter(typeof(TEntity), "e");
-                var body = Expression.AndAlso(
-                    Expression.Invoke(predicate, param),
-                    Expression.Invoke(groupFilter, param));
-                predicate = Expression.Lambda<Func<TEntity, bool>>(body, param);
-            }
+            predicate = predicate == null ? groupFilter : predicate.And(groupFilter);
         }
 
         // 动态高级筛选

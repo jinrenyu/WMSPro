@@ -322,8 +322,14 @@ const routes = [
             {
                 path: 'production/material-lists',
                 name: 'ProductionMaterialListList',
-                component: () => import('../views/production/PlaceholderPage.vue'),
+                component: () => import('../views/production/ProductionMaterialListList.vue'),
                 meta: { title: '生产用料清单' }
+            },
+            {
+                path: 'production/material-lists/edit',
+                name: 'ProductionMaterialListEdit',
+                component: () => import('../views/production/ProductionMaterialListEdit.vue'),
+                meta: { title: '生产用料清单-维护' }
             },
             // 生产领料
             {

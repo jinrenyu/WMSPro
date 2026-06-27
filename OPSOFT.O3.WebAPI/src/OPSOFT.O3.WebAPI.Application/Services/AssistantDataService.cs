@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using OPSOFT.O3.WebAPI.Application.DTOs;
+using OPSOFT.O3.WebAPI.Application.Extensions;
 using OPSOFT.O3.WebAPI.Application.Interfaces;
 using OPSOFT.O3.WebAPI.Domain.Entities;
 using OPSOFT.O3.WebAPI.Domain.Interfaces;
@@ -103,36 +104,14 @@ public class AssistantDataEntryService : ApprovableDisableableCrudService<TBasAs
         if (!string.IsNullOrEmpty(request.Keyword))
         {
             var searchPredicate = BuildSearchPredicate(request.Keyword);
-            if (predicate == null)
-            {
-                predicate = searchPredicate;
-            }
-            else
-            {
-                var param = Expression.Parameter(typeof(TBasAssistantdataentry), "e");
-                var body = Expression.AndAlso(
-                    Expression.Invoke(predicate, param),
-                    Expression.Invoke(searchPredicate, param));
-                predicate = Expression.Lambda<Func<TBasAssistantdataentry, bool>>(body, param);
-            }
+            predicate = predicate == null ? searchPredicate : predicate.And(searchPredicate);
         }
 
         // 分组过滤
         if (!string.IsNullOrEmpty(request.GroupId))
         {
             Expression<Func<TBasAssistantdataentry, bool>> groupFilter = e => e.FGroupId == request.GroupId;
-            if (predicate == null)
-            {
-                predicate = groupFilter;
-            }
-            else
-            {
-                var param = Expression.Parameter(typeof(TBasAssistantdataentry), "e");
-                var body = Expression.AndAlso(
-                    Expression.Invoke(predicate, param),
-                    Expression.Invoke(groupFilter, param));
-                predicate = Expression.Lambda<Func<TBasAssistantdataentry, bool>>(body, param);
-            }
+            predicate = predicate == null ? groupFilter : predicate.And(groupFilter);
         }
 
         var (items, totalCount) = await Repository.GetPagedListAsync(

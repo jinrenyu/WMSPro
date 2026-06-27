@@ -68,37 +68,14 @@ public class MaterialService : ApprovableDisableableCrudService<TBdMaterial, Mat
         if (!string.IsNullOrEmpty(request.GroupId))
         {
             Expression<Func<TBdMaterial, bool>> groupFilter = m => m.FGroupId == request.GroupId;
-            if (predicate == null)
-            {
-                predicate = groupFilter;
-            }
-            else
-            {
-                // Combine with AndAlso
-                var param = Expression.Parameter(typeof(TBdMaterial), "m");
-                var body = Expression.AndAlso(
-                    Expression.Invoke(predicate, param),
-                    Expression.Invoke(groupFilter, param));
-                predicate = Expression.Lambda<Func<TBdMaterial, bool>>(body, param);
-            }
+            predicate = predicate == null ? groupFilter : predicate.And(groupFilter);
         }
 
         // 选择器：仅已审核(40)+非禁用
         if (request.OnlyApproved)
         {
             Expression<Func<TBdMaterial, bool>> approvedFilter = m => m.FStatus == 40 && !m.FDisabled;
-            if (predicate == null)
-            {
-                predicate = approvedFilter;
-            }
-            else
-            {
-                var ap = Expression.Parameter(typeof(TBdMaterial), "m");
-                var body = Expression.AndAlso(
-                    Expression.Invoke(predicate, ap),
-                    Expression.Invoke(approvedFilter, ap));
-                predicate = Expression.Lambda<Func<TBdMaterial, bool>>(body, ap);
-            }
+            predicate = predicate == null ? approvedFilter : predicate.And(approvedFilter);
         }
 
         // 动态高级筛选（与基类 CrudService 保持一致，修复物料列表高级筛选不生效的问题）

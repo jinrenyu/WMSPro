@@ -14,6 +14,7 @@ public static class BillCodeFormKeys
     public const string MrApp = "PUR_MRAPP"; // 退料申请单（料品退货申请 MaterialReturnApply）
     public const string Mrb = "PUR_MRB";     // 采购退料单 / 外购退料（PurchaseReturn）
     public const string ProductionOrder = "PRD_MO"; // 生产订单 / 生产任务单（ProductionOrder）
+    public const string ProductionMaterialList = "PRD_PPBOM"; // 生产用料清单 / 生产投料单（ProductionMaterialList）
 }
 
 /// <summary>
