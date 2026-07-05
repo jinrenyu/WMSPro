@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OPSOFT.O3.WebAPI.Api.Authorization;
 using OPSOFT.O3.WebAPI.Application.DTOs;
 using OPSOFT.O3.WebAPI.Application.Interfaces;
 using OPSOFT.O3.WebAPI.Domain.Entities;
@@ -16,12 +17,15 @@ public class ProductionOrderController : ControllerBase
 {
     private readonly IDocumentService<TPrdMo, TPrdMoentry,
         ProductionOrderListDto, ProductionOrderDetailDto, CreateProductionOrderRequest, UpdateProductionOrderRequest> _service;
+    private readonly IProductionReleaseService _release;
 
     public ProductionOrderController(
         IDocumentService<TPrdMo, TPrdMoentry,
-            ProductionOrderListDto, ProductionOrderDetailDto, CreateProductionOrderRequest, UpdateProductionOrderRequest> service)
+            ProductionOrderListDto, ProductionOrderDetailDto, CreateProductionOrderRequest, UpdateProductionOrderRequest> service,
+        IProductionReleaseService release)
     {
         _service = service;
+        _release = release;
     }
 
     [HttpGet]
@@ -83,5 +87,25 @@ public class ProductionOrderController : ControllerBase
     {
         var result = await _service.CloseAsync(id);
         return Ok(ApiResponse<bool>.Ok(result, "关闭成功"));
+    }
+
+    /// <summary>下达：按选中明细行的 BOM 生成生产用料清单（id=生产订单主表 Uid）</summary>
+    [HttpPost("{id}/release")]
+    [RequirePermission("productionorder:release")]
+    public async Task<ActionResult<ApiResponse<ProductionReleaseResultDto>>> Release(string id, [FromBody] ProductionReleaseRequest request)
+    {
+        var result = await _release.ReleaseAsync(id, request?.EntryUids ?? new List<string>());
+        var msg = result.SuccessCount > 0 ? $"下达成功 {result.SuccessCount} 行" : "未下达任何明细";
+        return Ok(ApiResponse<ProductionReleaseResultDto>.Ok(result, msg));
+    }
+
+    /// <summary>反下达：删除选中明细行对应的生产用料清单</summary>
+    [HttpPost("{id}/unrelease")]
+    [RequirePermission("productionorder:unrelease")]
+    public async Task<ActionResult<ApiResponse<ProductionReleaseResultDto>>> Unrelease(string id, [FromBody] ProductionReleaseRequest request)
+    {
+        var result = await _release.UnreleaseAsync(id, request?.EntryUids ?? new List<string>());
+        var msg = result.SuccessCount > 0 ? $"反下达成功 {result.SuccessCount} 行" : "未反下达任何明细";
+        return Ok(ApiResponse<ProductionReleaseResultDto>.Ok(result, msg));
     }
 }

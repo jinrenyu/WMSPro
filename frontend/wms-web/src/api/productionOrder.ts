@@ -134,6 +134,24 @@ export const unapproveProductionOrder = (id: string) => {
     return request({ url: `/productionorder/${id}/unapprove`, method: 'post' })
 }
 
+// 下达 / 反下达结果
+export interface ProductionReleaseResult {
+    messages: string[]
+    successCount: number
+    failCount: number
+    billNos: string[]
+}
+
+// POST /api/productionorder/{id}/release - 下达（按选中明细行的 BOM 生成生产用料清单）
+export const releaseProductionOrder = (id: string, entryUids: string[]) => {
+    return request({ url: `/productionorder/${id}/release`, method: 'post', data: { entryUids } })
+}
+
+// POST /api/productionorder/{id}/unrelease - 反下达（删除选中明细行对应的生产用料清单）
+export const unreleaseProductionOrder = (id: string, entryUids: string[]) => {
+    return request({ url: `/productionorder/${id}/unrelease`, method: 'post', data: { entryUids } })
+}
+
 // GET /api/material/{id}/aux-enabled - 物料是否启用辅助属性
 export const getMaterialAuxEnabled = (materialId: string) => {
     return request({ url: `/material/${materialId}/aux-enabled`, method: 'get' })

@@ -140,6 +140,8 @@ public static class DependencyInjection
         services.AddScoped<IDocumentService<TPrdMo, TPrdMoentry, ProductionOrderListDto, ProductionOrderDetailDto, CreateProductionOrderRequest, UpdateProductionOrderRequest>, ProductionOrderService>();
         // 生产用料清单 / 生产投料单（一主一从 T_PRD_PPBOM / T_PRD_PPBOMENTRY）
         services.AddScoped<IDocumentService<TPrdPpbom, TPrdPpbomentry, ProductionMaterialListListDto, ProductionMaterialListDetailDto, CreateProductionMaterialListRequest, UpdateProductionMaterialListRequest>, ProductionMaterialListService>();
+        // 生产订单下达 / 反下达（按 BOM 生成用料清单 / 删除用料清单 + 回写明细业务状态）
+        services.AddScoped<IProductionReleaseService, ProductionReleaseService>();
         // 采购入库单（一主三从 ENTRY/ENTRY1/ENTRY2 + 扫码 + 源单类型）：暴露专有接口（含扫码/源单类型），其本身亦实现通用单据契约
         services.AddScoped<IInStockService, InStockService>();
         // 采购退料单 / 外购退料（一主三从 + 扫码 + 出库过账，镜像入库单反向）

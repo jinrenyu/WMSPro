@@ -19,14 +19,16 @@
       <el-button class="back-btn" @click="handleBack"><el-icon><Back /></el-icon> 退出</el-button>
     </div>
 
+    <!-- 注意：el-form 不整表 :disabled（否则审核后会连带禁用表体的"下达/反下达"按钮，
+         而下达恰恰要求单据已审核）。表头各字段改为各自显式 :disabled="isReadonly"。 -->
     <el-form ref="formRef" :model="form" :rules="rules" label-width="84px"
-             :disabled="isReadonly" class="edit-form" v-loading="loading">
+             class="edit-form" v-loading="loading">
       <!-- 单据头 -->
       <div class="form-header">
         <el-row :gutter="16">
           <el-col :span="8">
             <el-form-item label="单据类型" prop="fbilltype">
-              <LookupSelect v-model="form.fbilltype" module="billtype" parent-id="PRD_MO" placeholder="请选择单据类型" preload />
+              <LookupSelect v-model="form.fbilltype" module="billtype" parent-id="PRD_MO" placeholder="请选择单据类型" :disabled="isReadonly" preload />
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -36,7 +38,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="单据日期" prop="fdate">
-              <el-date-picker v-model="form.fdate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width:100%" />
+              <el-date-picker v-model="form.fdate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" :disabled="isReadonly" style="width:100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -53,7 +55,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="组织">
-              <el-select v-model="form.fcompanyid" placeholder="组织" style="width:100%">
+              <el-select v-model="form.fcompanyid" placeholder="组织" :disabled="isReadonly" style="width:100%">
                 <el-option v-for="o in orgOptions" :key="o.orgId" :label="o.orgName" :value="o.orgId" />
               </el-select>
             </el-form-item>
@@ -62,12 +64,12 @@
         <el-row :gutter="16">
           <el-col :span="8">
             <el-form-item label="计划员">
-              <LookupSelect v-model="form.fplannerid" module="employee" placeholder="请选择计划员" preload />
+              <LookupSelect v-model="form.fplannerid" module="employee" placeholder="请选择计划员" :disabled="isReadonly" preload />
             </el-form-item>
           </el-col>
           <el-col :span="16">
             <el-form-item label="备注">
-              <el-input v-model="form.fnote" placeholder="备注" />
+              <el-input v-model="form.fnote" placeholder="备注" :disabled="isReadonly" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -106,8 +108,8 @@
           <el-button size="small" :disabled="isReadonly" @click="insertLine">行插入</el-button>
           <el-button size="small" type="danger" :disabled="isReadonly || selectedLineIndex < 0" @click="deleteLine">行删除</el-button>
           <el-button size="small" :disabled="isReadonly || selectedLineIndex < 0" @click="notImpl('带入默认工艺')" v-permission="'productionorder:default-process'">带入默认工艺</el-button>
-          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('下达')" v-permission="'productionorder:release'">下达</el-button>
-          <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('反下达')" v-permission="'productionorder:unrelease'">反下达</el-button>
+          <el-button size="small" type="primary" plain :disabled="!canRelease" @click="handleRelease" v-permission="'productionorder:release'">下达</el-button>
+          <el-button size="small" :disabled="!canUnrelease" @click="handleUnrelease" v-permission="'productionorder:unrelease'">反下达</el-button>
           <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('生成工序流转卡')" v-permission="'productionorder:gen-routecard'">生成工序流转卡</el-button>
           <el-divider direction="vertical" />
           <el-button size="small" :disabled="selectedLineIndex < 0" @click="notImpl('变更')" v-permission="'productionorder:change'">变更</el-button>
@@ -251,12 +253,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Check, Back, Plus, CircleCheck, RefreshLeft } from '@element-plus/icons-vue'
 import {
   getProductionOrder, createProductionOrder, updateProductionOrder,
-  approveProductionOrder, unapproveProductionOrder, getMaterialAuxEnabled, type ProductionOrderEntry
+  approveProductionOrder, unapproveProductionOrder, getMaterialAuxEnabled,
+  releaseProductionOrder, unreleaseProductionOrder, type ProductionOrderEntry
 } from '../../api/productionOrder'
 import { formatDate } from '../../utils/format'
 import { useOrgStore } from '../../stores/org'
@@ -297,7 +300,8 @@ const defaultForm = {
 }
 
 const form = reactive({ ...defaultForm })
-const isReadonly = computed(() => isEdit.value && form.fStatus === 40)
+// 非草稿(10)即只读：已审核(40)、已关闭(70)都禁止编辑表单（与后端"仅草稿可改/删"兜底一致）
+const isReadonly = computed(() => isEdit.value && form.fStatus !== 10)
 
 const rules: FormRules = {
   fbilltype: [{ required: true, message: '请选择单据类型', trigger: 'change' }],
@@ -354,8 +358,53 @@ const deleteLine = () => {
   selectedLineIndex.value = lineItems.value.length > 0 ? Math.min(selectedLineIndex.value, lineItems.value.length - 1) : -1
 }
 
-// 明细高级动作占位（带入默认工艺/下达/反下达/生成工序流转卡/变更/结案/反结案/挂起/反挂起）——功能后续实现
+// 明细高级动作占位（生成工序流转卡/变更/结案/反结案/挂起/反挂起）——功能后续实现
 const notImpl = (name: string) => ElMessage.info(`「${name}」功能开发中，敬请期待`)
+
+// ===== 下达 / 反下达（生成 / 删除生产用料清单）=====
+const selectedLine = computed<any>(() => (selectedLineIndex.value >= 0 ? lineItems.value[selectedLineIndex.value] : null))
+// 与旧系统一致：单据审核态(40)+选中明细行 即可点击下达/反下达；
+// 选中行具体能否操作（已绑BOM/是否已下达等）由后端逐行校验并返回提示，不在按钮上预先灰掉，
+// 否则刚审核未下达的单据「反下达」恒灰、无BOM行「下达」恒灰，与设计预期不符。
+const canRelease = computed(() => isEdit.value && form.fStatus === 40 && selectedLineIndex.value >= 0)
+const canUnrelease = canRelease
+
+async function handleRelease() {
+  const line = selectedLine.value
+  if (!line || !uid.value) return
+  if (!line.uid) { ElMessage.warning('请先保存并审核单据后再下达'); return }
+  try {
+    await ElMessageBox.confirm(`确定要下达「行${selectedLineIndex.value + 1} ${line.fmaterialName || line.fmaterialNumber || ''}」，生成生产用料清单吗？`, '下达', { type: 'warning' })
+  } catch { return }
+  loading.value = true
+  try {
+    const res: any = await releaseProductionOrder(uid.value, [line.uid])
+    const data = res?.data || {}
+    const msg = (data.messages || []).join('；')
+    if (data.successCount > 0) { ElMessage.success(msg || '下达成功'); await loadDetail(uid.value) }
+    else { ElMessage.warning(msg || '未下达任何明细'); }
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || '下达失败')
+  } finally { loading.value = false }
+}
+
+async function handleUnrelease() {
+  const line = selectedLine.value
+  if (!line || !uid.value || !line.uid) return
+  try {
+    await ElMessageBox.confirm(`确定要反下达「行${selectedLineIndex.value + 1} ${line.fmaterialName || line.fmaterialNumber || ''}」，删除其生产用料清单吗？`, '反下达', { type: 'warning' })
+  } catch { return }
+  loading.value = true
+  try {
+    const res: any = await unreleaseProductionOrder(uid.value, [line.uid])
+    const data = res?.data || {}
+    const msg = (data.messages || []).join('；')
+    if (data.successCount > 0) { ElMessage.success(msg || '反下达成功'); await loadDetail(uid.value) }
+    else { ElMessage.warning(msg || '未反下达任何明细'); }
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || '反下达失败')
+  } finally { loading.value = false }
+}
 
 // 产品代码（工艺流程）选中：带出产品物料 + 工艺信息；按物料是否启用辅助属性决定该格可选/只读
 const onProductChange = async (row: any, item: any) => {

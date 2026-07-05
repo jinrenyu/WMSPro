@@ -48,14 +48,35 @@ public class ProductionOrderService : DocumentService<TPrdMo, TPrdMoentry,
         if (header == null || header.FDeleted) throw new KeyNotFoundException("单据不存在");
         if (header.FStatus == 40) throw new InvalidOperationException("单据已审核，无需重复审核");
 
-        var result = await Db.Updateable<TPrdMo>()
-            .SetColumns(h => h.FStatus == 40)
-            .SetColumns(h => h.Fcheckerid == (CurrentUser.UserId ?? string.Empty))
-            .SetColumns(h => h.Fcheckdate == DateTime.Now)
-            .SetColumns(h => h.MYmd == DateTime.Now)
-            .SetColumns(h => h.MUser == (CurrentUser.UserId ?? string.Empty))
-            .Where(h => h.Uid == uid)
-            .ExecuteCommandAsync() > 0;
+        bool result;
+        try
+        {
+            Db.AsTenant().BeginTran();
+
+            result = await Db.Updateable<TPrdMo>()
+                .SetColumns(h => h.FStatus == 40)
+                .SetColumns(h => h.Fcheckerid == (CurrentUser.UserId ?? string.Empty))
+                .SetColumns(h => h.Fcheckdate == DateTime.Now)
+                .SetColumns(h => h.MYmd == DateTime.Now)
+                .SetColumns(h => h.MUser == (CurrentUser.UserId ?? string.Empty))
+                .Where(h => h.Uid == uid)
+                .ExecuteCommandAsync() > 0;
+
+            // 审核=计划确认：把仍为"计划(1)"的明细业务状态置为"计划确认(2)"（对照旧系统 Verify 时 FBSTATUS=2），供后续下达
+            await Db.Updateable<TPrdMoentry>()
+                .SetColumns(e => e.Fbstatus == "2")
+                .SetColumns(e => e.MYmd == DateTime.Now)
+                .SetColumns(e => e.MUser == (CurrentUser.UserId ?? string.Empty))
+                .Where(e => e.FInterId == uid && !e.FDeleted && (e.Fbstatus == "1" || e.Fbstatus == ""))
+                .ExecuteCommandAsync();
+
+            Db.AsTenant().CommitTran();
+        }
+        catch
+        {
+            Db.AsTenant().RollbackTran();
+            throw;
+        }
 
         _ = OperationLog?.LogAsync(PrgKey, OperationType.Approve, uid, header.Fbillno, "审核单据", result);
         return result;
@@ -68,17 +89,45 @@ public class ProductionOrderService : DocumentService<TPrdMo, TPrdMoentry,
         if (header == null || header.FDeleted) throw new KeyNotFoundException("单据不存在");
         if (header.FStatus != 40) throw new InvalidOperationException("只有已审核的单据才能反审核");
 
+        // 拦截：存在已下达/已开工/已完工/已结案的明细行时不能反审核（否则反审核→编辑会重建明细 Uid，
+        // 令已生成的用料清单 FMOENTRYID 孤立）。须先逐行反下达。
+        var hasReleased = await Db.Queryable<TPrdMoentry>()
+            .AnyAsync(e => e.FInterId == uid && !e.FDeleted
+                && (e.Fbstatus == "3" || e.Fbstatus == "4" || e.Fbstatus == "5" || e.Fbstatus == "6"));
+        if (hasReleased) throw new InvalidOperationException("存在已下达的明细行，请先逐行反下达后再反审核");
+
         // 哨兵存入局部变量：SqlSugar 解析 SetColumns 表达式树时拒绝 private 字段，
         // 局部变量经闭包捕获（字段为 public）可被正常求值为参数化常量。
         var sentinel = DateSentinel;
-        var result = await Db.Updateable<TPrdMo>()
-            .SetColumns(h => h.FStatus == 10)
-            .SetColumns(h => h.Fcheckerid == string.Empty)
-            .SetColumns(h => h.Fcheckdate == sentinel)
-            .SetColumns(h => h.MYmd == DateTime.Now)
-            .SetColumns(h => h.MUser == (CurrentUser.UserId ?? string.Empty))
-            .Where(h => h.Uid == uid)
-            .ExecuteCommandAsync() > 0;
+        bool result;
+        try
+        {
+            Db.AsTenant().BeginTran();
+
+            result = await Db.Updateable<TPrdMo>()
+                .SetColumns(h => h.FStatus == 10)
+                .SetColumns(h => h.Fcheckerid == string.Empty)
+                .SetColumns(h => h.Fcheckdate == sentinel)
+                .SetColumns(h => h.MYmd == DateTime.Now)
+                .SetColumns(h => h.MUser == (CurrentUser.UserId ?? string.Empty))
+                .Where(h => h.Uid == uid)
+                .ExecuteCommandAsync() > 0;
+
+            // 反审核回到草稿：把"计划确认(2)"的明细退回"计划(1)"
+            await Db.Updateable<TPrdMoentry>()
+                .SetColumns(e => e.Fbstatus == "1")
+                .SetColumns(e => e.MYmd == DateTime.Now)
+                .SetColumns(e => e.MUser == (CurrentUser.UserId ?? string.Empty))
+                .Where(e => e.FInterId == uid && !e.FDeleted && e.Fbstatus == "2")
+                .ExecuteCommandAsync();
+
+            Db.AsTenant().CommitTran();
+        }
+        catch
+        {
+            Db.AsTenant().RollbackTran();
+            throw;
+        }
 
         _ = OperationLog?.LogAsync(PrgKey, OperationType.Reject, uid, header.Fbillno, reason ?? "反审核单据", result);
         return result;
@@ -90,6 +139,13 @@ public class ProductionOrderService : DocumentService<TPrdMo, TPrdMoentry,
         if (header == null || header.FDeleted) throw new KeyNotFoundException("单据不存在");
         if (header.FStatus == 70) throw new InvalidOperationException("单据已关闭");
         if (header.FStatus != 40) throw new InvalidOperationException("只有已审核的单据才能关闭");
+
+        // 拦截：存在已下达及以上的明细行时不能关闭（与反审核同口径）。否则关闭(70)后若再编辑会重建明细 Uid，
+        // 令已生成的用料清单 FMOENTRYID 孤立（见 RejectAsync 同款拦截 + UpdateAsync/DeleteAsync 仅草稿可改的兜底）。
+        var hasReleased = await Db.Queryable<TPrdMoentry>()
+            .AnyAsync(e => e.FInterId == uid && !e.FDeleted
+                && (e.Fbstatus == "3" || e.Fbstatus == "4" || e.Fbstatus == "5" || e.Fbstatus == "6"));
+        if (hasReleased) throw new InvalidOperationException("存在已下达的明细行，请先逐行反下达后再关闭");
 
         var result = await Db.Updateable<TPrdMo>()
             .SetColumns(h => h.FStatus == 70)
@@ -105,12 +161,13 @@ public class ProductionOrderService : DocumentService<TPrdMo, TPrdMoentry,
     protected override Expression<Func<TPrdMo, bool>> BuildSearchPredicate(string keyword)
         => h => h.Fbillno.Contains(keyword);
 
-    // 已审核单据禁止修改/删除（前端只读外的后端兜底，须先反审核）
+    // 非草稿单据禁止修改/删除（前端只读外的后端兜底）。改/删会经基类删插重建明细 Uid，
+    // 故已审核(40)与已关闭(70)都必须拦死，否则会令下达生成的用料清单 FMOENTRYID 孤立。
     public override async Task<bool> UpdateAsync(string uid, UpdateProductionOrderRequest request)
     {
         var header = await HeaderRepo.GetByIdAsync(uid);
         if (header == null || header.FDeleted) throw new KeyNotFoundException("单据不存在");
-        if (header.FStatus == 40) throw new InvalidOperationException("已审核的单据不能修改，请先反审核");
+        if (header.FStatus != 10) throw new InvalidOperationException("只有草稿状态的单据才能修改，请先反审核");
         return await base.UpdateAsync(uid, request);
     }
 
@@ -118,7 +175,7 @@ public class ProductionOrderService : DocumentService<TPrdMo, TPrdMoentry,
     {
         var header = await HeaderRepo.GetByIdAsync(uid);
         if (header == null || header.FDeleted) throw new KeyNotFoundException("单据不存在");
-        if (header.FStatus == 40) throw new InvalidOperationException("已审核的单据不能删除，请先反审核");
+        if (header.FStatus != 10) throw new InvalidOperationException("只有草稿状态的单据才能删除，请先反审核");
         return await base.DeleteAsync(uid);
     }
 

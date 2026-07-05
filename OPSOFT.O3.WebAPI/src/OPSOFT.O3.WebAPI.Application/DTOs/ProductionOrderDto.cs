@@ -235,6 +235,32 @@ public class UpdateProductionOrderRequest
 }
 
 /// <summary>
+/// 下达 / 反下达请求：对生产订单（主表 Uid 在路由）中选中的若干明细行（FDETAILID=明细 Uid）执行。
+/// 前端单选时传一个元素，保留 List 以便后续支持多选批量下达。
+/// </summary>
+public class ProductionReleaseRequest
+{
+    /// <summary>要下达 / 反下达的明细行 Uid（= T_PRD_MOENTRY.FDETAILID）集合</summary>
+    public List<string> EntryUids { get; set; } = new();
+}
+
+/// <summary>
+/// 下达 / 反下达结果：逐行处理信息 + 成功/失败计数 + 生成的用料清单单号。
+/// 单行软失败（无 BOM、已下达等）不抛异常，作为一条 Message 返回，前端据 SuccessCount 决定是否刷新。
+/// </summary>
+public class ProductionReleaseResultDto
+{
+    /// <summary>逐行处理信息（成功 / 跳过原因）</summary>
+    public List<string> Messages { get; set; } = new();
+    /// <summary>成功处理的明细行数</summary>
+    public int SuccessCount { get; set; }
+    /// <summary>跳过 / 失败的明细行数</summary>
+    public int FailCount { get; set; }
+    /// <summary>本次下达生成的用料清单单据编号（反下达为被删除的单号）</summary>
+    public List<string> BillNos { get; set; } = new();
+}
+
+/// <summary>
 /// 产品代码 / 工艺流程下拉项（数据源：T_ENG_PROROUTE 关联产品物料）。
 /// Uid=工艺流程内码（明细"产品工艺流程"键），FNumber=物料编码、FName=物料名称（产品代码显示用）；
 /// 选中后前端据扩展字段带出物料/工艺到明细各只读列。继承通用 LookupDto 以复用 LookupSelect。
