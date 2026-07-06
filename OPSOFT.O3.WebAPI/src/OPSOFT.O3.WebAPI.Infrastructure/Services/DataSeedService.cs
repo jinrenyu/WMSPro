@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Reflection;
+using System.Text.Json;
 using OPSOFT.O3.WebAPI.Application.Services;
 using OPSOFT.O3.WebAPI.Domain.Entities;
 using SqlSugar;
@@ -34,7 +37,188 @@ public class DataSeedService
         await SeedBillCodeRulesAsync();
         await SeedSourceBillsAsync();
         await SeedApproveExistingMaterialsAsync();
+        await SeedSynInfoAsync();
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ERP 集成配置种子（自金蝶源库 ODKV640 导出的 T_SYN_INFO/ENTRY/ENTRY1）
+    // 幂等按 UID 补插；子表关联键从 K3 惯例(子.FINTERID→表头.FINTERID)重映射为
+    // WMS 惯例(子.FINTERID→表头.UID)，FDETAILID/FBODYID 保持原样（其内部关联自洽）。
+    // ═══════════════════════════════════════════════════════════════
+    private async Task SeedSynInfoAsync()
+    {
+        var infos = LoadSeedRows("syn_info.json");
+        var ents = LoadSeedRows("syn_infoentry.json");
+        var f1s = LoadSeedRows("syn_infoentry1.json");
+        if (infos.Count == 0) return;
+
+        // 重置开关（RESEED_SYNINFO=1）：硬删三表后从源重新种入干净基线。
+        // 用于修复历史脏数据（如配置被界面编辑后再重跑种子产生的重复实体）。默认不重置。
+        if (Environment.GetEnvironmentVariable("RESEED_SYNINFO") == "1")
+        {
+            await _db.Deleteable<TSynInfoentry1>().Where(_ => true).ExecuteCommandAsync();
+            await _db.Deleteable<TSynInfoentry>().Where(_ => true).ExecuteCommandAsync();
+            await _db.Deleteable<TSynInfo>().Where(_ => true).ExecuteCommandAsync();
+            Console.WriteLine("[Seed] ERP集成配置：RESEED_SYNINFO=1，已清空三表");
+        }
+
+        // 1) 表头：源 FINTERID → UID 的映射；并把表头自身 FINTERID 归一为 UID（WMS 约定）
+        var headerUidBySrcFid = new Dictionary<string, string>();
+        foreach (var h in infos)
+        {
+            var uid = h.GetValueOrDefault("UID") as string;
+            var srcFid = h.GetValueOrDefault("FINTERID") as string;
+            if (!string.IsNullOrEmpty(uid) && !string.IsNullOrEmpty(srcFid))
+                headerUidBySrcFid[srcFid!] = uid!;
+            if (!string.IsNullOrEmpty(uid)) h["FINTERID"] = uid!;
+        }
+
+        // 2) 实体信息：FINTERID 重映射到表头 UID；建 FDETAILID → 新FINTERID 映射供字段映射用
+        var entryFidByDetail = new Dictionary<string, string>();
+        foreach (var e in ents)
+        {
+            var srcFid = e.GetValueOrDefault("FINTERID") as string;
+            if (!string.IsNullOrEmpty(srcFid) && headerUidBySrcFid.TryGetValue(srcFid!, out var huid))
+                e["FINTERID"] = huid;
+            var detail = e.GetValueOrDefault("FDETAILID") as string;
+            if (!string.IsNullOrEmpty(detail) && e.GetValueOrDefault("FINTERID") is string nf)
+                entryFidByDetail[detail!] = nf;
+        }
+
+        // 3) 字段映射：优先经 FBODYID→所属实体 定位表头 UID，回退表头映射
+        foreach (var f in f1s)
+        {
+            var body = f.GetValueOrDefault("FBODYID") as string;
+            if (!string.IsNullOrEmpty(body) && entryFidByDetail.TryGetValue(body!, out var nf))
+                f["FINTERID"] = nf;
+            else if (f.GetValueOrDefault("FINTERID") is string srcFid && !string.IsNullOrEmpty(srcFid)
+                     && headerUidBySrcFid.TryGetValue(srcFid, out var huid))
+                f["FINTERID"] = huid;
+        }
+
+        // 表头级幂等：只种入「表头 UID 不存在」的配置，连同其实体/字段映射整体插入。
+        // 这样即使某配置的明细已被界面编辑（明细 UID 变化），也不会因子 UID 缺失而重复补插实体。
+        var existingHeaders = new HashSet<string>(await _db.Ado.SqlQueryAsync<string>("SELECT UID FROM T_SYN_INFO"));
+        var newHeaderUids = new HashSet<string>(
+            infos.Select(h => h.GetValueOrDefault("UID") as string)
+                 .Where(u => !string.IsNullOrEmpty(u) && !existingHeaders.Contains(u!))!);
+        if (newHeaderUids.Count == 0) return;
+
+        var newInfos = infos.Where(h => newHeaderUids.Contains((h.GetValueOrDefault("UID") as string)!)).ToList();
+        var newEnts = ents.Where(e => e.GetValueOrDefault("FINTERID") is string fid && newHeaderUids.Contains(fid)).ToList();
+        var newF1s = f1s.Where(f => f.GetValueOrDefault("FINTERID") is string fid && newHeaderUids.Contains(fid)).ToList();
+
+        var n1 = await SeedDynamicRowsAsync(typeof(TSynInfo), "T_SYN_INFO", newInfos);
+        var n2 = await SeedDynamicRowsAsync(typeof(TSynInfoentry), "T_SYN_INFOENTRY", newEnts);
+        var n3 = await SeedDynamicRowsAsync(typeof(TSynInfoentry1), "T_SYN_INFOENTRY1", newF1s);
+        if (n1 + n2 + n3 > 0)
+            Console.WriteLine($"[Seed] ERP集成配置：新增 主表{n1}/实体{n2}/字段映射{n3} 行");
+    }
+
+    /// <summary>把一批「列名→值」行动态插入目标表（幂等按 UID）；缺失的实体列按 CLR 类型补默认（与同步引擎一致）。</summary>
+    private async Task<int> SeedDynamicRowsAsync(Type entityType, string table, List<Dictionary<string, object?>> rows)
+    {
+        var cols = ReflectColumns(entityType); // colName -> CLR 类型（仅可读写、非 IsIgnore）
+        var existing = new HashSet<string>(await _db.Ado.SqlQueryAsync<string>($"SELECT UID FROM {table}"));
+        var toInsert = new List<Dictionary<string, object>>();
+        foreach (var r in rows)
+        {
+            var uid = r.GetValueOrDefault("UID") as string;
+            if (string.IsNullOrEmpty(uid) || existing.Contains(uid!)) continue;
+            var ins = new Dictionary<string, object>();
+            foreach (var (colName, clr) in cols)
+            {
+                r.TryGetValue(colName, out var sv);
+                ins[colName] = CoerceSeedValue(sv, clr);
+            }
+            toInsert.Add(ins);
+            existing.Add(uid!);
+        }
+        // 分批插入
+        const int batch = 200;
+        for (int i = 0; i < toInsert.Count; i += batch)
+            await _db.Insertable(toInsert.GetRange(i, Math.Min(batch, toInsert.Count - i))).AS(table).ExecuteCommandAsync();
+        return toInsert.Count;
+    }
+
+    private static List<(string ColName, Type Clr)> ReflectColumns(Type entityType)
+    {
+        var list = new List<(string, Type)>();
+        foreach (var p in entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (!p.CanRead || !p.CanWrite) continue;
+            var col = p.GetCustomAttributes(typeof(SugarColumn), true).FirstOrDefault() as SugarColumn;
+            if (col != null && col.IsIgnore) continue;
+            var colName = col?.ColumnName ?? p.Name;
+            if (string.IsNullOrEmpty(colName)) continue;
+            list.Add((colName, Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType));
+        }
+        return list;
+    }
+
+    private static object CoerceSeedValue(object? sv, Type clr)
+    {
+        if (sv == null) return DefaultForClr(clr);
+        var inv = CultureInfo.InvariantCulture;
+        try
+        {
+            if (clr == typeof(string)) return sv.ToString() ?? string.Empty;
+            var s = sv.ToString()?.Trim() ?? string.Empty;
+            if (clr == typeof(bool)) return sv is bool b ? b : (s is "1" or "true" or "True" or "TRUE");
+            if (s.Length == 0) return DefaultForClr(clr);
+            if (clr == typeof(int) || clr == typeof(short) || clr == typeof(byte)) return Convert.ToInt32(decimal.Parse(s, NumberStyles.Any, inv));
+            if (clr == typeof(long)) return Convert.ToInt64(decimal.Parse(s, NumberStyles.Any, inv));
+            if (clr == typeof(decimal)) return decimal.Parse(s, NumberStyles.Any, inv);
+            if (clr == typeof(double)) return double.Parse(s, NumberStyles.Any, inv);
+            if (clr == typeof(float)) return float.Parse(s, NumberStyles.Any, inv);
+            if (clr == typeof(DateTime)) return DateTime.Parse(s, inv, DateTimeStyles.None);
+            if (clr == typeof(Guid)) return Guid.Parse(s);
+            return Convert.ChangeType(sv, clr, inv);
+        }
+        catch
+        {
+            return DefaultForClr(clr);
+        }
+    }
+
+    private static object DefaultForClr(Type t)
+    {
+        if (t == typeof(string)) return string.Empty;
+        if (t == typeof(DateTime)) return new DateTime(1900, 1, 1);
+        if (t == typeof(bool)) return false;
+        if (t == typeof(Guid)) return Guid.Empty;
+        if (t.IsValueType) return Activator.CreateInstance(t)!;
+        return DBNull.Value;
+    }
+
+    /// <summary>读嵌入资源 JSON（列名→值 的行数组），值转成 CLR 基元（string/long/decimal/bool/null）。</summary>
+    private static List<Dictionary<string, object?>> LoadSeedRows(string fileName)
+    {
+        var asm = typeof(DataSeedService).Assembly;
+        var resName = $"OPSOFT.O3.WebAPI.Infrastructure.SeedData.{fileName}";
+        using var stream = asm.GetManifestResourceStream(resName);
+        if (stream == null) return new();
+        using var doc = JsonDocument.Parse(stream);
+        var result = new List<Dictionary<string, object?>>();
+        foreach (var rowEl in doc.RootElement.EnumerateArray())
+        {
+            var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            foreach (var prop in rowEl.EnumerateObject())
+                row[prop.Name] = JsonToClr(prop.Value);
+            result.Add(row);
+        }
+        return result;
+    }
+
+    private static object? JsonToClr(JsonElement el) => el.ValueKind switch
+    {
+        JsonValueKind.String => el.GetString(),
+        JsonValueKind.Number => el.TryGetInt64(out var l) ? l : el.GetDecimal(),
+        JsonValueKind.True => true,
+        JsonValueKind.False => false,
+        JsonValueKind.Null => null,
+        _ => el.GetRawText()
+    };
 
     private async Task SeedFlexAuxPropertiesAsync()
     {
@@ -921,6 +1105,32 @@ public class DataSeedService
         AddButton(menus, "menu_production_simple_stockreturn_list", simpleStockReturnId, "查看简单生产退库单", "simpleprodstockreturn:list", 1, now);
         AddButton(menus, "menu_production_simple_stockreturn_add", simpleStockReturnId, "新增简单生产退库单", "simpleprodstockreturn:add", 2, now);
         AddButton(menus, "menu_production_simple_stockreturn_edit", simpleStockReturnId, "编辑简单生产退库单", "simpleprodstockreturn:edit", 3, now);
+
+        // ═══════════════════════════════════════════════════════════════
+        // 数据集成 (D) - 一级菜单，落在生产管理(3)之后、系统管理(99)之前
+        // ═══════════════════════════════════════════════════════════════
+        var integrationId = "menu_integration";
+        menus.Add(new SysMenu
+        {
+            Uid = integrationId, FInterId = integrationId, ParentId = "", MenuName = "数据集成",
+            MenuType = "D", RoutePath = "", Icon = "Connection", PermCode = "", SortOrder = 4,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+
+        // ERP集成配置 (M)
+        var erpSyncId = "menu_integration_erpsync";
+        menus.Add(new SysMenu
+        {
+            Uid = erpSyncId, FInterId = erpSyncId, ParentId = integrationId, MenuName = "ERP集成配置",
+            MenuType = "M", RoutePath = "/integration/erp-sync", Icon = "Document", PermCode = "", SortOrder = 1,
+            FCompanyId = "DEFAULT", CYmd = now, CUser = "system", MYmd = now, MUser = "system"
+        });
+        AddButton(menus, "menu_integration_erpsync_list", erpSyncId, "查看ERP集成配置", "erpsync:list", 1, now);
+        AddButton(menus, "menu_integration_erpsync_add", erpSyncId, "新增ERP集成配置", "erpsync:add", 2, now);
+        AddButton(menus, "menu_integration_erpsync_edit", erpSyncId, "编辑ERP集成配置", "erpsync:edit", 3, now);
+        AddButton(menus, "menu_integration_erpsync_approve", erpSyncId, "审核/反审核ERP集成配置", "erpsync:approve", 4, now);
+        AddButton(menus, "menu_integration_erpsync_delete", erpSyncId, "删除ERP集成配置", "erpsync:delete", 5, now);
+        AddButton(menus, "menu_integration_erpsync_sync", erpSyncId, "执行同步", "erpsync:sync", 6, now);
 
         // 过滤出数据库中不存在的菜单，补入
         var existingUids = await _db.Queryable<SysMenu>()

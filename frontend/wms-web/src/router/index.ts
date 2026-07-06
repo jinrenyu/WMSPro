@@ -331,6 +331,19 @@ const routes = [
                 component: () => import('../views/production/ProductionMaterialListEdit.vue'),
                 meta: { title: '生产用料清单-维护' }
             },
+            // 数据集成 - ERP集成配置
+            {
+                path: 'integration/erp-sync',
+                name: 'ErpSyncConfigList',
+                component: () => import('../views/integration/ErpSyncConfigList.vue'),
+                meta: { title: 'ERP集成配置' }
+            },
+            {
+                path: 'integration/erp-sync/edit',
+                name: 'ErpSyncConfigEdit',
+                component: () => import('../views/integration/ErpSyncConfigEdit.vue'),
+                meta: { title: 'ERP集成配置-维护' }
+            },
             // 生产领料
             {
                 path: 'production/picks',

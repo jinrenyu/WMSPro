@@ -11,11 +11,18 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
     <PackageReference Include="SqlSugarCore" Version="5.1.4.211" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <PackageReference Include="YiKdWebClient" Version="1.0.0.31" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OPSOFT.O3.WebAPI.Domain\OPSOFT.O3.WebAPI.Domain.csproj" />
     <ProjectReference Include="..\OPSOFT.O3.WebAPI.Application\OPSOFT.O3.WebAPI.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ERP 集成配置种子数据（自金蝶源库 ODKV640 的 T_SYN_INFO/ENTRY/ENTRY1 导出） -->
+    <None Remove="SeedData\*.json" />
+    <EmbeddedResource Include="SeedData\*.json" />
   </ItemGroup>
 
 </Project>

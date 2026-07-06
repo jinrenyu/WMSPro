@@ -128,6 +128,11 @@ try
     // Add refresh token cleanup background service
     builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
+    // ERP 集成：绑定配置节 + 自动定时同步后台服务
+    builder.Services.Configure<OPSOFT.O3.WebAPI.Infrastructure.ErpIntegration.ErpIntegrationOptions>(
+        builder.Configuration.GetSection(OPSOFT.O3.WebAPI.Infrastructure.ErpIntegration.ErpIntegrationOptions.SectionName));
+    builder.Services.AddHostedService<ErpSyncBackgroundService>();
+
     // Add health checks
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "ready" });

@@ -2,11 +2,13 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OPSOFT.O3.WebAPI.Application.DTOs;
 using OPSOFT.O3.WebAPI.Application.Interfaces;
 using OPSOFT.O3.WebAPI.Application.Services;
 using OPSOFT.O3.WebAPI.Domain.Entities;
 using OPSOFT.O3.WebAPI.Domain.Interfaces;
+using OPSOFT.O3.WebAPI.Infrastructure.ErpIntegration;
 using OPSOFT.O3.WebAPI.Infrastructure.Repositories;
 using OPSOFT.O3.WebAPI.Infrastructure.Services;
 using SqlSugar;
@@ -158,6 +160,20 @@ public static class DependencyInjection
 
         // 即时库存（只读列表查询，真实表 T_STK_INVENTORY）
         services.AddScoped<IInventoryService, InventoryService>();
+
+        // ERP 集成配置（一主两从 T_SYN_INFO / T_SYN_INFOENTRY / T_SYN_INFOENTRY1）+ 通用同步引擎
+        services.AddScoped<IErpSyncEngine, ErpSyncEngine>();
+        services.AddScoped<IErpSyncConfigService, ErpSyncConfigService>();
+        // ERP 取数源：按 ErpIntegration:Provider 在解析时择一（Stub 模拟 / K3Cloud 真连）
+        services.AddScoped<StubErpDataSource>();
+        services.AddScoped<K3CloudErpDataSource>();
+        services.AddScoped<IErpDataSource>(sp =>
+        {
+            var opt = sp.GetRequiredService<IOptions<ErpIntegrationOptions>>().Value;
+            return string.Equals(opt.Provider, "K3Cloud", StringComparison.OrdinalIgnoreCase)
+                ? sp.GetRequiredService<K3CloudErpDataSource>()
+                : sp.GetRequiredService<StubErpDataSource>();
+        });
 
         // 编码规则：业务表单目录（数据驱动）+ 取号引擎（单据编号/条码编号统一取号）+ 配置维护（系统管理→编码规则）
         services.AddScoped<IBillCodeFormCatalog, BillCodeFormCatalog>();
