@@ -31,7 +31,8 @@ public class BaseDataGroupService : IBaseDataGroupService
         ["MaterialBarType"] = "T_BD_MATERIALBARTYPE",
         ["Currency"] = "T_BD_CURRENCY",
         ["AssistantData"] = "T_BAS_ASSISTANTDATA",
-        ["AssistantDataEntry"] = "T_BAS_ASSISTANTDATAENTRY"
+        ["AssistantDataEntry"] = "T_BAS_ASSISTANTDATAENTRY",
+        ["User"] = "SYS_LOGINUSER"
     };
 
     public BaseDataGroupService(IRepository<SysBaseDataGroup> repository, ISqlSugarClient db)

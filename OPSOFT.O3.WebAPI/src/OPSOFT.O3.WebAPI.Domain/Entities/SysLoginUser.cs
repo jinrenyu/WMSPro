@@ -89,7 +89,7 @@ public class SysLoginUser : BaseEntity
     /// <summary>
     /// 照片
     /// </summary>
-    [SugarColumn(ColumnName = "PHOTO", IsIgnore = true)]
+    [SugarColumn(ColumnName = "PHOTO", IsNullable = true)]
     public byte[]? Photo { get; set; }
 
     /// <summary>

@@ -121,7 +121,9 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
         var headerFilters = filters.Where(f => HeaderFilterFields.Contains(f.Field)).ToList();
         var entryFilters = filters.Where(f => !HeaderFilterFields.Contains(f.Field)).ToList();
 
-        // 1) 表头条件（关键字 + 表头动态筛选 + 仅已审核）-> 命中的主表 Uid 集合
+        // 1) 表头条件（关键字 + 表头动态筛选 + 仅已审核）-> 命中的主表 FInterId 集合
+        //    明细↔主表按 FInterId 关联（entry.FInterId == header.FInterId），兼容 ERP 同步数据
+        //    （主表 Uid 为新 GUID、FInterId 为 ERP 内码）与手工单据（Uid==FInterId）。
         List<string>? headerIds = null;
         if (!string.IsNullOrWhiteSpace(request.Keyword) || headerFilters.Count > 0 || request.OnlyApproved)
         {
@@ -135,7 +137,7 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
             }
             if (headerFilters.Count > 0)
                 hq = hq.Where(headerFilters.ToConditionalModels<TPurPoOrder>());
-            headerIds = await hq.Select(h => h.Uid).ToListAsync();
+            headerIds = await hq.Select(h => h.FInterId).ToListAsync();
             if (headerIds.Count == 0)
                 return new PagedResult<PurchaseOrderListDto> { Items = new(), TotalCount = 0, PageIndex = request.PageIndex, PageSize = request.PageSize };
         }
@@ -155,10 +157,10 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
         if (entries.Count == 0)
             return new PagedResult<PurchaseOrderListDto> { Items = new(), TotalCount = totalCount, PageIndex = request.PageIndex, PageSize = request.PageSize };
 
-        // 3) 批量加载主表 + 名称源
+        // 3) 批量加载主表 + 名称源（明细↔主表按 FInterId 关联）
         var hids = entries.Select(e => e.FInterId).Distinct().ToList();
-        var headers = await Db.Queryable<TPurPoOrder>().Where(h => hids.Contains(h.Uid)).ToListAsync();
-        var headerDict = headers.GroupBy(h => h.Uid).ToDictionary(g => g.Key, g => g.First());
+        var headers = await Db.Queryable<TPurPoOrder>().Where(h => hids.Contains(h.FInterId)).ToListAsync();
+        var headerDict = headers.GroupBy(h => h.FInterId).ToDictionary(g => g.Key, g => g.First());
 
         var materialDict = await LoadMaterialDictAsync(entries.Select(e => e.Fmaterialid));
         var unitDict = await LoadUnitDictAsync(entries.Select(e => e.Funitid));
@@ -225,18 +227,20 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
         var header = await HeaderRepo.GetByIdAsync(uid);
         if (header == null || header.FDeleted) return null;
 
-        var entries = await GetEntriesByHeaderIdAsync(uid);
+        // 明细按 header.FInterId 关联（entry.FInterId == header.FInterId）：
+        // 手工单据 Uid==FInterId 等价；ERP 同步数据主表 Uid(GUID)≠FInterId(ERP内码)时须用 FInterId 才能取到明细。
+        var entries = await GetEntriesByHeaderIdAsync(header.FInterId);
         var dto = MapToDetailDto(header, entries);
 
         // 主表名称
-        dto.FbilltypeName = await Db.Queryable<TBasBilltype>().Where(b => b.Uid == header.Fbilltypeid).Select(b => b.Fname).FirstAsync() ?? string.Empty;
+        dto.FbilltypeName = await Db.Queryable<TBasBilltype>().Where(b => b.Uid == header.Fbilltypeid || b.FInterId == header.Fbilltypeid).Select(b => b.Fname).FirstAsync() ?? string.Empty;
         var supplier = await LoadSupplierDictAsync(new[] { header.Fsupplyid });
         if (supplier.TryGetValue(header.Fsupplyid, out var sp)) { dto.FsupplyNumber = sp.Number; dto.FsupplyName = sp.Name; }
         dto.FpurchaserName = (await LoadEmployeeNameDictAsync(new[] { header.Fpurchaserid })).GetValueOrDefault(header.Fpurchaserid, string.Empty);
-        dto.FpurchasedeptName = await Db.Queryable<TBdDepartment>().Where(d => d.Uid == header.Fpurchasedeptid).Select(d => d.FName).FirstAsync() ?? string.Empty;
-        var currency = await Db.Queryable<TBdCurrency>().Where(c => c.Uid == header.Fsettlecurrid).Select(c => new { c.FNumber, c.FName }).FirstAsync();
+        dto.FpurchasedeptName = await Db.Queryable<TBdDepartment>().Where(d => d.Uid == header.Fpurchasedeptid || d.FInterId == header.Fpurchasedeptid).Select(d => d.FName).FirstAsync() ?? string.Empty;
+        var currency = await Db.Queryable<TBdCurrency>().Where(c => c.Uid == header.Fsettlecurrid || c.FInterId == header.Fsettlecurrid).Select(c => new { c.FNumber, c.FName }).FirstAsync();
         if (currency != null) { dto.FcurrencyNumber = currency.FNumber; dto.FcurrencyName = currency.FName; }
-        dto.FcompanyName = await Db.Queryable<SysOrgStructure>().Where(o => o.Uid == header.FCompanyId).Select(o => o.Fname).FirstAsync() ?? string.Empty;
+        dto.FcompanyName = await Db.Queryable<SysOrgStructure>().Where(o => o.Uid == header.FCompanyId || o.FInterId == header.FCompanyId).Select(o => o.Fname).FirstAsync() ?? string.Empty;
         dto.FstatusName = (await LoadStatusDictAsync()).GetValueOrDefault(header.FStatus, string.Empty);
 
         // 制单/审核/修改/禁用人名（取自登录用户）
@@ -260,9 +264,9 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
             var auxEnabledKeys = new HashSet<string>();
             if (matIdList.Count > 0)
             {
-                var mats = await Db.Queryable<TBdMaterial>().Where(m => matIdList.Contains(m.Uid))
+                var mats = await Db.Queryable<TBdMaterial>().Where(m => matIdList.Contains(m.Uid) || matIdList.Contains(m.FInterId))
                     .Select(m => new { m.Uid, m.FInterId }).ToListAsync();
-                matKeyMap = mats.GroupBy(m => m.Uid).ToDictionary(g => g.Key, g => new[] { g.First().Uid, g.First().FInterId });
+                matKeyMap = BuildByUidOrFInterId(mats, m => m.Uid, m => m.FInterId, m => new[] { m.Uid, m.FInterId });
                 var allKeys = mats.SelectMany(m => new[] { m.Uid, m.FInterId }).Where(s => !string.IsNullOrEmpty(s)).Distinct().ToList();
                 if (allKeys.Count > 0)
                 {
@@ -448,41 +452,58 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
 
     // ===== 名称字典加载 =====
 
+    // 明细/表头外键的取值可能是关联主档的 Uid（手工单据）或 FInterId（ERP同步数据，存的是 K3 内码），
+    // 故名称解析一律按 Uid 或 FInterId 双向匹配，并把字典同时以两者为键，取值时任填其一都能命中。
+    private static Dictionary<string, TVal> BuildByUidOrFInterId<TSrc, TVal>(
+        IEnumerable<TSrc> rows, Func<TSrc, string> uid, Func<TSrc, string> fInterId, Func<TSrc, TVal> val)
+    {
+        var dict = new Dictionary<string, TVal>();
+        foreach (var r in rows)
+        {
+            var v = val(r);
+            var u = uid(r);
+            var f = fInterId(r);
+            if (!string.IsNullOrEmpty(u)) dict[u] = v;
+            if (!string.IsNullOrEmpty(f)) dict[f] = v;
+        }
+        return dict;
+    }
+
     private async Task<Dictionary<string, (string Number, string Name, string Spec, bool Batch, bool Kf, int KfPeriod, int KfUnit)>> LoadMaterialDictAsync(IEnumerable<string> ids)
     {
         var list = ids.Where(s => !string.IsNullOrEmpty(s)).Distinct().ToList();
         if (list.Count == 0) return new();
-        var rows = await Db.Queryable<TBdMaterial>().Where(m => list.Contains(m.Uid))
-            .Select(m => new { m.Uid, m.FNumber, m.FName, m.FSpecification, m.FIsBatchManage, m.FIsKfPeriod, m.FKfPeriod, m.FKfUnit }).ToListAsync();
-        return rows.GroupBy(r => r.Uid).ToDictionary(g => g.Key,
-            g => (g.First().FNumber, g.First().FName, g.First().FSpecification, g.First().FIsBatchManage, g.First().FIsKfPeriod, g.First().FKfPeriod, g.First().FKfUnit));
+        var rows = await Db.Queryable<TBdMaterial>().Where(m => list.Contains(m.Uid) || list.Contains(m.FInterId))
+            .Select(m => new { m.Uid, m.FInterId, m.FNumber, m.FName, m.FSpecification, m.FIsBatchManage, m.FIsKfPeriod, m.FKfPeriod, m.FKfUnit }).ToListAsync();
+        return BuildByUidOrFInterId(rows, r => r.Uid, r => r.FInterId,
+            r => (r.FNumber, r.FName, r.FSpecification, r.FIsBatchManage, r.FIsKfPeriod, r.FKfPeriod, r.FKfUnit));
     }
 
     private async Task<Dictionary<string, (string Number, string Name)>> LoadUnitDictAsync(IEnumerable<string> ids)
     {
         var list = ids.Where(s => !string.IsNullOrEmpty(s)).Distinct().ToList();
         if (list.Count == 0) return new();
-        var rows = await Db.Queryable<TBdUnit>().Where(u => list.Contains(u.Uid))
-            .Select(u => new { u.Uid, u.FNumber, u.FName }).ToListAsync();
-        return rows.GroupBy(r => r.Uid).ToDictionary(g => g.Key, g => (g.First().FNumber, g.First().FName));
+        var rows = await Db.Queryable<TBdUnit>().Where(u => list.Contains(u.Uid) || list.Contains(u.FInterId))
+            .Select(u => new { u.Uid, u.FInterId, u.FNumber, u.FName }).ToListAsync();
+        return BuildByUidOrFInterId(rows, r => r.Uid, r => r.FInterId, r => (r.FNumber, r.FName));
     }
 
     private async Task<Dictionary<string, (string Number, string Name)>> LoadSupplierDictAsync(IEnumerable<string> ids)
     {
         var list = ids.Where(s => !string.IsNullOrEmpty(s)).Distinct().ToList();
         if (list.Count == 0) return new();
-        var rows = await Db.Queryable<TBdSupplier>().Where(s => list.Contains(s.Uid))
-            .Select(s => new { s.Uid, s.FNumber, s.FName }).ToListAsync();
-        return rows.GroupBy(r => r.Uid).ToDictionary(g => g.Key, g => (g.First().FNumber, g.First().FName));
+        var rows = await Db.Queryable<TBdSupplier>().Where(s => list.Contains(s.Uid) || list.Contains(s.FInterId))
+            .Select(s => new { s.Uid, s.FInterId, s.FNumber, s.FName }).ToListAsync();
+        return BuildByUidOrFInterId(rows, r => r.Uid, r => r.FInterId, r => (r.FNumber, r.FName));
     }
 
     private async Task<Dictionary<string, string>> LoadEmployeeNameDictAsync(IEnumerable<string> ids)
     {
         var list = ids.Where(s => !string.IsNullOrEmpty(s)).Distinct().ToList();
         if (list.Count == 0) return new();
-        var rows = await Db.Queryable<THrEmpinfo>().Where(e => list.Contains(e.Uid))
-            .Select(e => new { e.Uid, e.Fname }).ToListAsync();
-        return rows.GroupBy(r => r.Uid).ToDictionary(g => g.Key, g => g.First().Fname);
+        var rows = await Db.Queryable<THrEmpinfo>().Where(e => list.Contains(e.Uid) || list.Contains(e.FInterId))
+            .Select(e => new { e.Uid, e.FInterId, e.Fname }).ToListAsync();
+        return BuildByUidOrFInterId(rows, r => r.Uid, r => r.FInterId, r => r.Fname);
     }
 
     private async Task<Dictionary<string, string>> LoadUserNameDictAsync(IEnumerable<string> ids)
@@ -504,8 +525,8 @@ public class PurchaseOrderService : DocumentService<TPurPoOrder, TPurPoOrderEntr
     {
         var list = ids.Where(s => !string.IsNullOrEmpty(s)).Distinct().ToList();
         if (list.Count == 0) return new();
-        var rows = await Db.Queryable<TBdFlexauxproperty>().Where(f => list.Contains(f.Uid))
-            .Select(f => new { f.Uid, f.Fname }).ToListAsync();
-        return rows.GroupBy(r => r.Uid).ToDictionary(g => g.Key, g => g.First().Fname);
+        var rows = await Db.Queryable<TBdFlexauxproperty>().Where(f => list.Contains(f.Uid) || list.Contains(f.FInterId))
+            .Select(f => new { f.Uid, f.FInterId, f.Fname }).ToListAsync();
+        return BuildByUidOrFInterId(rows, r => r.Uid, r => r.FInterId, r => r.Fname);
     }
 }

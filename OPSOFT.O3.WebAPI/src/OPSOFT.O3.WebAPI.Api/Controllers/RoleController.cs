@@ -26,6 +26,14 @@ public class RoleController : ControllerBase
         return Ok(ApiResponse<PagedResult<RoleDto>>.Ok(result));
     }
 
+    /// <summary>角色下拉（用户维护「角色明细」等选择场景，与基础资料 lookup 同形：{uid,fNumber,fName}）</summary>
+    [HttpGet("lookup")]
+    public async Task<ActionResult<ApiResponse<List<LookupDto>>>> Lookup([FromQuery] LookupRequest request)
+    {
+        var result = await _roleService.GetLookupAsync(request);
+        return Ok(ApiResponse<List<LookupDto>>.Ok(result));
+    }
+
     [HttpGet("{id}")]
     [RequirePermission("role:list")]
     public async Task<ActionResult<ApiResponse<RoleDetailDto>>> GetById(string id)

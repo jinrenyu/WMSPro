@@ -28,6 +28,12 @@ const routes = [
                 meta: { title: '用户管理' }
             },
             {
+                path: 'system/users/edit',
+                name: 'UserEdit',
+                component: () => import('../views/system/UserEdit.vue'),
+                meta: { title: '用户-维护' }
+            },
+            {
                 path: 'system/roles',
                 name: 'RoleList',
                 component: () => import('../views/system/RoleList.vue'),

@@ -294,8 +294,11 @@ public class ErpSyncEngine : IErpSyncEngine
         if (t == typeof(DateTime)) return DateSentinel;
         if (t == typeof(bool)) return false;
         if (t == typeof(Guid)) return Guid.Empty;
+        // 二进制/图片列（IMAGE/BLOB，如职员/物料 FPICTURE）补空字节数组而非 NULL：
+        // 部分目标表该列 NOT NULL（开发库 T_HR_EMPINFO.FPICTURE），补 NULL 会撞 NOT NULL 约束；空 blob 语义=无图，对可空列亦无害。
+        if (t == typeof(byte[])) return Array.Empty<byte>();
         if (t.IsValueType) return Activator.CreateInstance(t)!; // int/decimal/... → 0
-        return DBNull.Value; // 引用类型（byte[] 等）→ NULL
+        return DBNull.Value; // 其余引用类型 → NULL
     }
 
     private async Task<string> WriteLogAsync(TSynInfo header, bool success, int ok, int fail, string message)

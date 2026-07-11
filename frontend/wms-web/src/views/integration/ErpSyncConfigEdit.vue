@@ -109,8 +109,9 @@
                   </el-select>
                 </template>
               </el-table-column>
-              <el-table-column label="目标唯一标识" min-width="160">
-                <template #default="{ row }"><el-input v-model="row.faimdatakey" :disabled="isReadonly" size="small" placeholder="如 FCOMPANYID,FNUMBER" /></template>
+              <el-table-column min-width="160">
+                <template #header><span style="color: var(--el-color-danger); margin-right: 2px;">*</span>目标唯一标识</template>
+                <template #default="{ row }"><el-input v-model="row.faimdatakey" :disabled="isReadonly" size="small" placeholder="必录，如 FCOMPANYID,FNUMBER" /></template>
               </el-table-column>
               <el-table-column label="ERP表单代码" min-width="130">
                 <template #default="{ row }"><el-input v-model="row.ferpbillid" :disabled="isReadonly" size="small" placeholder="留空取表头" /></template>
@@ -414,6 +415,13 @@ function buildPayload() {
 async function handleSave() {
   if (!formRef.value) return
   try { await formRef.value.validate() } catch { return }
+  // 目标唯一标识为空会导致同步时该实体整表失败（引擎需唯一键做 upsert），保存前强制校验、必录
+  const badIdx = entities.value.findIndex((e: any) => !(e.faimdatakey || '').trim())
+  if (badIdx >= 0) {
+    selectedEntityIndex.value = badIdx
+    ElMessage.error(`第 ${badIdx + 1} 行实体「${entities.value[badIdx].faimdataname || '未选目标表'}」未填写「目标唯一标识」，该项为必录`)
+    return
+  }
   loading.value = true
   try {
     if (isEdit.value) {

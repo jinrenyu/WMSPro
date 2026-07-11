@@ -1,6 +1,19 @@
 import request from '../utils/request'
 import { encryptPassword } from '../utils/crypto'
 
+export interface UserRoleRow {
+    roleId: string
+    roleNumber: string
+    roleName: string
+}
+
+export interface UserOrgRow {
+    orgId: string
+    orgNumber: string
+    orgName: string
+    isDefault?: boolean
+}
+
 export interface User {
     uid?: string
     userId: string
@@ -8,17 +21,29 @@ export interface User {
     password?: string
     email?: string
     paType?: string
+    paId?: string
+    isPda?: boolean
+    isDefault?: boolean
+    domainUser?: string
+    cardId?: string
+    erpId?: string
+    fGroupId?: string
+    fGroupName?: string
     fStatus?: number
     lockStatus?: number
     lastLoginTime?: string
+    lastCpTime?: string
+    lastLockTime?: string
+    pwdErrTimes?: number
     cYmd?: string
     companyId?: string
+    photoBase64?: string | null
     roles?: string[]
-    roleDetails?: { roleId: string; roleNumber: string; roleName: string }[]
-    organizations?: { orgId: string; isDefault: boolean }[]
+    roleDetails?: UserRoleRow[]
+    organizations?: UserOrgRow[]
 }
 
-// GET /api/user - paged list
+// GET /api/user - paged list（支持按用户分组过滤）
 export const getUsers = (params: any) => {
     return request({
         url: '/user',
@@ -26,7 +51,8 @@ export const getUsers = (params: any) => {
         params: {
             pageIndex: params.page || 1,
             pageSize: params.pageSize || 10,
-            keyword: params.keyword || ''
+            keyword: params.keyword || '',
+            groupId: params.groupId || ''
         }
     })
 }
@@ -83,6 +109,15 @@ export const assignUserRoles = (userId: string, roleIds: string[]) => {
         url: `/user/${userId}/assign-roles`,
         method: 'post',
         data: { roleIds }
+    })
+}
+
+// POST /api/user/{id}/assign-orgs
+export const assignUserOrgs = (userId: string, orgIds: string[]) => {
+    return request({
+        url: `/user/${userId}/assign-orgs`,
+        method: 'post',
+        data: { orgIds }
     })
 }
 

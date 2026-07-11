@@ -13,6 +13,7 @@ public interface IUserService
     Task<bool> ChangePasswordAsync(string uid, ChangePasswordRequest request);
     Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
     Task<bool> AssignRolesAsync(string uid, AssignRolesRequest request);
+    Task<bool> AssignOrgsAsync(string uid, AssignOrgsRequest request);
     Task<bool> UnlockAsync(string uid);
     Task<bool> ToggleStatusAsync(string uid);
 }

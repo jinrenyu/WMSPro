@@ -317,6 +317,12 @@ public class ErpSyncConfigService : DocumentService<TSynInfo, TSynInfoentry,
     /// <summary>持久化两套从表（事务内）：实体信息 + 字段映射（Fbodyid 回填实体行 Fdetailid）</summary>
     private async Task PersistEntriesAsync(TSynInfo header, List<ErpSyncEntityRequest> entities)
     {
+        // 目标唯一标识（Faimdatakey）为空会导致同步引擎对该实体抛「未配置目标唯一标识」并整表跳过
+        // （"只同步主表不同步明细"的根因），故保存即校验：每个实体必须配置唯一标识键。
+        var invalid = (entities ?? new()).FirstOrDefault(e => string.IsNullOrWhiteSpace(e.Faimdatakey));
+        if (invalid != null)
+            throw new ArgumentException($"实体「{(string.IsNullOrWhiteSpace(invalid.Faimdataname) ? "未选目标表" : invalid.Faimdataname)}」未配置「目标唯一标识」，该项为必录。");
+
         var now = DateTime.Now;
         var user = CurrentUser.UserId ?? string.Empty;
         var company = header.FCompanyId ?? string.Empty;

@@ -60,6 +60,27 @@ public class RoleService : IRoleService
         };
     }
 
+    public async Task<List<LookupDto>> GetLookupAsync(LookupRequest request)
+    {
+        var query = _db.Queryable<SysUserRole>().Where(r => !r.FDeleted);
+
+        var kw = request.Keyword?.Trim();
+        if (!string.IsNullOrEmpty(kw))
+            query = query.Where(r => r.Frolenumber.Contains(kw) || r.Frolename.Contains(kw));
+
+        var roles = await query
+            .OrderBy(r => r.Frolenumber)
+            .Take(request.MaxCount)
+            .ToListAsync();
+
+        return roles.Select(r => new LookupDto
+        {
+            Uid = r.Uid,
+            FNumber = r.Frolenumber,
+            FName = r.Frolename
+        }).ToList();
+    }
+
     public async Task<RoleDetailDto?> GetByIdAsync(string uid)
     {
         var role = await _roleRepo.GetByIdAsync(uid);

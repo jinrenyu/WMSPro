@@ -16,6 +16,22 @@ public class UserListDto
     public DateTime? LastLoginTime { get; set; }
     public DateTime? CYmd { get; set; }
     public string PaType { get; set; } = string.Empty;
+    /// <summary>关联代码（职员/厂商/客户内码）</summary>
+    public string PaId { get; set; } = string.Empty;
+    /// <summary>是否智能终端用户</summary>
+    public bool IsPda { get; set; }
+    /// <summary>是否系统预置</summary>
+    public bool IsDefault { get; set; }
+    /// <summary>域用户帐号</summary>
+    public string DomainUser { get; set; } = string.Empty;
+    /// <summary>用户ID卡</summary>
+    public string CardId { get; set; } = string.Empty;
+    /// <summary>第三方ERP帐号</summary>
+    public string ErpId { get; set; } = string.Empty;
+    /// <summary>用户分组内码</summary>
+    public string FGroupId { get; set; } = string.Empty;
+    /// <summary>用户分组名称</summary>
+    public string FGroupName { get; set; } = string.Empty;
     public List<string> Roles { get; set; } = new();
 }
 
@@ -24,11 +40,17 @@ public class UserListDto
 /// </summary>
 public class UserDetailDto : UserListDto
 {
-    public string PaId { get; set; } = string.Empty;
-    public bool IsDefault { get; set; }
     public string CompanyId { get; set; } = string.Empty;
+    /// <summary>最后修改密码时间</summary>
+    public DateTime? LastCpTime { get; set; }
+    /// <summary>密码错误次数</summary>
+    public int PwdErrTimes { get; set; }
+    /// <summary>最后锁定/解锁时间</summary>
+    public DateTime? LastLockTime { get; set; }
+    /// <summary>用户照片（纯 Base64，无 dataURL 前缀）</summary>
+    public string? PhotoBase64 { get; set; }
     public List<UserRoleDto> RoleDetails { get; set; } = new();
-    public List<UserOrgInfo> Organizations { get; set; } = new();
+    public List<UserOrgDto> Organizations { get; set; } = new();
     public List<string> Permissions { get; set; } = new();
 }
 
@@ -37,6 +59,17 @@ public class UserRoleDto
     public string RoleId { get; set; } = string.Empty;
     public string RoleNumber { get; set; } = string.Empty;
     public string RoleName { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// 用户组织明细 DTO
+/// </summary>
+public class UserOrgDto
+{
+    public string OrgId { get; set; } = string.Empty;
+    public string OrgNumber { get; set; } = string.Empty;
+    public string OrgName { get; set; } = string.Empty;
+    public bool IsDefault { get; set; }
 }
 
 /// <summary>
@@ -58,7 +91,14 @@ public class CreateUserRequest
     public string PaType { get; set; } = string.Empty;
     public string PaId { get; set; } = string.Empty;
     public string CompanyId { get; set; } = string.Empty;
+    public bool IsPda { get; set; }
+    public string ErpId { get; set; } = string.Empty;
+    public string CardId { get; set; } = string.Empty;
+    public string DomainUser { get; set; } = string.Empty;
+    public string FGroupId { get; set; } = string.Empty;
+    public string? PhotoBase64 { get; set; }
     public List<string>? RoleIds { get; set; }
+    public List<string>? OrgIds { get; set; }
 }
 
 /// <summary>
@@ -73,6 +113,12 @@ public class UpdateUserRequest
     public string PaType { get; set; } = string.Empty;
     public string PaId { get; set; } = string.Empty;
     public string CompanyId { get; set; } = string.Empty;
+    public bool IsPda { get; set; }
+    public string ErpId { get; set; } = string.Empty;
+    public string CardId { get; set; } = string.Empty;
+    public string DomainUser { get; set; } = string.Empty;
+    public string FGroupId { get; set; } = string.Empty;
+    public string? PhotoBase64 { get; set; }
 }
 
 /// <summary>
@@ -108,4 +154,12 @@ public class AssignRolesRequest
 {
     [Required(ErrorMessage = "角色ID列表不能为空")]
     public List<string> RoleIds { get; set; } = new();
+}
+
+/// <summary>
+/// 分配组织请求
+/// </summary>
+public class AssignOrgsRequest
+{
+    public List<string> OrgIds { get; set; } = new();
 }

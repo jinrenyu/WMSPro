@@ -5,6 +5,7 @@ namespace OPSOFT.O3.WebAPI.Application.Interfaces;
 public interface IRoleService
 {
     Task<PagedResult<RoleDto>> GetPagedListAsync(PagedRequest request);
+    Task<List<LookupDto>> GetLookupAsync(LookupRequest request);
     Task<RoleDetailDto?> GetByIdAsync(string uid);
     Task<RoleDto> CreateAsync(CreateRoleRequest request);
     Task<bool> UpdateAsync(string uid, UpdateRoleRequest request);

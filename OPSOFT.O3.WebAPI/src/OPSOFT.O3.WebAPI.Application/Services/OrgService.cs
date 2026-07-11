@@ -26,6 +26,30 @@ public class OrgService : IOrgService
         var userId = _currentUser.UserId ?? string.Empty;
         if (string.IsNullOrEmpty(userId)) return new List<MyOrgDto>();
 
+        // superadmin 虚拟拥有全部组织（无需在 SYS_USERORG 维护）
+        if (userId == "superadmin")
+        {
+            var allOrgs = await _orgRepo.GetListAsync(o => !o.FDeleted);
+            var allDict = allOrgs.ToDictionary(o => o.Uid);
+            return allOrgs
+                .OrderBy(o => o.Fnumber)
+                .Select((o, idx) =>
+                {
+                    var hasParent = !string.IsNullOrEmpty(o.Fparaid);
+                    var parentName = hasParent && allDict.TryGetValue(o.Fparaid, out var p) ? p.Fname : o.Fname;
+                    return new MyOrgDto
+                    {
+                        OrgId = o.Uid,
+                        OrgNumber = o.Fnumber,
+                        OrgName = o.Fname,
+                        ParentOrgId = hasParent ? o.Fparaid : o.Uid,
+                        ParentOrgName = parentName,
+                        IsDefault = idx == 0
+                    };
+                })
+                .ToList();
+        }
+
         var links = await _userOrgRepo.GetListAsync(x => x.UserId == userId);
         if (links.Count == 0) return new List<MyOrgDto>();
 

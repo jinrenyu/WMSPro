@@ -113,6 +113,14 @@ public class UserController : ControllerBase
         return Ok(ApiResponse<bool>.Ok(result, "角色分配成功"));
     }
 
+    [HttpPost("{id}/assign-orgs")]
+    [RequirePermission("user:assign")]
+    public async Task<ActionResult<ApiResponse<bool>>> AssignOrgs(string id, [FromBody] AssignOrgsRequest request)
+    {
+        var result = await _userService.AssignOrgsAsync(id, request);
+        return Ok(ApiResponse<bool>.Ok(result, "组织分配成功"));
+    }
+
     [HttpPost("{id}/unlock")]
     [RequirePermission("user:unlock")]
     public async Task<ActionResult<ApiResponse<bool>>> Unlock(string id)
