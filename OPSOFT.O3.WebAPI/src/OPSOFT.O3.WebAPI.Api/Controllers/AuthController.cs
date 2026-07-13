@@ -54,6 +54,40 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<LoginResponse>.Ok(result, result.Message));
     }
 
+    /// <summary>
+    /// 发送短信验证码（登录第二步：密码通过后凭 mfaTicket 发码）
+    /// </summary>
+    [HttpPost("send-sms-code")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<SmsCodeSendResult>>> SendSmsCode([FromBody] SendSmsCodeRequest request)
+    {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _authService.SendSmsCodeAsync(request.MfaTicket, ipAddress);
+        if (!result.Success)
+            return Ok(ApiResponse<SmsCodeSendResult>.Fail(result.Message));
+        return Ok(ApiResponse<SmsCodeSendResult>.Ok(result, result.Message));
+    }
+
+    /// <summary>
+    /// 校验短信验证码并完成登录（登录第三步）
+    /// </summary>
+    [HttpPost("verify-sms")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<LoginResponse>>> VerifySms([FromBody] VerifyMfaRequest request)
+    {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers["User-Agent"].ToString();
+
+        var result = await _authService.VerifyMfaAsync(request.MfaTicket, request.Code, ipAddress, userAgent);
+
+        // 记录登录审计（最终结果）
+        await _loginInfoService.RecordLoginAsync(result.UserInfo?.UserId ?? string.Empty, ipAddress, userAgent, result.Success, result.Message);
+
+        if (!result.Success)
+            return Ok(ApiResponse<LoginResponse>.Fail(result.Message));
+        return Ok(ApiResponse<LoginResponse>.Ok(result, result.Message));
+    }
+
     [HttpPost("refresh")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<RefreshTokenResponse>>> Refresh([FromBody] RefreshTokenRequest request)

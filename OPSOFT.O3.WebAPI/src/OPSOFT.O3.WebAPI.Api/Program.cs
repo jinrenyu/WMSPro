@@ -133,6 +133,11 @@ try
         builder.Configuration.GetSection(OPSOFT.O3.WebAPI.Infrastructure.ErpIntegration.ErpIntegrationOptions.SectionName));
     builder.Services.AddHostedService<ErpSyncBackgroundService>();
 
+    // 短信 / 登录MFA：绑定配置节 + 过期验证码清理后台服务
+    builder.Services.Configure<OPSOFT.O3.WebAPI.Infrastructure.Sms.SmsOptions>(
+        builder.Configuration.GetSection(OPSOFT.O3.WebAPI.Infrastructure.Sms.SmsOptions.SectionName));
+    builder.Services.AddHostedService<SmsCodeCleanupService>();
+
     // Add health checks
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "ready" });

@@ -55,17 +55,21 @@
         <div class="form-inner">
           <div class="form-head">
             <span class="form-badge"><el-icon><Box /></el-icon></span>
-            <h2 class="form-title">欢迎登录</h2>
-            <p class="form-subtitle">请输入账号信息以继续</p>
+            <h2 class="form-title">{{ step === 'sms' ? '短信验证' : '欢迎登录' }}</h2>
+            <p class="form-subtitle">
+              {{ step === 'sms' ? `验证码已发送至 ${mfa.maskedMobile}` : '请输入账号信息以继续' }}
+            </p>
           </div>
 
-          <el-form :model="loginForm" label-width="0" size="large" class="login-form">
+          <!-- 第一步：账号 + 密码 -->
+          <el-form v-if="step === 'credential'" :model="loginForm" label-width="0" size="large" class="login-form" @submit.prevent>
             <el-form-item>
               <el-input
                 v-model="loginForm.username"
                 placeholder="用户名 / Username"
                 prefix-icon="User"
                 aria-label="用户名"
+                @keyup.enter="handleLogin"
               />
             </el-form-item>
             <el-form-item>
@@ -76,12 +80,45 @@
                 show-password
                 prefix-icon="Lock"
                 aria-label="密码"
+                @keyup.enter="handleLogin"
               />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" class="login-btn" @click="handleLogin" :loading="loading">
                 登 录 / LOGIN
               </el-button>
+            </el-form-item>
+          </el-form>
+
+          <!-- 第二步：短信验证码 -->
+          <el-form v-else :model="mfa" label-width="0" size="large" class="login-form" @submit.prevent>
+            <el-form-item>
+              <div class="sms-row">
+                <el-input
+                  v-model="mfa.code"
+                  placeholder="短信验证码"
+                  prefix-icon="Message"
+                  maxlength="8"
+                  aria-label="短信验证码"
+                  @keyup.enter="handleVerify"
+                />
+                <el-button
+                  class="sms-send-btn"
+                  :disabled="countdown > 0 || sending"
+                  :loading="sending"
+                  @click="sendSmsCode"
+                >
+                  {{ countdown > 0 ? `${countdown}s 后重发` : '获取验证码' }}
+                </el-button>
+              </div>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" class="login-btn" @click="handleVerify" :loading="loading">
+                验 证 并 登 录
+              </el-button>
+            </el-form-item>
+            <el-form-item>
+              <el-button link class="back-link" @click="backToCredential">← 返回重新登录</el-button>
             </el-form-item>
           </el-form>
 
@@ -93,10 +130,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '../utils/request'
-import { setAccessToken, setRefreshToken, clearTokens } from '../utils/token'
+import { setAccessToken, setRefreshToken } from '../utils/token'
 import { encryptPassword, fetchPublicKey } from '../utils/crypto'
 import { User, Lock } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -105,15 +142,46 @@ import { usePermissionStore } from '../stores/permission'
 
 const router = useRouter()
 const loading = ref(false)
+const permissionStore = usePermissionStore()
+
+// 登录步骤：credential=账号密码 / sms=短信验证码
+const step = ref<'credential' | 'sms'>('credential')
 
 const loginForm = reactive({
   username: '',
   password: ''
 })
 
+// 短信MFA 中间态（票据仅存内存，登录完成即弃，绝不写 localStorage 以免绕过路由守卫）
+const mfa = reactive({
+  ticket: '',
+  maskedMobile: '',
+  code: ''
+})
+
+const countdown = ref(0)
+const sending = ref(false)
+let countdownTimer: number | undefined
+
+function startCountdown(seconds: number) {
+  countdown.value = seconds > 0 ? seconds : 60
+  if (countdownTimer) window.clearInterval(countdownTimer)
+  countdownTimer = window.setInterval(() => {
+    countdown.value -= 1
+    if (countdown.value <= 0 && countdownTimer) {
+      window.clearInterval(countdownTimer)
+      countdownTimer = undefined
+    }
+  }, 1000)
+}
+
 // 预获取 RSA 公钥
 onMounted(() => {
   fetchPublicKey().catch(() => {})
+})
+
+onBeforeUnmount(() => {
+  if (countdownTimer) window.clearInterval(countdownTimer)
 })
 
 const handleLogin = async () => {
@@ -123,7 +191,6 @@ const handleLogin = async () => {
   }
 
   loading.value = true
-  const permissionStore = usePermissionStore()
   permissionStore.resetPermissions()
   try {
     const encryptedPwd = await encryptPassword(loginForm.password)
@@ -132,28 +199,89 @@ const handleLogin = async () => {
       password: encryptedPwd
     })
 
-    const token = data.data.token
-    const refreshToken = data.data.refreshToken
-    const userInfo = data.data.userInfo
-
-    setAccessToken(token)
-    if (refreshToken) {
-      setRefreshToken(refreshToken)
+    if (data.data?.mfaRequired) {
+      // 密码正确但需短信验证：进入第二步，并自动发送首条验证码
+      mfa.ticket = data.data.mfaTicket
+      mfa.maskedMobile = data.data.maskedMobile || ''
+      mfa.code = ''
+      step.value = 'sms'
+      await sendSmsCode()
+    } else {
+      finishLogin(data)
     }
-    localStorage.setItem('username', userInfo.userName)
-    localStorage.setItem('permissions', JSON.stringify(userInfo.permissions || []))
-
-    // Load permissions into store
-    permissionStore.loadPermissions()
-
-    ElMessage.success('登录成功')
-    router.push('/')
   } catch (error) {
     console.error(error)
     ElMessage.error('登录失败，请检查用户名或密码')
   } finally {
     loading.value = false
   }
+}
+
+const sendSmsCode = async () => {
+  if (!mfa.ticket || countdown.value > 0 || sending.value) return
+  sending.value = true
+  try {
+    const data: any = await request.post('/auth/send-sms-code', { mfaTicket: mfa.ticket })
+    startCountdown(data.data?.cooldownSeconds || 60)
+    ElMessage.success('验证码已发送')
+  } catch (error) {
+    // 频控/会话失效等错误消息已由响应拦截器统一弹出，此处不重复提示
+    console.error(error)
+  } finally {
+    sending.value = false
+  }
+}
+
+const handleVerify = async () => {
+  if (!mfa.code) {
+    ElMessage.warning('请输入短信验证码')
+    return
+  }
+  loading.value = true
+  permissionStore.resetPermissions()
+  try {
+    const data: any = await request.post('/auth/verify-sms', {
+      mfaTicket: mfa.ticket,
+      code: mfa.code
+    })
+    finishLogin(data)
+  } catch (error) {
+    // “验证码错误/已失效”等消息由响应拦截器弹出
+    console.error(error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const backToCredential = () => {
+  step.value = 'credential'
+  mfa.ticket = ''
+  mfa.code = ''
+  mfa.maskedMobile = ''
+  if (countdownTimer) {
+    window.clearInterval(countdownTimer)
+    countdownTimer = undefined
+  }
+  countdown.value = 0
+}
+
+function finishLogin(data: any) {
+  const token = data.data.token
+  const refreshToken = data.data.refreshToken
+  const userInfo = data.data.userInfo
+
+  setAccessToken(token)
+  if (refreshToken) {
+    setRefreshToken(refreshToken)
+  }
+  localStorage.setItem('username', userInfo.userName)
+  localStorage.setItem('permissions', JSON.stringify(userInfo.permissions || []))
+
+  // Load permissions into store
+  permissionStore.loadPermissions()
+
+  ElMessage.success('登录成功')
+  router.push('/')
 }
 </script>
 
@@ -389,6 +517,26 @@ const handleLogin = async () => {
   text-align: center;
   font-size: 12px;
   color: var(--text-placeholder);
+}
+
+/* ---------- 短信验证码步骤 ---------- */
+.sms-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.sms-row :deep(.el-input) {
+  flex: 1;
+}
+.sms-send-btn {
+  flex-shrink: 0;
+  height: 46px;
+  white-space: nowrap;
+  border-radius: var(--radius-base);
+}
+.back-link {
+  width: 100%;
+  color: var(--text-secondary);
 }
 
 /* ---------- 响应式：窄屏隐藏品牌墙 ---------- */

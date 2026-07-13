@@ -11,6 +11,7 @@ public class AuthService : IAuthService
     private readonly ILoginUserRepository _loginUserRepository;
     private readonly IJwtService _jwtService;
     private readonly IRefreshTokenService _refreshTokenService;
+    private readonly ISmsCodeService _smsCodeService;
     private readonly ISqlSugarClient _db;
     private const int MaxPwdErrTimes = 5;
 
@@ -18,11 +19,13 @@ public class AuthService : IAuthService
         ILoginUserRepository loginUserRepository,
         IJwtService jwtService,
         IRefreshTokenService refreshTokenService,
+        ISmsCodeService smsCodeService,
         ISqlSugarClient db)
     {
         _loginUserRepository = loginUserRepository;
         _jwtService = jwtService;
         _refreshTokenService = refreshTokenService;
+        _smsCodeService = smsCodeService;
         _db = db;
     }
 
@@ -84,6 +87,53 @@ public class AuthService : IAuthService
         }
 
         await _loginUserRepository.UpdatePwdErrTimesAsync(user.Uid, 0, 0, null);
+
+        // 密码校验通过：若该用户需短信MFA，返回中间态票据(此时不签发 token)，由前端进入验证码步骤
+        var mfaSession = await _smsCodeService.TryBeginMfaAsync(user.Uid, user.UserId, ipAddress);
+        if (mfaSession != null)
+        {
+            return new LoginResponse
+            {
+                Success = true,
+                Message = "需要短信验证码",
+                MfaRequired = true,
+                MfaTicket = mfaSession.Ticket,
+                MaskedMobile = mfaSession.MaskedMobile
+            };
+        }
+
+        return await BuildSuccessLoginResponseAsync(user, ipAddress, userAgent);
+    }
+
+    public async Task<SmsCodeSendResult> SendSmsCodeAsync(string mfaTicket, string? ipAddress = null)
+    {
+        return await _smsCodeService.SendCodeAsync(mfaTicket, ipAddress);
+    }
+
+    public async Task<LoginResponse> VerifyMfaAsync(string mfaTicket, string code, string? ipAddress = null, string? userAgent = null)
+    {
+        var verify = await _smsCodeService.VerifyCodeAsync(mfaTicket, code);
+        if (!verify.Success)
+            return new LoginResponse { Success = false, Message = verify.Message };
+
+        var user = await _loginUserRepository.GetByUserIdAsync(verify.UserId!);
+        if (user == null || user.FDeleted || user.FStatus != 0)
+            return new LoginResponse { Success = false, Message = "用户不存在或已被禁用" };
+
+        // 中间态期间账号可能被管理员锁定：发 token 前复查锁定状态，避免绕过账号锁定
+        if (user.LockStatus == 1 && user.LastLockTime.HasValue &&
+            DateTime.Now.Subtract(user.LastLockTime.Value).TotalMinutes < 30)
+            return new LoginResponse { Success = false, Message = "账户已锁定，请稍后再试" };
+
+        return await BuildSuccessLoginResponseAsync(user, ipAddress, userAgent);
+    }
+
+    /// <summary>
+    /// 密码(及短信MFA)校验全部通过后：更新登录时间、装配角色/权限/组织并签发令牌。
+    /// 被「无需MFA的直登」与「MFA校验通过」两条路径复用。
+    /// </summary>
+    private async Task<LoginResponse> BuildSuccessLoginResponseAsync(SysLoginUser user, string? ipAddress, string? userAgent)
+    {
         await _loginUserRepository.UpdateLastLoginTimeAsync(user.Uid);
 
         // 查询用户角色

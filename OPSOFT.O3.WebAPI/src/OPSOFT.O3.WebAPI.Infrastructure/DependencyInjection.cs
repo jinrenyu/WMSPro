@@ -10,6 +10,7 @@ using OPSOFT.O3.WebAPI.Domain.Entities;
 using OPSOFT.O3.WebAPI.Domain.Interfaces;
 using OPSOFT.O3.WebAPI.Infrastructure.ErpIntegration;
 using OPSOFT.O3.WebAPI.Infrastructure.Repositories;
+using OPSOFT.O3.WebAPI.Infrastructure.Sms;
 using OPSOFT.O3.WebAPI.Infrastructure.Services;
 using SqlSugar;
 
@@ -174,6 +175,18 @@ public static class DependencyInjection
                 ? sp.GetRequiredService<K3CloudErpDataSource>()
                 : sp.GetRequiredService<StubErpDataSource>();
         });
+
+        // 短信 / 登录MFA：按 Sms:Provider 择一发送实现(Aliyun 真发 / Stub 打日志)，呼应 ERP 的 Stub/K3Cloud Provider 范式
+        services.AddScoped<StubSmsSender>();
+        services.AddScoped<AliyunSmsSender>();
+        services.AddScoped<ISmsSender>(sp =>
+        {
+            var opt = sp.GetRequiredService<IOptions<SmsOptions>>().Value;
+            return string.Equals(opt.Provider, "Aliyun", StringComparison.OrdinalIgnoreCase)
+                ? (ISmsSender)sp.GetRequiredService<AliyunSmsSender>()
+                : sp.GetRequiredService<StubSmsSender>();
+        });
+        services.AddScoped<ISmsCodeService, SmsCodeService>();
 
         // 编码规则：业务表单目录（数据驱动）+ 取号引擎（单据编号/条码编号统一取号）+ 配置维护（系统管理→编码规则）
         services.AddScoped<IBillCodeFormCatalog, BillCodeFormCatalog>();

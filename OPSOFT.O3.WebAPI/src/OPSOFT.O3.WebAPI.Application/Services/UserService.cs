@@ -51,15 +51,24 @@ public class UserService : IUserService
         // 解析用户分组名称
         var groupDict = await ResolveGroupNamesAsync(users.Select(u => u.FGroupId));
 
+        // 读取这些用户的 MFA 配置（独立表 SYS_USERMFA）；GroupBy 去重避免同账号多行时 ToDictionary 抛异常致列表 500
+        var mfaList = await _db.Queryable<SysUserMfa>()
+            .Where(m => userIds.Contains(m.UserId) && !m.FDeleted)
+            .ToListAsync();
+        var mfaDict = mfaList.GroupBy(m => m.UserId).ToDictionary(g => g.Key, g => g.First());
+
         var items = users.Select(u =>
         {
             var userRoleIds = roleRelations.Where(r => r.UserId == u.UserId).Select(r => r.Froleid).ToList();
+            mfaDict.TryGetValue(u.UserId, out var mfa);
             return new UserListDto
             {
                 Uid = u.Uid,
                 UserId = u.UserId,
                 UserName = u.UserName,
                 Email = u.Email,
+                Mobile = mfa?.Mobile ?? string.Empty,
+                MfaEnabled = mfa?.MfaEnabled == 1,
                 FStatus = u.FStatus,
                 LockStatus = u.LockStatus,
                 LastLoginTime = u.LastLoginTime,
@@ -132,6 +141,9 @@ public class UserService : IUserService
 
         var created = await _userRepo.InsertAsync(user);
 
+        // MFA 配置写入独立表 SYS_USERMFA
+        await UpsertUserMfaAsync(created.UserId, request.Mobile, request.MfaEnabled);
+
         if (request.RoleIds != null && request.RoleIds.Any())
         {
             await AssignRolesInternalAsync(created.UserId, request.RoleIds);
@@ -168,7 +180,10 @@ public class UserService : IUserService
         if (!string.IsNullOrEmpty(request.CompanyId))
             user.FCompanyId = request.CompanyId;
 
-        return await _userRepo.UpdateAsync(user);
+        var ok = await _userRepo.UpdateAsync(user);
+        // MFA 配置写入独立表 SYS_USERMFA
+        await UpsertUserMfaAsync(user.UserId, request.Mobile, request.MfaEnabled);
+        return ok;
     }
 
     public async Task<bool> DeleteAsync(string uid)
@@ -425,12 +440,19 @@ public class UserService : IUserService
         // 解析用户分组名称
         var groupDict = await ResolveGroupNamesAsync(new[] { user.FGroupId });
 
+        // 读取该用户的 MFA 配置（独立表 SYS_USERMFA）
+        var mfaCfg = await _db.Queryable<SysUserMfa>()
+            .Where(m => m.UserId == user.UserId && !m.FDeleted)
+            .FirstAsync();
+
         return new UserDetailDto
         {
             Uid = user.Uid,
             UserId = user.UserId,
             UserName = user.UserName,
             Email = user.Email,
+            Mobile = mfaCfg?.Mobile ?? string.Empty,
+            MfaEnabled = mfaCfg?.MfaEnabled == 1,
             FStatus = user.FStatus,
             LockStatus = user.LockStatus,
             LastLoginTime = user.LastLoginTime,
@@ -484,6 +506,45 @@ public class UserService : IUserService
         if (comma >= 0) base64 = base64[(comma + 1)..];
         try { return Convert.FromBase64String(base64); }
         catch { return null; }
+    }
+
+    /// <summary>写入/更新用户的 MFA 配置（独立表 SYS_USERMFA，按登录账号 upsert）</summary>
+    private async Task UpsertUserMfaAsync(string userId, string? mobile, bool mfaEnabled)
+    {
+        var mob = mobile ?? string.Empty;
+        var existing = await _db.Queryable<SysUserMfa>()
+            .Where(x => x.UserId == userId && !x.FDeleted)
+            .FirstAsync();
+        var now = DateTime.Now;
+
+        if (existing == null)
+        {
+            // 既没手机号也没启用 → 不建行
+            if (string.IsNullOrWhiteSpace(mob) && !mfaEnabled) return;
+            await _db.Insertable(new SysUserMfa
+            {
+                Uid = Guid.NewGuid().ToString("N"),
+                FInterId = Guid.NewGuid().ToString("N"),
+                UserId = userId,
+                Mobile = mob,
+                MfaEnabled = mfaEnabled ? 1 : 0,
+                FCompanyId = _currentUser.CompanyId ?? string.Empty,
+                CYmd = now,
+                CUser = _currentUser.UserId ?? string.Empty,
+                MYmd = now,
+                MUser = _currentUser.UserId ?? string.Empty
+            }).ExecuteCommandAsync();
+        }
+        else
+        {
+            existing.Mobile = mob;
+            existing.MfaEnabled = mfaEnabled ? 1 : 0;
+            existing.MYmd = now;
+            existing.MUser = _currentUser.UserId ?? string.Empty;
+            await _db.Updateable(existing)
+                .UpdateColumns(x => new { x.Mobile, x.MfaEnabled, x.MYmd, x.MUser })
+                .ExecuteCommandAsync();
+        }
     }
 
     private async Task ValidatePaTypeAndPaIdAsync(string? paType, string? paId)

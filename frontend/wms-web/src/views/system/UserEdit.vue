@@ -132,6 +132,20 @@
         </el-row>
 
         <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="手机号">
+              <el-input v-model="form.mobile" placeholder="用于短信验证码(MFA)" maxlength="11" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="短信验证登录">
+              <el-switch v-model="form.mfaEnabled" />
+              <span class="mfa-hint">开启后该用户登录需短信验证码（需全局开启且已填手机号）</span>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="用户照片">
               <div class="picture-uploader">
@@ -285,6 +299,8 @@ const defaultForm = {
   userName: '',
   password: '',
   email: '',
+  mobile: '',
+  mfaEnabled: false,
   paType: '',
   paId: '',
   isPda: false,
@@ -438,6 +454,8 @@ function buildPayload() {
   return {
     userName: form.userName,
     email: form.email,
+    mobile: form.mobile,
+    mfaEnabled: form.mfaEnabled,
     paType: form.paType,
     paId: form.paId,
     isPda: form.isPda,
@@ -588,6 +606,12 @@ onMounted(async () => {
 
 .grid-toolbar {
   margin-bottom: 8px;
+}
+
+.mfa-hint {
+  margin-left: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 .picture-uploader {

@@ -11,6 +11,10 @@ public class UserListDto
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    /// <summary>手机号（短信MFA 接收验证码）</summary>
+    public string Mobile { get; set; } = string.Empty;
+    /// <summary>是否启用短信MFA</summary>
+    public bool MfaEnabled { get; set; }
     public int FStatus { get; set; }
     public int LockStatus { get; set; }
     public DateTime? LastLoginTime { get; set; }
@@ -88,6 +92,10 @@ public class CreateUserRequest
     public string Password { get; set; } = string.Empty;
 
     public string Email { get; set; } = string.Empty;
+    /// <summary>手机号（短信MFA 接收验证码）</summary>
+    public string Mobile { get; set; } = string.Empty;
+    /// <summary>是否启用短信MFA</summary>
+    public bool MfaEnabled { get; set; }
     public string PaType { get; set; } = string.Empty;
     public string PaId { get; set; } = string.Empty;
     public string CompanyId { get; set; } = string.Empty;
@@ -110,6 +118,10 @@ public class UpdateUserRequest
     public string UserName { get; set; } = string.Empty;
 
     public string Email { get; set; } = string.Empty;
+    /// <summary>手机号（短信MFA 接收验证码）</summary>
+    public string Mobile { get; set; } = string.Empty;
+    /// <summary>是否启用短信MFA</summary>
+    public bool MfaEnabled { get; set; }
     public string PaType { get; set; } = string.Empty;
     public string PaId { get; set; } = string.Empty;
     public string CompanyId { get; set; } = string.Empty;

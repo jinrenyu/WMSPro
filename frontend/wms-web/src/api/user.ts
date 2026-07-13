@@ -20,6 +20,8 @@ export interface User {
     userName: string
     password?: string
     email?: string
+    mobile?: string
+    mfaEnabled?: boolean
     paType?: string
     paId?: string
     isPda?: boolean
